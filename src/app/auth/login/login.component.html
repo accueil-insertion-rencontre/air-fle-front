@@ -14,6 +14,7 @@
             id="email" 
             formControlName="email" 
             placeholder="Votre adresse email" 
+            autocomplete="email"
             [ngClass]="{'is-invalid': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}">
           <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
             <span *ngIf="loginForm.get('email')?.errors?.['required']">Email est requis</span>
@@ -28,6 +29,7 @@
             id="password" 
             formControlName="password" 
             placeholder="Votre mot de passe"
+            autocomplete="current-password"
             [ngClass]="{'is-invalid': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}">
           <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
             <span *ngIf="loginForm.get('password')?.errors?.['required']">Mot de passe est requis</span>
