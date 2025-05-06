@@ -1,1 +1,36 @@
+# Dépendances
 node_modules
+
+# Fichiers de compilation
+/dist
+/.tmp
+/out-tsc
+/bazel-out
+
+# Angular cache
+.angular/cache
+.sass-cache/
+connect.lock
+coverage
+libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+typings
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Environnements
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+/.idea
+/.vscode
+/*.sublime-workspace
+/*.sublime-project
