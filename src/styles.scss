@@ -17,10 +17,11 @@ html, body {
 }
 
 body {
-  background-color: #f5f5f5;
+  background-color: #f5f7fa;
   font-size: 16px;
   line-height: 1.5;
-  color: #333;
+  color: #2d3748;
+  min-height: 100vh;
 }
 
 /* Assurez-vous que le composant racine prend toute la hauteur */
@@ -48,4 +49,34 @@ app-root {
 img {
   max-width: 100%;
   height: auto;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Styles pour les scrollbars personnalisées */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
