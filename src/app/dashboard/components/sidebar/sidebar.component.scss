@@ -5,17 +5,18 @@
 }
 
 // Variables
-$sidebar-bg: #ffffff;
+$sidebar-bg: #f5f7fa;
 $sidebar-width: 250px;
 $sidebar-collapsed-width: 80px;
 $menu-active-color: #4fd1c5;
 $menu-text-color: #2d3748;
-$menu-hover-bg: #f7fafc;
+$menu-hover-bg: #e7f0ff;
 $border-color: rgba(0, 0, 0, 0.05);
 $border-radius: 12px;
 $spacing: 20px;
 $mobile-breakpoint: 768px;
 $navbar-height: 80px;
+$primary-color: #4fd1c5; // Couleur turquoise/menthe
 
 // Classe pour les éléments visibles uniquement en mobile
 .mobile-only {
@@ -50,7 +51,7 @@ $navbar-height: 80px;
       overflow: hidden;
     }
     
-    .menu-text, .menu-category {
+    .menu-text, .section-title {
       opacity: 0;
       width: 0;
       overflow: hidden;
@@ -134,27 +135,29 @@ $navbar-height: 80px;
       margin: 0;
     }
     
-    .menu-category {
-      padding: 10px 15px;
-      color: #718096;
-      font-size: 12px;
+    .menu-section {
+      padding: 20px 15px 10px 15px;
+      color: #2d3748;
+      font-size: 13px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
       @include transition(opacity, width);
+      
+      .section-title {
+        display: block;
+      }
     }
     
     .menu-item {
-      margin-bottom: 5px;
+      margin-bottom: 8px;
       
       a {
         display: flex;
         align-items: center;
-        padding: 10px 15px;
+        padding: 12px 15px;
         text-decoration: none;
         color: $menu-text-color;
         border-radius: 8px;
-        margin: 0 5px;
+        margin: 0 8px;
         @include transition();
         
         &:hover {
@@ -165,27 +168,27 @@ $navbar-height: 80px;
       &.active {
         a {
           background-color: rgba(79, 209, 197, 0.1);
-          color: $menu-active-color;
+          color: $primary-color;
           font-weight: 500;
           
-          .menu-icon {
-            color: $menu-active-color;
+          .feather {
+            stroke: $primary-color;
           }
         }
       }
       
       .menu-icon-container {
-        width: 24px;
+        width: 20px;
+        height: 20px;
         display: flex;
         justify-content: center;
+        align-items: center;
         margin-right: 12px;
         @include transition(margin);
       }
       
-      .menu-icon {
-        font-size: 18px;
-        color: #718096;
-        @include transition(color);
+      .feather {
+        @include transition(stroke);
       }
       
       .menu-text {
@@ -197,16 +200,14 @@ $navbar-height: 80px;
   }
 }
 
-// Icônes spécifiques
-.dashboard-icon::before { content: '\1F4CA'; } // Graphique
-.students-icon::before { content: '\1F4DA'; } // Livres
-.users-icon::before { content: '\1F465'; } // Utilisateurs
-.periods-icon::before { content: '\1F4C5'; } // Calendrier
-.hours-icon::before { content: '\1F552'; } // Horloge
-.address-icon::before { content: '\1F4CD'; } // Epingle de lieu
-.exam-icon::before { content: '\1F4DD'; } // Bloc-notes
-.progress-icon::before { content: '\1F4C8'; } // Graphique montant
-.profile-icon::before { content: '\1F464'; } // Utilisateur
+// Icônes spécifiques (version emoji pour test rapide)
+.home-icon::before { content: '\1F3E0'; } // Maison
+.chart-icon::before { content: '\1F4CA'; } // Graphique
+.menu-icon::before { content: '\1F4C2'; } // Dossier ouvert
+.tool-icon::before { content: '\1F6E0'; } // Outil
+.user-icon::before { content: '\1F464'; } // Utilisateur
+.file-icon::before { content: '\1F4C4'; } // Document
+.rocket-icon::before { content: '\1F680'; } // Fusée
 
 // Version responsive
 @media (max-width: $mobile-breakpoint) {
