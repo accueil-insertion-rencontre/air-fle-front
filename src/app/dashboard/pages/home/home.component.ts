@@ -1,134 +1,75 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
+
+declare var feather: any;
+
+interface StatCard {
+  title: string;
+  value: string;
+  change: number | null;
+  icon: string;
+  color: string;
+}
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="dashboard-home">
-      <div class="welcome-card">
-        <h2>Bienvenue sur le Dashboard</h2>
-        <p>Sélectionnez une option dans le menu pour commencer.</p>
-      </div>
-      
-      <div class="stats-container">
-        <div class="stat-card">
-          <div class="stat-icon">👨‍🎓</div>
-          <div class="stat-content">
-            <h3>Apprenants</h3>
-            <div class="stat-value">124</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">👥</div>
-          <div class="stat-content">
-            <h3>Utilisateurs</h3>
-            <div class="stat-value">32</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-content">
-            <h3>Examens</h3>
-            <div class="stat-value">56</div>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">📅</div>
-          <div class="stat-content">
-            <h3>Périodes</h3>
-            <div class="stat-value">8</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .dashboard-home {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    
-    .welcome-card {
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    }
-    
-    .welcome-card h2 {
-      color: #2d3748;
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-    
-    .welcome-card p {
-      color: #718096;
-      margin: 0;
-    }
-    
-    .stats-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    
-    .stat-card {
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-      display: flex;
-      align-items: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
-    }
-    
-    .stat-icon {
-      font-size: 2.5rem;
-      margin-right: 15px;
-    }
-    
-    .stat-content {
-      flex: 1;
-    }
-    
-    .stat-content h3 {
-      color: #718096;
-      font-size: 0.9rem;
-      margin: 0 0 5px 0;
-      font-weight: 500;
-    }
-    
-    .stat-value {
-      color: #2d3748;
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
-    
-    @media (max-width: 768px) {
-      .stats-container {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      }
-      
-      .stat-icon {
-        font-size: 2rem;
-        margin-right: 10px;
-      }
-      
-      .stat-value {
-        font-size: 1.5rem;
-      }
-    }
-  `]
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss']
 })
-export class HomeComponent {} 
+export class HomeComponent implements OnInit, AfterViewInit {
+  // Cartes statistiques
+  statCards: StatCard[] = [
+    { title: 'Apprenants', value: 'Aucune donnée', change: null, icon: 'user', color: '#4fd1c5' },
+    { title: 'Adresses', value: 'Aucune donnée', change: null, icon: 'map-pin', color: '#4fd1c5' },
+    { title: 'Période', value: 'Aucune donnée', change: null, icon: 'calendar', color: '#4fd1c5' },
+    { title: 'Taux de Réussite', value: 'Aucune donnée', change: null, icon: 'bar-chart-2', color: '#4fd1c5' }
+  ];
+
+  // Données pour le graphique (vide pour l'instant)
+  chartData = {
+    labels: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
+    datasets: []
+  };
+
+  // Liste des tâches (vide)
+  todoItems: any[] = [];
+
+  // Modules de la journée (vide)
+  todayModules: any[] = [];
+
+  constructor(private router: Router, private ngZone: NgZone) {}
+  
+  ngOnInit() {
+    // S'abonner aux événements de navigation pour mettre à jour les icônes
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        setTimeout(() => {
+          this.initFeatherIcons();
+        }, 100);
+      });
+  }
+  
+  ngAfterViewInit() {
+    // Initialiser les icônes après le rendu de la vue
+    setTimeout(() => {
+      this.initFeatherIcons();
+    }, 0);
+  }
+  
+  initFeatherIcons() {
+    try {
+      if (typeof feather !== 'undefined') {
+        this.ngZone.runOutsideAngular(() => {
+          feather.replace();
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du remplacement des icônes:', error);
+    }
+  }
+} 
