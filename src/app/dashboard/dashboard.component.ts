@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
 
 interface BreadcrumbItem {
   label: string;
@@ -26,14 +27,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly smallScreenBreakpoint = 480;
   private routerSubscription: Subscription | null = null;
   
-  userName = 'messaoud.houri@outlook.fr';
+  userName = '';
   pageTitle = 'Index';
   breadcrumbs: BreadcrumbItem[] = [
     { label: 'Général', path: '/dashboard' },
     { label: 'Utilisateurs', active: true }
   ];
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private authService: AuthService) {
     this.checkScreenSize();
   }
 
@@ -73,6 +74,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.isSidebarOpen = false;
       }
     });
+
+    this.loadUserInfo();
   }
   
   ngOnDestroy(): void {
@@ -88,14 +91,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
   
   handleOpenTicket(): void {
-    console.log('Ouverture d\'un ticket');
     // Implémenter la logique d'ouverture de ticket
     // Par exemple, ouvrir un modal ou naviguer vers une page de ticket
     // this.router.navigate(['/dashboard/ticket/new']);
   }
   
   handleOpenReleaseNotes(): void {
-    console.log('Ouverture des notes de mise à jour');
     // Implémenter la logique d'ouverture des notes de mise à jour
     // Par exemple, ouvrir un modal ou naviguer vers une page de notes
     // this.router.navigate(['/dashboard/release-notes']);
@@ -159,6 +160,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.breadcrumbs = [
         { label: 'Général', active: true }
       ];
+    }
+  }
+
+  loadUserInfo() {
+    const user = this.authService.currentUser;
+    if (user) {
+      this.userName = `${user.firstname} ${user.lastname}`;
     }
   }
 } 

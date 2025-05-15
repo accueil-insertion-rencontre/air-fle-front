@@ -1,6 +1,7 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface BreadcrumbItem {
   label: string;
@@ -16,7 +17,7 @@ interface BreadcrumbItem {
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  @Input() userName: string = 'messaoud.houri@outlook.fr';
+  @Input() userName: string = '';
   @Input() pageTitle: string = 'Index';
   @Input() breadcrumbs: BreadcrumbItem[] = [
     { label: 'Général', path: '/dashboard' },
@@ -29,7 +30,7 @@ export class NavbarComponent {
   
   showUserMenu: boolean = false;
   
-  constructor() {}
+  constructor(private authService: AuthService) {}
   
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
@@ -44,11 +45,9 @@ export class NavbarComponent {
   }
   
   logout(): void {
-    // Logique de déconnexion à implémenter
-    console.log('Déconnexion...');
+    console.log('Déconnexion initiée depuis le composant navbar');
     this.closeUserMenu();
-    // Rediriger vers la page de connexion
-    // this.router.navigate(['/auth']);
+    this.authService.logout();
   }
   
   onOpenTicket(): void {

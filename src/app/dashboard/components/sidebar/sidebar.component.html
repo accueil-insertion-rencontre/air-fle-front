@@ -12,22 +12,25 @@
   
   <div class="sidebar-menu">
     <ul class="menu-list">
-      <li class="menu-category">
-        <span>Pages</span>
-      </li>
-      
-      <li *ngFor="let item of menuItems" 
-          class="menu-item" 
-          [class.active]="item.active">
-        <a [routerLink]="item.route" 
-           routerLinkActive="active-link" 
-           [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}">
-          <div class="menu-icon-container">
-            <i class="menu-icon" [class]="item.icon"></i>
-          </div>
-          <span class="menu-text">{{ item.label }}</span>
-        </a>
-      </li>
+      <!-- Parcourir les éléments de menu en tenant compte des sections -->
+      <ng-container *ngFor="let item of menuItems; let i = index">
+        <!-- Afficher le titre de la section si présent -->
+        <li class="menu-section" *ngIf="item.section">
+          <span class="section-title">{{ item.section }}</span>
+        </li>
+        
+        <!-- Afficher l'élément du menu -->
+        <li class="menu-item" [class.active]="item.active">
+          <a [routerLink]="item.route" 
+             routerLinkActive="active-link" 
+             [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}">
+            <div class="menu-icon-container">
+              <i [attr.data-feather]="item.icon" class="feather"></i>
+            </div>
+            <span class="menu-text">{{ item.label }}</span>
+          </a>
+        </li>
+      </ng-container>
     </ul>
   </div>
 </div> 
