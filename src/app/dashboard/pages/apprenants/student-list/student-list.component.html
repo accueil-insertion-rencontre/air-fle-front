@@ -1,0 +1,125 @@
+<div class="student-list-container">
+  <div class="search-section">
+    <div class="search-field">
+      <input type="text" 
+             [(ngModel)]="searchValue" 
+             (keyup)="applyFilter($event)" 
+             placeholder="Rechercher un étudiant...">
+      <button class="btn-filter" (click)="toggleFilters()">
+        {{ showFilters ? 'Masquer les filtres' : 'Afficher les filtres' }}
+      </button>
+    </div>
+
+    <div class="advanced-filters" *ngIf="showFilters">
+      <div class="filter-group">
+        <label>Prénom</label>
+        <input type="text" 
+               [(ngModel)]="filters.firstName" 
+               (input)="applyFilters()"
+               placeholder="Filtrer par prénom">
+      </div>
+      <div class="filter-group">
+        <label>Nom</label>
+        <input type="text" 
+               [(ngModel)]="filters.lastName" 
+               (input)="applyFilters()"
+               placeholder="Filtrer par nom">
+      </div>
+      <div class="filter-group">
+        <label>Email</label>
+        <input type="text" 
+               [(ngModel)]="filters.email" 
+               (input)="applyFilters()"
+               placeholder="Filtrer par email">
+      </div>
+      <button class="btn-clear" (click)="clearFilters()">
+        Effacer les filtres
+      </button>
+    </div>
+
+    <div class="search-history" *ngIf="searchHistory.length > 0">
+      <h4>Historique des recherches</h4>
+      <div class="history-chips">
+        <span class="history-chip" *ngFor="let term of searchHistory">
+          {{term}}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-section">
+    <button class="btn-primary" (click)="exportToCsv()">
+      Exporter en CSV
+    </button>
+    <button class="btn-primary" (click)="exportToExcel()">
+      Exporter en Excel
+    </button>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th (click)="sortData('id')" [class.active]="sortColumn === 'id'">
+            ID
+            <span class="sort-indicator" *ngIf="sortColumn === 'id'">
+              {{sortDirection === 'asc' ? '▲' : '▼'}}
+            </span>
+          </th>
+          <th (click)="sortData('firstName')" [class.active]="sortColumn === 'firstName'">
+            Prénom
+            <span class="sort-indicator" *ngIf="sortColumn === 'firstName'">
+              {{sortDirection === 'asc' ? '▲' : '▼'}}
+            </span>
+          </th>
+          <th (click)="sortData('lastName')" [class.active]="sortColumn === 'lastName'">
+            Nom
+            <span class="sort-indicator" *ngIf="sortColumn === 'lastName'">
+              {{sortDirection === 'asc' ? '▲' : '▼'}}
+            </span>
+          </th>
+          <th (click)="sortData('email')" [class.active]="sortColumn === 'email'">
+            Email
+            <span class="sort-indicator" *ngIf="sortColumn === 'email'">
+              {{sortDirection === 'asc' ? '▲' : '▼'}}
+            </span>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of paginatedStudents">
+          <td>{{student.id}}</td>
+          <td>{{student.firstName}}</td>
+          <td>{{student.lastName}}</td>
+          <td>{{student.email}}</td>
+          <td class="actions">
+            <button class="btn-icon" title="Voir">👁️</button>
+            <button class="btn-icon" title="Éditer">✏️</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredStudents.length === 0">
+          <td colspan="5" class="no-data">Aucun étudiant trouvé</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button 
+      [disabled]="currentPage === 1"
+      (click)="changePage(currentPage - 1)"
+      class="btn-page">
+      ◀
+    </button>
+    <span class="page-info">
+      Page {{currentPage}} sur {{totalPages}}
+    </span>
+    <button 
+      [disabled]="currentPage === totalPages"
+      (click)="changePage(currentPage + 1)"
+      class="btn-page">
+      ▶
+    </button>
+  </div>
+</div> 
