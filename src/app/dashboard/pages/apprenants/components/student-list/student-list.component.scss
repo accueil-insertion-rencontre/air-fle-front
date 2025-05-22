@@ -1,0 +1,168 @@
+.student-list-container {
+  padding: 2rem;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0;
+    color: #212529;
+  }
+
+  .btn-add {
+    padding: 0.75rem 1.5rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #218838;
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      color: #495057;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        background-color: #e9ecef;
+      }
+
+      .sort-icon {
+        margin-left: 0.5rem;
+        color: #6c757d;
+      }
+    }
+
+    td {
+      color: #212529;
+
+      &.actions {
+        display: flex;
+        gap: 0.5rem;
+
+        button {
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-size: 0.875rem;
+
+          &.btn-view {
+            background-color: #17a2b8;
+            color: white;
+
+            &:hover {
+              background-color: #138496;
+            }
+          }
+
+          &.btn-edit {
+            background-color: #ffc107;
+            color: #212529;
+
+            &:hover {
+              background-color: #e0a800;
+            }
+          }
+
+          &.btn-delete {
+            background-color: #dc3545;
+            color: white;
+
+            &:hover {
+              background-color: #c82333;
+            }
+          }
+        }
+      }
+    }
+
+    .level-badge, .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 16px;
+      font-size: 0.875rem;
+    }
+
+    .level-badge {
+      &[data-level="A1"] { background-color: #cce5ff; color: #004085; }
+      &[data-level="A2"] { background-color: #d4edda; color: #155724; }
+      &[data-level="B1"] { background-color: #fff3cd; color: #856404; }
+      &[data-level="B2"] { background-color: #f8d7da; color: #721c24; }
+      &[data-level="C1"] { background-color: #e2e3e5; color: #383d41; }
+      &[data-level="C2"] { background-color: #d6d8d9; color: #1b1e21; }
+    }
+
+    .status-badge {
+      &[data-status="ACTIVE"] { background-color: #28a745; color: white; }
+      &[data-status="INACTIVE"] { background-color: #dc3545; color: white; }
+      &[data-status="PENDING"] { background-color: #ffc107; color: #212529; }
+    }
+
+    .no-data {
+      text-align: center;
+      color: #6c757d;
+      padding: 2rem;
+    }
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+
+  .btn-page {
+    padding: 0.5rem 1rem;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: #5a6268;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+
+  .page-info {
+    color: #6c757d;
+  }
+} 
