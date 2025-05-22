@@ -69,7 +69,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
         });
       }
     } catch (error) {
-      console.error('Erreur lors du remplacement des icônes:', error);
+      // Gestion silencieuse de l'erreur
     }
   }
 } 
