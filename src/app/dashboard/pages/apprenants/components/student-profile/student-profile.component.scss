@@ -1,0 +1,211 @@
+.profile-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .btn-back {
+      padding: 0.5rem 1rem;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+
+      &:hover {
+        background-color: #5a6268;
+      }
+    }
+
+    h2 {
+      margin: 0;
+      color: #212529;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.btn-edit {
+        background-color: #ffc107;
+        color: #212529;
+
+        &:hover {
+          background-color: #e0a800;
+        }
+      }
+
+      &.btn-delete {
+        background-color: #dc3545;
+        color: white;
+
+        &:hover {
+          background-color: #c82333;
+        }
+      }
+    }
+  }
+}
+
+.profile-section {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+
+  h3 {
+    color: #495057;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+
+    .info-item {
+      label {
+        display: block;
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        margin: 0;
+        color: #212529;
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+.level-badge, .status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+}
+
+.level-badge {
+  &[data-level="A1"] { background-color: #cce5ff; color: #004085; }
+  &[data-level="A2"] { background-color: #d4edda; color: #155724; }
+  &[data-level="B1"] { background-color: #fff3cd; color: #856404; }
+  &[data-level="B2"] { background-color: #f8d7da; color: #721c24; }
+  &[data-level="C1"] { background-color: #e2e3e5; color: #383d41; }
+  &[data-level="C2"] { background-color: #d6d8d9; color: #1b1e21; }
+}
+
+.status-badge {
+  &[data-status="ACTIVE"] { background-color: #28a745; color: white; }
+  &[data-status="INACTIVE"] { background-color: #dc3545; color: white; }
+  &[data-status="PENDING"] { background-color: #ffc107; color: #212529; }
+}
+
+.history-timeline {
+  .timeline-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-left: 2px solid #dee2e6;
+    padding-left: 1.5rem;
+    position: relative;
+
+    &:before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 1.5rem;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #6c757d;
+    }
+
+    &:last-child {
+      border-left: none;
+    }
+
+    .timeline-date {
+      min-width: 100px;
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+
+    .timeline-content {
+      flex: 1;
+
+      .timeline-field {
+        color: #212529;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+        text-transform: capitalize;
+      }
+
+      .timeline-change {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 0.5rem 0;
+
+        .old-value {
+          color: #dc3545;
+          text-decoration: line-through;
+        }
+
+        .arrow {
+          color: #6c757d;
+        }
+
+        .new-value {
+          color: #28a745;
+        }
+      }
+
+      .timeline-comment {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin: 0;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+.no-history, .no-progression {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+.progression-info {
+  p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+} 
