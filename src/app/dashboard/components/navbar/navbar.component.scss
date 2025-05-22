@@ -34,9 +34,9 @@ $small-screen-breakpoint: 480px;
   align-items: center;
   justify-content: space-between;
   padding: 10px $spacing;
-  background-color: white;
-  border-radius: $border-radius;
-  box-shadow: $dropdown-shadow;
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
   
   .navbar-left, .navbar-right {
     display: flex;
