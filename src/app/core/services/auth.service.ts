@@ -33,9 +33,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {
-    // Aucun log ici
-  }
+  ) {}
 
   login(email: string, password: string): Observable<any> {
     const url = `${this.apiUrl}/auth/login`;
@@ -58,7 +56,7 @@ export class AuthService {
               }
             }
           } catch (error) {
-            // Gérer silencieusement l'erreur
+            // Gestion silencieuse des erreurs
           }
         })
       );
@@ -109,6 +107,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+    // Utiliser directement 'access_token' au lieu de this.ACCESS_TOKEN_KEY
+    return localStorage.getItem('access_token');
   }
 } 
