@@ -45,7 +45,6 @@ export class NavbarComponent {
   }
   
   logout(): void {
-    console.log('Déconnexion initiée depuis le composant navbar');
     this.closeUserMenu();
     this.authService.logout();
   }
