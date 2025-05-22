@@ -1,0 +1,130 @@
+<div class="profile-container" *ngIf="student">
+  <div class="profile-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="goBack()">
+        ← Retour
+      </button>
+      <h2>Profil de {{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</h2>
+    </div>
+    <div class="header-actions">
+      <button class="btn-edit" (click)="editStudent()">
+        Modifier
+      </button>
+      <button class="btn-delete" (click)="deleteStudent()">
+        Supprimer
+      </button>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-section">
+      <h3>Informations personnelles</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nom complet</label>
+          <p>{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</p>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <p>{{ student.personalInfo.email }}</p>
+        </div>
+        <div class="info-item">
+          <label>Téléphone</label>
+          <p>{{ student.personalInfo.phone || 'Non renseigné' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Date de naissance</label>
+          <p>{{ student.personalInfo.birthDate | date:'dd/MM/yyyy' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>Adresse</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Rue</label>
+          <p>{{ student.address.street || 'Non renseigné' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Ville</label>
+          <p>{{ student.address.city || 'Non renseigné' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Code postal</label>
+          <p>{{ student.address.zipCode || 'Non renseigné' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Pays</label>
+          <p>{{ student.address.country || 'Non renseigné' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>Informations académiques</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nationalité</label>
+          <p>{{ student.nationality.name }}</p>
+        </div>
+        <div class="info-item">
+          <label>Niveau</label>
+          <p>
+            <span class="level-badge" [attr.data-level]="student.level.code">
+              {{ student.level.name }}
+            </span>
+          </p>
+        </div>
+        <div class="info-item">
+          <label>Statut</label>
+          <p>
+            <span class="status-badge" [attr.data-status]="student.status.code">
+              {{ student.status.name }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>Historique des changements</h3>
+      <div class="history-timeline" *ngIf="student.statusHistory.length > 0">
+        <div class="timeline-item" *ngFor="let entry of student.statusHistory">
+          <div class="timeline-date">
+            {{ entry.date | date:'dd/MM/yyyy' }}
+          </div>
+          <div class="timeline-content">
+            <p class="timeline-field">{{ entry.field }}</p>
+            <p class="timeline-change">
+              <span class="old-value">{{ entry.oldValue }}</span>
+              <span class="arrow">→</span>
+              <span class="new-value">{{ entry.newValue }}</span>
+            </p>
+            <p class="timeline-comment" *ngIf="entry.comment">
+              {{ entry.comment }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <p class="no-history" *ngIf="student.statusHistory.length === 0">
+        Aucun changement enregistré
+      </p>
+    </div>
+
+    <div class="profile-section">
+      <h3>Progression</h3>
+      <div class="progression-info" *ngIf="nextLevel">
+        <p>
+          Prochain niveau possible : 
+          <span class="level-badge" [attr.data-level]="nextLevel.code">
+            {{ nextLevel.name }}
+          </span>
+        </p>
+      </div>
+      <p class="no-progression" *ngIf="!nextLevel">
+        Niveau maximum atteint
+      </p>
+    </div>
+  </div>
+</div> 
