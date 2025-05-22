@@ -14,7 +14,7 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'apprenants',
-        loadComponent: () => import('./pages/apprenants/student-list/student-list.component').then(m => m.StudentListComponent)
+        loadChildren: () => import('./pages/apprenants/apprenants.module').then(m => m.ApprenantsModule)
       },
       {
         path: 'users',
