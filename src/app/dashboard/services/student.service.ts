@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Student {
   id: number;
@@ -24,11 +25,9 @@ export class StudentService {
   }
 
   getStudentCount(): Observable<number> {
-    return new Observable(observer => {
-      this.getStudents().subscribe(students => {
-        observer.next(students.length);
-      });
-    });
+    return this.studentsSubject.pipe(
+      map(students => students.length)
+    );
   }
 
   addStudent(student: Student): void {
