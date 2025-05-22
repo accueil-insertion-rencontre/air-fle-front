@@ -2,7 +2,7 @@ import { Component, AfterViewInit, OnInit, NgZone, OnDestroy } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { StudentService } from '../../services/student.service';
+import { StudentService } from '../apprenants/services/student.service';
 import { Subscription } from 'rxjs';
 
 declare var feather: any;
