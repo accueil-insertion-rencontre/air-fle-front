@@ -1,0 +1,85 @@
+<div class="profile-container">
+  <!-- Bannière bleue avec bouton retour -->
+  <div class="banner">
+    <button class="back-button" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Retour
+    </button>
+  </div>
+
+  <!-- Carte transparente avec avatar et nom -->
+  <div class="user-card" *ngIf="user">
+    <div class="user-info">
+      <div class="avatar">{{ getInitials(user.firstname, user.lastname) }}</div>
+      <div class="name-container">
+        <h2>{{ user.firstname }} {{ user.lastname }}</h2>
+        <p>{{ user.email }}</p>
+        <span class="status-badge" [ngClass]="user.isActive ? 'active' : 'inactive'">
+          {{ user.isActive ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte d'informations détaillées -->
+  <div class="info-card" *ngIf="user">
+    <h3>Informations</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="label">Prénom:</span>
+        <span class="value">{{ user.firstname || 'Non renseigné' }}</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Nom:</span>
+        <span class="value">{{ user.lastname || 'Non renseigné' }}</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Numéro de téléphone:</span>
+        <span class="value">{{ user.phone || 'Non renseigné' }}</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Email:</span>
+        <span class="value">{{ user.email }}</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Date de naissance:</span>
+        <span class="value">{{ user.birthdate ? (user.birthdate | date:'dd/MM/yyyy') : 'Non renseignée' }}</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Age:</span>
+        <span class="value">{{ user.age || 'Non renseigné' }} ans</span>
+      </div>
+      
+      <div class="info-item">
+        <span class="label">Rôle:</span>
+        <span class="value">{{ user.role?.rolename || 'Non renseigné' }}</span>
+      </div>
+      
+      <div class="info-item status-switch-item">
+        <span class="label">Statut:</span>
+        <div class="switch-container">
+          <label class="switch">
+            <input type="checkbox" [checked]="user.isActive" disabled>
+            <span class="slider round"></span>
+          </label>
+          <span class="switch-text" [ngClass]="user.isActive ? 'active-text' : 'inactive-text'">
+            {{ user.isActive ? 'Compte actif' : 'Compte inactif' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="loading">
+    Chargement...
+  </div>
+</div>
