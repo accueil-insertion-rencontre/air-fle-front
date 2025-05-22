@@ -26,15 +26,7 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'users',
-        component: PagePlaceholderComponent,
-        data: { 
-          title: 'Utilisateurs',
-          features: [
-            'Gestion des comptes utilisateurs',
-            'Attribution des rôles et permissions',
-            'Historique des activités'
-          ]
-        }
+        loadChildren: () => import('../users/users.module').then(m => m.UsersModule)
       },
       {
         path: 'periodes',
