@@ -1,0 +1,158 @@
+<div class="form-container">
+  <!-- État de chargement -->
+  <div class="loading-state" *ngIf="isLoading">
+    Chargement en cours...
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Formulaire -->
+  <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <div class="form-header">
+  <h2>{{ isEditMode ? 'Modifier' : 'Ajouter' }} un apprenant</h2>
+    </div>
+
+    <div class="form-section">
+      <h3>Informations personnelles</h3>
+      <div class="form-grid">
+      <div class="form-group">
+        <label for="firstName">Prénom</label>
+          <input id="firstName" type="text" formControlName="firstName" [class.invalid]="isFieldInvalid('firstName')">
+          <div class="error-hint" *ngIf="isFieldInvalid('firstName')">
+          Le prénom est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Nom</label>
+          <input id="lastName" type="text" formControlName="lastName" [class.invalid]="isFieldInvalid('lastName')">
+          <div class="error-hint" *ngIf="isFieldInvalid('lastName')">
+          Le nom est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" [class.invalid]="isFieldInvalid('email')">
+          <div class="error-hint" *ngIf="isFieldInvalid('email')">
+          Un email valide est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="birthDate">Date de naissance</label>
+          <input id="birthDate" type="date" formControlName="birthDate" [class.invalid]="isFieldInvalid('birthDate')">
+          <div class="error-hint" *ngIf="isFieldInvalid('birthDate')">
+          La date de naissance est requise
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Téléphone</label>
+          <input id="phone" type="tel" formControlName="phone" [class.invalid]="isFieldInvalid('phone')">
+          <div class="error-hint" *ngIf="isFieldInvalid('phone')">
+          Un numéro de téléphone valide est requis
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Adresse</h3>
+      <div class="form-grid">
+      <div class="form-group">
+        <label for="street">Rue</label>
+          <input id="street" type="text" formControlName="street" [class.invalid]="isFieldInvalid('street')">
+          <div class="error-hint" *ngIf="isFieldInvalid('street')">
+          La rue est requise
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="city">Ville</label>
+          <input id="city" type="text" formControlName="city" [class.invalid]="isFieldInvalid('city')">
+          <div class="error-hint" *ngIf="isFieldInvalid('city')">
+          La ville est requise
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="zipCode">Code postal</label>
+          <input id="zipCode" type="text" formControlName="zipCode" [class.invalid]="isFieldInvalid('zipCode')">
+          <div class="error-hint" *ngIf="isFieldInvalid('zipCode')">
+            Le code postal est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="country">Pays</label>
+          <select id="country" formControlName="country" [class.invalid]="isFieldInvalid('country')">
+          <option value="">Sélectionnez un pays</option>
+            <option *ngFor="let country of countries" [value]="country.code">
+            {{ country.name }}
+          </option>
+        </select>
+          <div class="error-hint" *ngIf="isFieldInvalid('country')">
+          Le pays est requis
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Informations académiques</h3>
+      <div class="form-grid">
+      <div class="form-group">
+        <label for="nationality">Nationalité</label>
+          <select id="nationality" formControlName="nationality" [class.invalid]="isFieldInvalid('nationality')">
+          <option value="">Sélectionnez une nationalité</option>
+            <option *ngFor="let nationality of nationalities" [value]="nationality.code">
+              {{ nationality.name }}
+          </option>
+        </select>
+          <div class="error-hint" *ngIf="isFieldInvalid('nationality')">
+          La nationalité est requise
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="level">Niveau</label>
+          <select id="level" formControlName="level" [class.invalid]="isFieldInvalid('level')">
+          <option value="">Sélectionnez un niveau</option>
+            <option *ngFor="let level of levels" [value]="level.code">
+              {{ level.name }}
+          </option>
+        </select>
+          <div class="error-hint" *ngIf="isFieldInvalid('level')">
+          Le niveau est requis
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Statut</label>
+          <select id="status" formControlName="status" [class.invalid]="isFieldInvalid('status')">
+          <option value="">Sélectionnez un statut</option>
+            <option *ngFor="let status of statuses" [value]="status.code">
+              {{ status.name }}
+          </option>
+        </select>
+          <div class="error-hint" *ngIf="isFieldInvalid('status')">
+          Le statut est requis
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSubmitting">
+        Annuler
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="!studentForm.valid || isSubmitting">
+        {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Mettre à jour' : 'Créer') }}
+      </button>
+    </div>
+  </form>
+</div>
