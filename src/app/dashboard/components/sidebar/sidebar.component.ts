@@ -12,6 +12,7 @@ interface MenuItem {
   route: string;
   active: boolean;
   section?: string;
+  requiredRole?: string; // Rôle requis pour voir cet élément de menu
 }
 
 @Component({
@@ -28,7 +29,7 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
   private routerSubscription: Subscription | null = null;
   private pendingIconReplacement = false;
   
-  menuItems: MenuItem[] = [
+  allMenuItems: MenuItem[] = [
     { 
       label: 'Dashboard', 
       icon: 'home', 
@@ -39,7 +40,8 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
       label: 'Utilisateurs', 
       icon: 'users', 
       route: '/dashboard/users', 
-      active: false 
+      active: false,
+      requiredRole: 'admin' // Seuls les administrateurs peuvent voir cet élément
     },
     { 
       label: 'Menus Déroulants', 
@@ -85,6 +87,10 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
       active: false 
     }
   ];
+  
+  // Éléments de menu filtrés en fonction du rôle de l'utilisateur
+  menuItems: MenuItem[] = [];
+  userRole: string = '';
 
   constructor(
     private router: Router, 
@@ -93,6 +99,12 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
+    // Récupérer le rôle de l'utilisateur depuis le token JWT
+    this.getUserRole();
+    
+    // Filtrer les éléments de menu en fonction du rôle
+    this.filterMenuItems();
+    
     // Initialiser la route active au chargement initial
     this.handleRouteChange(this.router.url);
     
@@ -117,6 +129,32 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
       this.initFeatherIcons();
       this.pendingIconReplacement = false;
     }
+  }
+  
+  // Récupérer le rôle de l'utilisateur depuis le token JWT
+  getUserRole(): void {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.userRole = payload.role;
+      } catch (error) {
+        // Gestion silencieuse de l'erreur
+      }
+    }
+  }
+  
+  // Filtrer les éléments de menu en fonction du rôle de l'utilisateur
+  filterMenuItems(): void {
+    this.menuItems = this.allMenuItems.filter(item => {
+      // Si l'élément n'a pas de rôle requis, le montrer à tous les utilisateurs
+      if (!item.requiredRole) {
+        return true;
+      }
+      
+      // Sinon, vérifier si l'utilisateur a le rôle requis
+      return this.userRole === item.requiredRole;
+    });
   }
   
   // Gestion de changement de route
@@ -152,7 +190,7 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
         });
       }
     } catch (error) {
-      console.error('Erreur lors du remplacement des icônes Feather:', error);
+      // Gestion silencieuse de l'erreur
     }
   }
   
