@@ -53,7 +53,7 @@
       
       <!-- Menu déroulant utilisateur -->
       <div class="user-dropdown" *ngIf="showUserMenu">
-        <div class="dropdown-item" routerLink="/dashboard/profile">
+        <div class="dropdown-item" [routerLink]="'/dashboard/users/profile/' + currentUserId">
           <i class="profile-icon"></i>
           <span>Mon profil</span>
         </div>
