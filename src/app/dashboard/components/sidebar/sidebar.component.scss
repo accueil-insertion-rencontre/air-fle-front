@@ -5,13 +5,13 @@
 }
 
 // Variables
-$sidebar-bg: #f5f7fa;
+$sidebar-bg: #f5f7fa; // Retour au fond clair pour la sidebar
 $sidebar-width: 250px;
 $sidebar-collapsed-width: 80px;
 $menu-active-color: #4fd1c5;
-$menu-text-color: #2d3748;
-$menu-hover-bg: #e7f0ff;
-$border-color: rgba(0, 0, 0, 0.05);
+$menu-text-color: #2d3748; // Texte foncé pour la sidebar claire
+$menu-hover-bg: #e7f0ff; // Fond de survol adapté au thème clair
+$border-color: rgba(0, 0, 0, 0.05); // Bordure plus foncée
 $border-radius: 12px;
 $spacing: 20px;
 $mobile-breakpoint: 768px;
@@ -137,7 +137,7 @@ $primary-color: #4fd1c5; // Couleur turquoise/menthe
     
     .menu-section {
       padding: 20px 15px 10px 15px;
-      color: #2d3748;
+      color: #6b7280;
       font-size: 13px;
       font-weight: 600;
       @include transition(opacity, width);

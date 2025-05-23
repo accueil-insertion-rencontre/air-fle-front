@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -16,7 +16,7 @@ interface BreadcrumbItem {
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   @Input() userName: string = '';
   @Input() pageTitle: string = 'Index';
   @Input() breadcrumbs: BreadcrumbItem[] = [
@@ -29,8 +29,18 @@ export class NavbarComponent {
   @Output() openReleaseNotes = new EventEmitter<void>();
   
   showUserMenu: boolean = false;
+  currentUserId: string = '';
   
   constructor(private authService: AuthService) {}
+  
+  ngOnInit(): void {
+    // Obtenir l'ID de l'utilisateur connecté
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.id) {
+        this.currentUserId = user.id;
+      }
+    });
+  }
   
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
@@ -45,7 +55,6 @@ export class NavbarComponent {
   }
   
   logout(): void {
-    console.log('Déconnexion initiée depuis le composant navbar');
     this.closeUserMenu();
     this.authService.logout();
   }
