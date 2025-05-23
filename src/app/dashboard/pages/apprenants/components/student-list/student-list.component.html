@@ -1,0 +1,106 @@
+<div class="student-list-container">
+  <div class="list-header">
+    <h2>Liste des Apprenants</h2>
+    <button class="btn-add" routerLink="new">
+      Ajouter un apprenant
+    </button>
+  </div>
+
+  <app-student-search
+    (search)="onSearch($event)"
+    (filtersChange)="onFiltersChange($event)"
+  ></app-student-search>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th (click)="sort('personalInfo.lastName')">
+            Nom
+            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.lastName'">
+              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sort('personalInfo.firstName')">
+            Prénom
+            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.firstName'">
+              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sort('personalInfo.email')">
+            Email
+            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.email'">
+              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sort('level.code')">
+            Niveau
+            <span class="sort-icon" *ngIf="sortConfig.field === 'level.code'">
+              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sort('status.code')">
+            Statut
+            <span class="sort-icon" *ngIf="sortConfig.field === 'status.code'">
+              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of students">
+          <td>{{ student.personalInfo.lastName }}</td>
+          <td>{{ student.personalInfo.firstName }}</td>
+          <td>{{ student.personalInfo.email }}</td>
+          <td>
+            <span class="level-badge" [attr.data-level]="student.level.code">
+              {{ student.level.name }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [attr.data-status]="student.status.code">
+              {{ student.status.name }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-view" [routerLink]="['/dashboard/apprenants', student.id, 'view']">
+              Voir
+            </button>
+            <button class="btn-edit" [routerLink]="['/dashboard/apprenants', student.id, 'edit']">
+              Modifier
+            </button>
+            <button class="btn-delete" (click)="deleteStudent(student.id)">
+              Supprimer
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="students.length === 0">
+          <td colspan="6" class="no-data">
+            Aucun apprenant trouvé
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === 1"
+      (click)="changePage(currentPage - 1)"
+    >
+      Précédent
+    </button>
+    <span class="page-info">
+      Page {{ currentPage }} sur {{ totalPages }}
+    </span>
+    <button 
+      class="btn-page" 
+      [disabled]="currentPage === totalPages"
+      (click)="changePage(currentPage + 1)"
+    >
+      Suivant
+    </button>
+  </div>
+</div> 

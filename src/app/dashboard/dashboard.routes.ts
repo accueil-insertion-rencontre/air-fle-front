@@ -14,15 +14,7 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'apprenants',
-        component: PagePlaceholderComponent,
-        data: { 
-          title: 'Apprenants',
-          features: [
-            'Gestion des données des apprenants',
-            'Suivi des parcours de formation',
-            'Gestion des inscriptions'
-          ]
-        }
+        loadChildren: () => import('./pages/apprenants/apprenants.module').then(m => m.ApprenantsModule)
       },
       {
         path: 'users',

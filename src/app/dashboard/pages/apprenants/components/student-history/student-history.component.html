@@ -1,0 +1,26 @@
+<div class="history-container">
+  <h3>Historique des changements</h3>
+  
+  <div class="history-timeline" *ngIf="history.length > 0">
+    <div class="timeline-item" *ngFor="let entry of sortedHistory()">
+      <div class="timeline-date">
+        {{ entry.date | date:'dd/MM/yyyy' }}
+      </div>
+      <div class="timeline-content">
+        <p class="timeline-field">{{ entry.field }}</p>
+        <p class="timeline-change">
+          <span class="old-value">{{ entry.oldValue }}</span>
+          <span class="arrow">→</span>
+          <span class="new-value">{{ entry.newValue }}</span>
+        </p>
+        <p class="timeline-comment" *ngIf="entry.comment">
+          {{ entry.comment }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <p class="no-history" *ngIf="history.length === 0">
+    Aucun changement enregistré
+  </p>
+</div> 

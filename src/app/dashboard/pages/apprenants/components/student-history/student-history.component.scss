@@ -1,0 +1,88 @@
+.history-container {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 4px;
+
+  h3 {
+    color: #495057;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+  }
+}
+
+.history-timeline {
+  .timeline-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-left: 2px solid #dee2e6;
+    padding-left: 1.5rem;
+    position: relative;
+
+    &:before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 1.5rem;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #6c757d;
+    }
+
+    &:last-child {
+      border-left: none;
+    }
+
+    .timeline-date {
+      min-width: 100px;
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+
+    .timeline-content {
+      flex: 1;
+
+      .timeline-field {
+        color: #212529;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+        text-transform: capitalize;
+      }
+
+      .timeline-change {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 0.5rem 0;
+
+        .old-value {
+          color: #dc3545;
+          text-decoration: line-through;
+        }
+
+        .arrow {
+          color: #6c757d;
+        }
+
+        .new-value {
+          color: #28a745;
+        }
+      }
+
+      .timeline-comment {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin: 0;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+.no-history {
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+} 
