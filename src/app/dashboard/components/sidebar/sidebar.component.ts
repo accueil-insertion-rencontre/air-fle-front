@@ -83,6 +83,25 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
       icon: 'trending-up', 
       route: '/dashboard/parcours', 
       active: false 
+    },
+    { 
+      label: 'Groupes', 
+      icon: 'users', 
+      route: '/dashboard/groups', 
+      active: false,
+      section: 'Formation'
+    },
+    { 
+      label: 'Sessions', 
+      icon: 'calendar', 
+      route: '/dashboard/sessions', 
+      active: false 
+    },
+    { 
+      label: 'Cours', 
+      icon: 'book-open', 
+      route: '/dashboard/courses', 
+      active: false 
     }
   ];
 
