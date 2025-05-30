@@ -13,6 +13,54 @@ export const DASHBOARD_ROUTES: Routes = [
         component: HomeComponent
       },
       {
+        path: 'groups',
+        loadComponent: () => import('./pages/groups/list/group-list.component').then(c => c.GroupListComponent)
+      },
+      {
+        path: 'groups/create',
+        loadComponent: () => import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent)
+      },
+      {
+        path: 'groups/edit/:id',
+        loadComponent: () => import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent)
+      },
+      {
+        path: 'groups/:id',
+        loadComponent: () => import('./pages/groups/details/group-details.component').then(c => c.GroupDetailsComponent)
+      },
+      {
+        path: 'sessions',
+        loadComponent: () => import('./pages/sessions/list/session-list.component').then(c => c.SessionListComponent)
+      },
+      {
+        path: 'sessions/create',
+        loadComponent: () => import('./pages/sessions/create/session-create.component').then(c => c.SessionCreateComponent)
+      },
+      {
+        path: 'sessions/edit/:id',
+        loadComponent: () => import('./pages/sessions/create/session-create.component').then(c => c.SessionCreateComponent)
+      },
+      {
+        path: 'sessions/:id',
+        loadComponent: () => import('./pages/sessions/details/session-details.component').then(c => c.SessionDetailsComponent)
+      },
+      {
+        path: 'courses',
+        loadComponent: () => import('./pages/courses/calendar/course-calendar.component').then(c => c.CourseCalendarComponent)
+      },
+      {
+        path: 'courses/create',
+        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+      },
+      {
+        path: 'courses/edit/:id',
+        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+      },
+      {
+        path: 'courses/:id',
+        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+      },
+      {
         path: 'apprenants',
         component: PagePlaceholderComponent,
         data: { 
