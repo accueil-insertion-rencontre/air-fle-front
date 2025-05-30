@@ -155,6 +155,74 @@ export class DashboardComponent implements OnInit, OnDestroy {
         { label: 'Général', path: '/dashboard' },
         { label: 'Suivi de parcours', active: true }
       ];
+    } 
+    // Nouvelles routes
+    else if (url.includes('/groups')) {
+      if (url.includes('/create')) {
+        this.pageTitle = 'Création de groupe';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Groupes', path: '/dashboard/groups' },
+          { label: 'Nouveau groupe', active: true }
+        ];
+      } else if (url.includes('/edit')) {
+        this.pageTitle = 'Édition de groupe';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Groupes', path: '/dashboard/groups' },
+          { label: 'Modifier groupe', active: true }
+        ];
+      } else {
+        this.pageTitle = 'Groupes';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Groupes', active: true }
+        ];
+      }
+    } else if (url.includes('/sessions')) {
+      if (url.includes('/create')) {
+        this.pageTitle = 'Création de session';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Sessions', path: '/dashboard/sessions' },
+          { label: 'Nouvelle session', active: true }
+        ];
+      } else if (url.match(/\/sessions\/\d+/)) { // Match /sessions/{id} pattern
+        this.pageTitle = 'Détails de session';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Sessions', path: '/dashboard/sessions' },
+          { label: 'Détails', active: true }
+        ];
+      } else {
+        this.pageTitle = 'Sessions';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Sessions', active: true }
+        ];
+      }
+    } else if (url.includes('/courses')) {
+      if (url.includes('/create')) {
+        this.pageTitle = 'Création de cours';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Cours', path: '/dashboard/courses' },
+          { label: 'Nouveau cours', active: true }
+        ];
+      } else if (url.includes('/edit')) {
+        this.pageTitle = 'Édition de cours';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Cours', path: '/dashboard/courses' },
+          { label: 'Modifier cours', active: true }
+        ];
+      } else {
+        this.pageTitle = 'Cours';
+        this.breadcrumbs = [
+          { label: 'Général', path: '/dashboard' },
+          { label: 'Cours', active: true }
+        ];
+      }
     } else {
       this.pageTitle = 'Dashboard';
       this.breadcrumbs = [
