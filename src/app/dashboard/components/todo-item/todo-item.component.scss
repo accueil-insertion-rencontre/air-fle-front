@@ -1,0 +1,353 @@
+// Variables cohérentes avec le LMS
+$primary-color: #4fd1c5;
+$text-color: #2d3748;
+$light-text: #718096;
+$border-radius: 12px;
+$card-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+$spacing: 20px;
+$border-color: #e2e8f0;
+$hover-bg: #f7fafc;
+$success-color: #38a169;
+$warning-color: #d69e2e;
+$pending-color: #718096;
+
+.todo-item {
+  background: white;
+  border-radius: $border-radius;
+  border: 1px solid $border-color;
+  margin-bottom: 12px;
+  box-shadow: $card-shadow;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+  }
+
+  // Styles pour les sous-tâches
+  &.subtask {
+    background: $hover-bg;
+    margin: 8px 0 8px 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    .task-content {
+      padding: 12px 16px;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-indicator {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.completed {
+    opacity: 0.7;
+    
+    .task-title {
+      text-decoration: line-through;
+      color: $light-text;
+    }
+  }
+
+  .task-content {
+    padding: $spacing;
+  }
+
+  .task-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  // Indicateur de statut simple
+  .status-indicator-wrapper {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid $border-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    transition: all 0.2s ease;
+
+    &.clickable {
+      cursor: pointer;
+      
+      &:hover {
+        border-color: $primary-color;
+        transform: scale(1.1);
+      }
+    }
+
+    &.completed {
+      background: $success-color;
+      border-color: $success-color;
+      
+      .inner-circle svg {
+        color: white;
+      }
+    }
+
+    &.pending {
+      border-color: $pending-color;
+    }
+
+    &.in-progress {
+      border-color: $warning-color;
+      background: $warning-color;
+
+      .inner-circle .spinner {
+        width: 8px;
+        height: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-top: 1px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  // Contenu de la tâche
+  .task-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .title-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-color;
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+  }
+
+  .task-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .priority-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #fed7d7;
+    color: #c53030;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    
+    &.pending {
+      background: #edf2f7;
+      color: $pending-color;
+    }
+
+    &.in-progress {
+      background: #fefcbf;
+      color: #975a16;
+    }
+
+    &.completed {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+  }
+
+  .task-description {
+    color: $light-text;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+  }
+
+  // Section de progression simple
+  .progress-section {
+    margin: 12px 0;
+    padding: 12px;
+    background: $hover-bg;
+    border-radius: 6px;
+    border: 1px solid $border-color;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-stats {
+    font-size: 13px;
+    color: $light-text;
+
+    .completed-count {
+      font-weight: 600;
+      color: $success-color;
+    }
+  }
+
+  .percentage {
+    font-size: 14px;
+    font-weight: 600;
+    color: $primary-color;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: $primary-color;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+
+    &.completed {
+      background: $success-color;
+    }
+  }
+
+  // Date d'échéance simple
+  .task-meta {
+    margin-top: 8px;
+  }
+
+  .due-date-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: $light-text;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+    }
+
+    .due-date.overdue {
+      color: #e53e3e;
+      font-weight: 500;
+    }
+  }
+
+  // Bouton d'expansion simple
+  .expand-controls {
+    flex-shrink: 0;
+  }
+
+  .expand-btn {
+    background: transparent;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $hover-bg;
+      border-color: $primary-color;
+    }
+
+    &.expanded svg {
+      transform: rotate(180deg);
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+      stroke: $light-text;
+      transition: transform 0.2s ease;
+    }
+  }
+
+  // Container des sous-tâches simple
+  .subtasks-container {
+    border-top: 1px solid $border-color;
+    background: #fafafa;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+
+    &.expanded {
+      max-height: 500px;
+    }
+  }
+
+  .subtasks-list {
+    padding: 12px $spacing 8px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .todo-item {
+    .task-content {
+      padding: 16px;
+    }
+
+    .task-main {
+      gap: 10px;
+    }
+
+    .task-title {
+      font-size: 15px;
+    }
+
+    .progress-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    &.subtask {
+      margin-left: 16px;
+      
+      .task-content {
+        padding: 12px;
+      }
+    }
+  }
+} 

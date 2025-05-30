@@ -69,6 +69,10 @@ export const DASHBOARD_ROUTES: Routes = [
         loadChildren: () => import('./pages/users/users.module').then(m => m.UsersModule)
       },
       {
+        path: 'reference-data',
+        loadChildren: () => import('./pages/reference-data/reference-data.routes').then(m => m.REFERENCE_DATA_ROUTES)
+      },
+      {
         path: 'periodes',
         component: PagePlaceholderComponent,
         data: { 

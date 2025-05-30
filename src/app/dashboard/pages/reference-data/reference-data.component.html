@@ -1,0 +1,43 @@
+<!-- En-tête (seulement sur la page principale) -->
+<div class="reference-data-header" *ngIf="!isChildRouteActive">
+  <h1>Gestion des Données de Référence</h1>
+  <p class="subtitle">Administrez les listes déroulantes utilisées dans l'application</p>
+</div>
+
+<!-- Liste des sections (seulement sur la page principale) -->
+<div class="reference-data-content" *ngIf="!isChildRouteActive">
+  <div class="sections-list">
+    <div class="sections-header">
+      <div class="column name">SECTION</div>
+      <div class="column description">DESCRIPTION</div>
+      <div class="column actions">ACTIONS</div>
+    </div>
+    
+    <div 
+      *ngFor="let config of referenceDataConfigs" 
+      class="section-item"
+    >
+      <div class="column name">
+        <div class="section-name">
+          <span class="section-icon">{{ config.icon }}</span>
+          {{ config.displayName }}
+        </div>
+      </div>
+      
+      <div class="column description">
+        <div class="section-description">
+          Gérer les {{ config.displayName.toLowerCase() }}
+        </div>
+      </div>
+      
+      <div class="column actions">
+        <button class="manage-btn" (click)="navigateToSection(config)">
+          Gérer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zone de contenu pour les routes enfants -->
+<router-outlet></router-outlet> 

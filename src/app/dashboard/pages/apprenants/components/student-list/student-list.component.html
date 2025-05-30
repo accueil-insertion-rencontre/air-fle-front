@@ -1,106 +1,154 @@
-<div class="student-list-container">
-  <div class="list-header">
-    <h2>Liste des Apprenants</h2>
-    <button class="btn-add" routerLink="new">
-      Ajouter un apprenant
+<div class="students-container">
+  <div class="students-actions">
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Créer un étudiant
     </button>
+    
+    <!-- Barre de recherche -->
+    <div class="search-container">
+      <input 
+        type="text" 
+        placeholder="Rechercher par nom ou prénom..." 
+        #searchInput
+        (keyup.enter)="onSearch(searchInput.value)"
+        class="search-input">
+      <button (click)="onSearch(searchInput.value)" class="search-btn">Rechercher</button>
+      <button (click)="clearFilters(); searchInput.value=''" class="clear-btn">Effacer</button>
+    </div>
+  </div>
+  
+  <!-- Informations sur les résultats -->
+  <div class="results-info" *ngIf="!loading">
+    <span>{{ getDisplayRange() }}</span>
+  </div>
+  
+  <div class="students-content">
+    <div class="students-list">
+      <div class="students-header">
+        <div class="column author">APPRENANT</div>
+        <div class="column level">NIVEAU</div>
+        <div class="column status">STATUT</div>
+        <div class="column nationality">NATIONALITÉ</div>
+        <div class="column actions"></div>
+      </div>
+      
+      <div class="student-item" *ngFor="let student of students">
+        <div class="column author">
+          <div class="student-avatar">
+            <div class="avatar-initials">{{ getStudentInitials(student) }}</div>
+          </div>
+          <div class="student-info">
+            <div class="student-name">
+              {{ getStudentName(student) }}
+            </div>
+            <div class="student-email">{{ getStudentEmail(student) }}</div>
+          </div>
+        </div>
+        
+        <div class="column level">
+          <div class="level-badge" [attr.data-level]="student.currentLevel?.code || student.level?.code">
+            {{ getStudentLevel(student) }}
+          </div>
+        </div>
+        
+        <div class="column status">
+          <div class="status-badge" [attr.data-status]="student.status?.code">
+            {{ getStudentStatus(student) }}
+          </div>
+        </div>
+        
+        <div class="column nationality">
+          <div class="nationality-name">{{ getStudentNationality(student) }}</div>
+        </div>
+        
+        <div class="column actions">
+          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.id, 'view']">Voir</button>
+        </div>
+      </div>
+      
+      <div *ngIf="loading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des apprenants...</span>
+      </div>
+      
+      <div *ngIf="!loading && students.length === 0" class="empty-state">
+        <p>Aucun apprenant trouvé</p>
+      </div>
+      
+      <div *ngIf="error" class="error-message">
+        <p>{{ error }}</p>
+        <button (click)="loadStudents()" class="retry-btn">Réessayer</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading && totalPages > 1">
+    <div class="pagination">
+      <!-- Bouton Précédent -->
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === 1"
+        (click)="previousPage()">
+        ‹ Précédent
+      </button>
+      
+      <!-- Numéros de page -->
+      <button 
+        *ngFor="let page of getPageNumbers()" 
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="changePage(page)">
+        {{ page }}
+      </button>
+      
+      <!-- Bouton Suivant -->
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === totalPages"
+        (click)="nextPage()">
+        Suivant ›
+      </button>
+    </div>
+    
+    <!-- Sélecteur de taille de page -->
+    <div class="page-size-selector">
+      <label>Éléments par page:</label>
+      <select [(ngModel)]="pageSize" (change)="currentPage = 1; loadStudents()" class="page-size-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
   </div>
 
-  <app-student-search
-    (search)="onSearch($event)"
-    (filtersChange)="onFiltersChange($event)"
-  ></app-student-search>
-
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th (click)="sort('personalInfo.lastName')">
-            Nom
-            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.lastName'">
-              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
-            </span>
-          </th>
-          <th (click)="sort('personalInfo.firstName')">
-            Prénom
-            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.firstName'">
-              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
-            </span>
-          </th>
-          <th (click)="sort('personalInfo.email')">
-            Email
-            <span class="sort-icon" *ngIf="sortConfig.field === 'personalInfo.email'">
-              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
-            </span>
-          </th>
-          <th (click)="sort('level.code')">
-            Niveau
-            <span class="sort-icon" *ngIf="sortConfig.field === 'level.code'">
-              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
-            </span>
-          </th>
-          <th (click)="sort('status.code')">
-            Statut
-            <span class="sort-icon" *ngIf="sortConfig.field === 'status.code'">
-              {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
-            </span>
-          </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let student of students">
-          <td>{{ student.personalInfo.lastName }}</td>
-          <td>{{ student.personalInfo.firstName }}</td>
-          <td>{{ student.personalInfo.email }}</td>
-          <td>
-            <span class="level-badge" [attr.data-level]="student.level.code">
-              {{ student.level.name }}
-            </span>
-          </td>
-          <td>
-            <span class="status-badge" [attr.data-status]="student.status.code">
-              {{ student.status.name }}
-            </span>
-          </td>
-          <td class="actions">
-            <button class="btn-view" [routerLink]="['/dashboard/apprenants', student.id, 'view']">
-              Voir
-            </button>
-            <button class="btn-edit" [routerLink]="['/dashboard/apprenants', student.id, 'edit']">
-              Modifier
-            </button>
-            <button class="btn-delete" (click)="deleteStudent(student.id)">
-              Supprimer
-            </button>
-          </td>
-        </tr>
-        <tr *ngIf="students.length === 0">
-          <td colspan="6" class="no-data">
-            Aucun apprenant trouvé
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="pagination">
-    <button 
-      class="btn-page" 
-      [disabled]="currentPage === 1"
-      (click)="changePage(currentPage - 1)"
-    >
-      Précédent
-    </button>
-    <span class="page-info">
-      Page {{ currentPage }} sur {{ totalPages }}
-    </span>
-    <button 
-      class="btn-page" 
-      [disabled]="currentPage === totalPages"
-      (click)="changePage(currentPage + 1)"
-    >
-      Suivant
-    </button>
+  <!-- Modal de choix de création -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Comment souhaitez-vous ajouter des étudiants ?</h2>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="option-cards">
+          <div class="option-card" (click)="createSingleStudent()">
+            <div class="option-icon">👤</div>
+            <h3>Créer un étudiant</h3>
+            <p>Ajouter un nouvel étudiant individuellement avec le formulaire complet</p>
+            <div class="option-badge individual">Individuel</div>
+          </div>
+          
+          <div class="option-card" (click)="importFromExcel()">
+            <div class="option-icon">📊</div>
+            <h3>Importer depuis Excel</h3>
+            <p>Ajouter plusieurs étudiants en une fois depuis un fichier Excel existant</p>
+            <div class="option-badge bulk">En masse</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div> 

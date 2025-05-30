@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { StudentListComponent } from './components/student-list/student-list.component';
 import { StudentFormComponent } from './components/student-form/student-form.component';
 import { StudentProfileComponent } from './components/student-profile/student-profile.component';
+import { StudentImportComponent } from './components/student-import/student-import.component';
 
 const routes: Routes = [
   {
@@ -12,6 +13,10 @@ const routes: Routes = [
   {
     path: 'new',
     component: StudentFormComponent
+  },
+  {
+    path: 'import',
+    component: StudentImportComponent
   },
   {
     path: ':id/view',

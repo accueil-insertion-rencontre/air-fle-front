@@ -1,130 +1,171 @@
-<div class="profile-container" *ngIf="student">
-  <div class="profile-header">
-    <div class="header-left">
-      <button class="btn-back" (click)="goBack()">
-        ← Retour
-      </button>
-      <h2>Profil de {{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</h2>
-    </div>
-    <div class="header-actions">
-      <button class="btn-edit" (click)="editStudent()">
+<div class="profile-container">
+  <!-- Bannière colorée selon le statut -->
+  <div class="banner" [ngClass]="{'inactive-banner': student && student.status.code === 'INACTIVE'}">
+  </div>
+
+  <!-- Boutons flottants -->
+  <div class="floating-buttons">
+    <button class="back-button" (click)="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Retour
+    </button>
+    
+    <div class="action-buttons">
+      <button *ngIf="student" class="edit-button" (click)="editStudent()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
         Modifier
       </button>
-      <button class="btn-delete" (click)="deleteStudent()">
+      
+      <button *ngIf="student" class="delete-button" (click)="deleteStudent()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
         Supprimer
       </button>
     </div>
   </div>
 
-  <div class="profile-content">
-    <div class="profile-section">
-      <h3>Informations personnelles</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <label>Nom complet</label>
-          <p>{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</p>
-        </div>
-        <div class="info-item">
-          <label>Email</label>
-          <p>{{ student.personalInfo.email }}</p>
-        </div>
-        <div class="info-item">
-          <label>Téléphone</label>
-          <p>{{ student.personalInfo.phone || 'Non renseigné' }}</p>
-        </div>
-        <div class="info-item">
-          <label>Date de naissance</label>
-          <p>{{ student.personalInfo.birthDate | date:'dd/MM/yyyy' }}</p>
-        </div>
+  <!-- État de chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement du profil...</p>
+  </div>
+
+  <!-- État d'erreur -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p>{{ error }}</p>
+    <button (click)="loadStudent()" class="retry-button">Réessayer</button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="student && !loading && !error">
+    <!-- Carte principale avec nom et email -->
+    <div class="main-student-card">
+      <div class="student-header">
+        <h1>{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</h1>
+        <p class="email">{{ student.personalInfo.email }}</p>
       </div>
     </div>
 
-    <div class="profile-section">
-      <h3>Adresse</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <label>Rue</label>
-          <p>{{ student.address.street || 'Non renseigné' }}</p>
-        </div>
-        <div class="info-item">
-          <label>Ville</label>
-          <p>{{ student.address.city || 'Non renseigné' }}</p>
-        </div>
-        <div class="info-item">
-          <label>Code postal</label>
-          <p>{{ student.address.zipCode || 'Non renseigné' }}</p>
-        </div>
-        <div class="info-item">
-          <label>Pays</label>
-          <p>{{ student.address.country || 'Non renseigné' }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="profile-section">
-      <h3>Informations académiques</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <label>Nationalité</label>
-          <p>{{ student.nationality.name }}</p>
-        </div>
-        <div class="info-item">
-          <label>Niveau</label>
-          <p>
-            <span class="level-badge" [attr.data-level]="student.level.code">
-              {{ student.level.name }}
-            </span>
-          </p>
-        </div>
-        <div class="info-item">
-          <label>Statut</label>
-          <p>
-            <span class="status-badge" [attr.data-status]="student.status.code">
-              {{ student.status.name }}
-            </span>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="profile-section">
-      <h3>Historique des changements</h3>
-      <div class="history-timeline" *ngIf="student.statusHistory.length > 0">
-        <div class="timeline-item" *ngFor="let entry of student.statusHistory">
-          <div class="timeline-date">
-            {{ entry.date | date:'dd/MM/yyyy' }}
+    <!-- Contenu principal en 4 colonnes -->
+    <div class="content-grid">
+      
+      <!-- Colonne 1: Profil Information -->
+      <div class="profile-section">
+        <h3>Profil Information</h3>
+        <p class="section-subtitle">Informations personnelles de l'apprenant</p>
+        
+        <div class="profile-details">
+          <div class="detail-row">
+            <span class="detail-label">Nom / prénom:</span>
+            <span class="detail-value">{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</span>
           </div>
-          <div class="timeline-content">
-            <p class="timeline-field">{{ entry.field }}</p>
-            <p class="timeline-change">
-              <span class="old-value">{{ entry.oldValue }}</span>
-              <span class="arrow">→</span>
-              <span class="new-value">{{ entry.newValue }}</span>
-            </p>
-            <p class="timeline-comment" *ngIf="entry.comment">
-              {{ entry.comment }}
-            </p>
+          
+          <div class="detail-row">
+            <span class="detail-label">Numéro de téléphone:</span>
+            <span class="detail-value">{{ student.personalInfo.phone || 'Non renseigné' }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ student.personalInfo.email }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Nationalité:</span>
+            <span class="detail-value">{{ student.nationality.name }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Âge:</span>
+            <span class="detail-value">{{ calculateAge(student.personalInfo.birthDate) }} ans</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Niveau:</span>
+            <span class="detail-value level-badge" [attr.data-level]="student.level.code">{{ student.level.name }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Statut:</span>
+            <span class="detail-value status-badge" [attr.data-status]="student.status.code">{{ student.status.name }}</span>
           </div>
         </div>
       </div>
-      <p class="no-history" *ngIf="student.statusHistory.length === 0">
-        Aucun changement enregistré
-      </p>
+
+      <!-- Colonne 2: Généré des attestations -->
+      <div class="attestations-section">
+        <h3>Généré des attestations</h3>
+        
+        <div class="empty-state">
+          <p>Aucune attestation générée</p>
+          <p class="empty-subtitle">Les attestations apparaîtront ici une fois générées</p>
+        </div>
+        
+        <div class="generate-button-container">
+          <button class="generate-btn" (click)="generateAttestation()">Générer une attestation</button>
+        </div>
+      </div>
+
+      <!-- Colonne 3: Dernières Absences -->
+      <div class="absences-section">
+        <h3>Dernières Absences</h3>
+        
+        <div class="empty-state">
+          <p>Aucune absence enregistrée</p>
+          <p class="empty-subtitle">Les absences apparaîtront ici</p>
+        </div>
+        
+        <div class="action-buttons-row">
+          <button class="action-btn-small blue" (click)="viewAbsences()">Voir tout</button>
+          <button class="action-btn-small orange" (click)="addAbsence()">Ajouter</button>
+          <button class="action-btn-small red" (click)="manageAbsences()">Gérer</button>
+        </div>
+      </div>
+
+      <!-- Colonne 4: Dernières évaluations -->
+      <div class="evaluations-section">
+        <h3>Dernières évaluations</h3>
+        
+        <div class="empty-state">
+          <p>Aucune évaluation enregistrée</p>
+          <p class="empty-subtitle">Les évaluations apparaîtront ici</p>
+        </div>
+        
+        <div class="action-buttons-row">
+          <button class="action-btn-small blue" (click)="viewEvaluations()">Voir tout</button>
+          <button class="action-btn-small orange" (click)="addEvaluation()">Ajouter</button>
+          <button class="action-btn-small red" (click)="manageEvaluations()">Gérer</button>
+        </div>
+      </div>
     </div>
 
-    <div class="profile-section">
-      <h3>Progression</h3>
-      <div class="progression-info" *ngIf="nextLevel">
-        <p>
-          Prochain niveau possible : 
-          <span class="level-badge" [attr.data-level]="nextLevel.code">
-            {{ nextLevel.name }}
-          </span>
-        </p>
+    <!-- Section Suite de parcours -->
+    <div class="parcours-section">
+      <h3>Suite de parcours</h3>
+      <div class="parcours-content">
+        <div class="parcours-icon">
+          <span class="level-badge-large" [attr.data-level]="student.level.code">{{ student.level.code }}</span>
+        </div>
+        <p class="parcours-description">Niveau actuel: {{ student.level.name }}</p>
+        <p class="parcours-next" *ngIf="nextLevel">Prochain niveau: {{ nextLevel.name }}</p>
+        <p class="parcours-max" *ngIf="!nextLevel">🎓 Niveau maximum atteint</p>
       </div>
-      <p class="no-progression" *ngIf="!nextLevel">
-        Niveau maximum atteint
-      </p>
+      
+      <div class="parcours-action">
+        <button class="parcours-btn" (click)="createParcours()" [disabled]="!nextLevel">
+          {{ nextLevel ? 'Créer une suite de parcours' : 'Parcours terminé' }}
+        </button>
+      </div>
     </div>
   </div>
 </div> 

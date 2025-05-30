@@ -142,19 +142,13 @@ export class UserListComponent implements OnInit {
       userData.birthdate = formValue.birthdate;
     }
     
-    // Afficher les données du formulaire pour le débogage
-    console.log('Données du formulaire:', userData);
-    console.log('Valeur de isActive:', userData.isActive);
-    
     this.userService.createUser(userData).subscribe({
       next: (user) => {
-        console.log('Utilisateur créé avec succès:', user);
         this.isSubmitting = false;
         this.hideCreateUserModal();
         this.loadUsers(); // Recharger la liste des utilisateurs
       },
       error: (error) => {
-        console.error('Erreur lors de la création de l\'utilisateur:', error);
         this.isSubmitting = false;
         
         // Gérer spécifiquement l'erreur 409 (Conflict)
@@ -232,7 +226,7 @@ export class UserListComponent implements OnInit {
           this.loadUsers();
         },
         error: (error) => {
-          // Gestion silencieuse
+          this.error = `Erreur lors de la suppression: ${error.status || ''} ${error.statusText || error.message || 'Erreur inconnue'}`;
         }
       });
     }

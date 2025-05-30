@@ -117,8 +117,6 @@ export class UserService {
   }
 
   createUser(user: CreateUserDto): Observable<User> {
-    console.log('Données reçues:', JSON.stringify(user));
-    
     // Créer un nouvel objet avec tous les champs nécessaires
     const userData: any = {
       firstname: user.firstname,
@@ -144,16 +142,12 @@ export class UserService {
           }
         }
       } catch (error) {
-        console.error('Erreur lors du formatage de la date:', error);
         // Ne pas inclure la date si elle ne peut pas être formatée correctement
       }
     }
     
-    console.log('Données envoyées à l\'API:', JSON.stringify(userData));
-    
     return this.http.post<ApiResponse<User>>(this.apiUrl, userData)
       .pipe(
-        tap(response => console.log('Réponse de l\'API:', response)),
         map(response => {
           if (response.success && response.data) {
             return response.data;
@@ -193,7 +187,6 @@ export class UserService {
           }
         }
       } catch (error) {
-        console.error('Erreur lors du formatage de la date:', error);
         // Ne pas inclure la date si elle ne peut pas être formatée correctement
       }
     }
@@ -205,12 +198,8 @@ export class UserService {
       }
     });
     
-    console.log('Envoi de la requête PATCH à:', `${this.apiUrl}/${id}`);
-    console.log('Données envoyées (filtrées):', filteredData);
-    
     return this.http.patch<ApiResponse<User>>(`${this.apiUrl}/${id}`, filteredData, { headers })
       .pipe(
-        tap(response => console.log('Réponse de l\'API (update):', response)),
         map(response => {
           if (response.success && response.data) {
             return response.data;
@@ -227,11 +216,8 @@ export class UserService {
       'Authorization': `Bearer ${token}`
     });
     
-    console.log('Envoi de la requête DELETE à:', `${this.apiUrl}/${id}`);
-    
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`, { headers })
       .pipe(
-        tap(response => console.log('Réponse de l\'API (delete):', response)),
         map(response => {
           if (!response.success) {
             throw new Error(response.message || 'Erreur lors de la suppression de l\'utilisateur');
