@@ -110,4 +110,10 @@ export class AuthService {
     // Utiliser directement 'access_token' au lieu de this.ACCESS_TOKEN_KEY
     return localStorage.getItem('access_token');
   }
+  
+  // Méthode pour faciliter le debugging de l'API
+  logTokenToConsole(): void {
+    const token = this.getToken();
+    console.log('Token actuel:', token);
+  }
 } 

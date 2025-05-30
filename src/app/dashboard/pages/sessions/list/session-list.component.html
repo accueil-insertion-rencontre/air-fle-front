@@ -1,0 +1,103 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 title-text fw-bold">Sessions</h1>
+    <button (click)="openCreateModal()" class="btn btn-primary">
+      <i class="fas fa-plus me-2"></i> NOUVELLE SESSION
+    </button>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body p-0">
+      <!-- Loading indicator -->
+      <div *ngIf="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Chargement...</span>
+        </div>
+        <p class="mt-2">Chargement des sessions...</p>
+      </div>
+      
+      <!-- Bootstrap Table -->
+      <table id="sessionTable" class="table align-items-center mb-0"></table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pour créer une session -->
+<div class="modal fade" id="createSessionModal" tabindex="-1" aria-labelledby="createSessionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createSessionModalLabel">Créer une nouvelle session</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()">
+          <!-- Message d'erreur général -->
+          <div *ngIf="error" class="alert alert-danger">
+            {{ error }}
+          </div>
+          
+          <!-- Nom de la session -->
+          <div class="mb-3">
+            <label for="label" class="form-label">Nom de la session <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="label" 
+              formControlName="label"
+              [ngClass]="{ 'is-invalid': isFieldInvalid('label') }">
+            <div *ngIf="isFieldInvalid('label')" class="invalid-feedback">
+              <div *ngIf="f['label'].errors?.['required']">Le nom de la session est obligatoire</div>
+              <div *ngIf="f['label'].errors?.['minlength']">Le nom doit comporter au moins 3 caractères</div>
+              <div *ngIf="f['label'].errors?.['maxlength']">Le nom ne peut pas dépasser 255 caractères</div>
+            </div>
+          </div>
+          
+          <!-- Dates de début et fin -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="started_at" class="form-label">Date de début <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="started_at" 
+                formControlName="started_at"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('started_at') }">
+              <div *ngIf="isFieldInvalid('started_at')" class="invalid-feedback">
+                La date de début est obligatoire
+              </div>
+              <div class="mt-1" *ngIf="f['started_at'].value">
+                <strong>Format français :</strong> <span class="badge bg-info">{{ formatDateForDisplay(f['started_at'].value) }}</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="finished_at" class="form-label">Date de fin <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="finished_at" 
+                formControlName="finished_at"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('finished_at') }">
+              <div *ngIf="isFieldInvalid('finished_at')" class="invalid-feedback">
+                La date de fin est obligatoire
+              </div>
+              <div class="mt-1" *ngIf="f['finished_at'].value">
+                <strong>Format français :</strong> <span class="badge bg-info">{{ formatDateForDisplay(f['finished_at'].value) }}</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="resetForm()" data-bs-dismiss="modal">
+          Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading || sessionForm.invalid">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          <i *ngIf="!loading" class="fas fa-save me-2"></i>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

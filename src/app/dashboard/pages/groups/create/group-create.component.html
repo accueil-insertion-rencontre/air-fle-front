@@ -1,0 +1,71 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-header pb-0">
+          <h6>{{ isEditMode ? 'Modifier le groupe' : 'Créer un nouveau groupe' }}</h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="groupForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Message d'erreur général -->
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+            
+            <!-- Nom du groupe -->
+            <div class="mb-3">
+              <label for="label" class="form-label">Nom du groupe <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="label" 
+                formControlName="label"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('label') }">
+              <div *ngIf="isFieldInvalid('label')" class="invalid-feedback">
+                <div *ngIf="f['label'].errors?.['required']">Le nom du groupe est obligatoire</div>
+                <div *ngIf="f['label'].errors?.['minlength']">Le nom doit comporter au moins 3 caractères</div>
+                <div *ngIf="f['label'].errors?.['maxlength']">Le nom ne peut pas dépasser 255 caractères</div>
+              </div>
+            </div>
+            
+            <!-- Session -->
+            <div class="mb-3">
+              <label for="session_id" class="form-label">Session <span class="text-danger">*</span></label>
+              <select 
+                class="form-select" 
+                id="session_id" 
+                formControlName="session_id"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('session_id') }">
+                <option [ngValue]="null" disabled>Sélectionnez une session</option>
+                <option *ngFor="let session of sessions" [value]="session.session_id">
+                  {{ session.label }}
+                </option>
+              </select>
+              <div *ngIf="isFieldInvalid('session_id')" class="invalid-feedback">
+                Veuillez sélectionner une session
+              </div>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="d-flex justify-content-between">
+              <a [routerLink]="['/dashboard/groups']" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Retour à la liste
+              </a>
+              <div>
+                <button type="button" class="btn btn-outline-secondary me-2" (click)="resetForm()">
+                  <i class="fas fa-undo me-2"></i> Réinitialiser
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="loading || groupForm.invalid">
+                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  <i *ngIf="!loading" class="fas fa-save me-2"></i>
+                  {{ isEditMode ? 'Mettre à jour' : 'Créer le groupe' }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

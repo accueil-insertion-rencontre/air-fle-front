@@ -1,0 +1,316 @@
+@use 'sass:color';
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+// Variables de couleurs
+$primary-color: #4FD1C5; // Couleur turquoise
+$text-color: #344767;
+$bg-color: #f8f9fa;
+$border-color: #dee2e6; // Légèrement plus foncé pour les lignes
+$hover-bg: #f9fafb;
+$search-border: #8a8a8a; // Couleur d'encadrement de la barre de recherche (gris moyen clair)
+
+.card {
+  box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  border: none;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 1rem;
+}
+
+.card-title {
+  margin-bottom: 0;
+}
+
+.btn-group {
+  .btn {
+    padding: 0.25rem 0.5rem;
+    
+    &:not(:last-child) {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+/* Style pour les icônes Feather */
+.icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: text-bottom;
+}
+
+:host {
+  display: block;
+}
+
+// Style spécifique pour le titre
+h1.h2, .title-text {
+  color: #344767 !important; // Forcer la couleur sur le titre
+  letter-spacing: -0.5px;
+  font-weight: 600;
+}
+
+.container-fluid {
+  max-width: 1600px;
+}
+
+.card-body {
+  padding: 0;
+}
+
+// Styles pour Modal
+.modal {
+  .modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+  
+  .modal-header {
+    border-bottom: 1px solid $border-color;
+    background-color: #fafbfc;
+    padding: 1rem 1.5rem;
+    
+    .modal-title {
+      color: $text-color;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+    
+    .btn-close {
+      box-shadow: none;
+      transition: all 0.2s;
+      
+      &:hover {
+        transform: rotate(90deg);
+      }
+    }
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    border-top: 1px solid $border-color;
+    padding: 1rem 1.5rem;
+  }
+  
+  .form-control, .form-select {
+    border: 1px solid $border-color;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s;
+    
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.25rem rgba(79, 209, 197, 0.25);
+    }
+  }
+  
+  .invalid-feedback {
+    font-size: 0.8rem;
+  }
+}
+
+// Styles pour Bootstrap Table
+::ng-deep {
+  // Bouton primaire (NOUVEAU GROUPE)
+  .btn-primary {
+    background-color: $primary-color !important;
+    border-color: $primary-color !important;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 3px 5px rgba(79, 209, 197, 0.3);
+
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%) !important;
+      border-color: color.adjust($primary-color, $lightness: -10%) !important;
+    }
+  }
+
+  // Boutons d'export et de filtres
+  .fixed-table-toolbar .bs-bars .btn,
+  .fixed-table-toolbar .columns .btn,
+  .fixed-table-toolbar .search .btn,
+  .fixed-table-toolbar .export .btn,
+  .fixed-table-toolbar .refresh .btn,
+  .fixed-table-toolbar .toggle .btn {
+    background-color: $primary-color !important;
+    border-color: $primary-color !important;
+    color: #fff;
+    
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%) !important;
+      border-color: color.adjust($primary-color, $lightness: -10%) !important;
+    }
+  }
+
+  // Style de la table principale
+  .bootstrap-table {
+    .fixed-table-container {
+      border-radius: 0.75rem;
+      border: none; // Suppression du cadre
+      
+      .table {
+        border: none;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+      }
+    }
+    
+    .fixed-table-toolbar {
+      padding: 1rem;
+    }
+    
+    .search .form-control {
+      height: 38px;
+      border-radius: 0.5rem;
+      border: 1px solid $search-border !important; // Encadrement gris foncé pour la barre de recherche
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    
+    .pagination-detail {
+      margin-top: 1rem;
+      color: #8392ab;
+      font-size: 0.875rem;
+    }
+    
+    .pagination {
+      margin-top: 1rem;
+    }
+    
+    .page-item.active .page-link {
+      background-color: $primary-color;
+      border-color: $primary-color;
+    }
+    
+    .page-link {
+      color: $text-color;
+    }
+
+    // Styles modernes pour le tableau
+    .table {
+      thead {
+        th {
+          color: #8392ab;
+          font-weight: 600;
+          font-size: 0.65rem;
+          padding: 0.75rem 1rem;
+          letter-spacing: 0.05rem;
+          text-transform: uppercase;
+          border-top: none;
+          border-bottom: 2px solid $border-color; // Bordure plus visible pour l'entête
+          background-color: #fafbfc;
+          border-right: none; // Pas de bordure entre les colonnes
+          border-left: none; // Pas de bordure entre les colonnes
+        }
+      }
+      
+      tbody {
+        td {
+          font-size: 0.875rem;
+          padding: 1rem;
+          color: $text-color;
+          border-top: none; // Pas de bordure du haut
+          border-bottom: 1px solid $border-color; // Bordure pour les lignes
+          border-right: none; // Pas de bordure entre les colonnes
+          border-left: none; // Pas de bordure entre les colonnes
+          vertical-align: middle;
+        }
+
+        tr {
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: $hover-bg;
+          }
+
+          &:last-child td {
+            border-bottom: none;
+          }
+        }
+      }
+    }
+  }
+
+  .btn-group {
+    box-shadow: none !important;
+  }
+
+  .btn-info {
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+  
+  .btn-warning {
+    background-color: #f53939;
+    border-color: #f53939;
+  }
+
+  .btn-danger {
+    background-color: #ea0606;
+    border-color: #ea0606;
+  }
+
+  .btn-group-view,
+  .btn-group-edit,
+  .btn-group-delete {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px;
+    border-radius: 0.5rem;
+    color: white;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  // Fix pour les icônes dans les boutons d'export et de colonnes
+  .dropdown-toggle::after {
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    content: "";
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+  }
+
+  .keep-open button[data-toggle="dropdown"],
+  .fixed-table-toolbar .dropdown-toggle {
+    padding-right: 25px;
+  }
+  
+  .dropdown-menu {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+  }
+}
+
+// Ajustement pour les tables avec peu de données
+@media (min-height: 800px) {
+  .card {
+    min-height: 400px;
+  }
+} 
