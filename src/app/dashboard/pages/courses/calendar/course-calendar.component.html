@@ -1,0 +1,676 @@
+<div class="container-fluid">
+  <!-- En-tête du planning -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>Planning des cours</h2>
+    </div>
+    <div class="col-md-6">
+      <div class="d-flex justify-content-end align-items-center gap-3">
+        <!-- Sélecteur de session -->
+        <div class="form-group mb-0">
+          <label for="sessionSelect" class="form-label me-2">Session :</label>
+          <select 
+            id="sessionSelect" 
+            class="form-select form-select-sm" 
+            [(ngModel)]="selectedSessionId" 
+            (change)="onSessionChange(selectedSessionId)"
+            style="width: auto; display: inline-block;">
+            <option value="">Toutes les sessions</option>
+            <option *ngFor="let session of sessions" [value]="session.session_id">
+              {{ session.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation du planning -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
+        <button class="btn btn-outline-primary" (click)="previousWeek()">
+          <i class="fas fa-chevron-left"></i> Semaine précédente
+        </button>
+        
+        <h4 class="mb-0 text-center">{{ getWeekDisplay() }}</h4>
+        
+        <button class="btn btn-outline-primary" (click)="nextWeek()">
+          Semaine suivante <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Planning -->
+  <div class="row">
+    <div class="col-12">
+      <div class="calendar-grid">
+        <!-- En-tête avec les jours -->
+        <div class="calendar-header">
+          <div *ngFor="let day of weekDays" 
+               class="day-column-header"
+               [class.today]="day.isToday">
+            <div class="day-name">{{ day.dayName }}</div>
+            <div class="day-number">{{ day.dayNumber }}</div>
+          </div>
+        </div>
+        
+        <!-- Colonnes des jours avec les cours -->
+        <div class="calendar-body">
+          <div *ngFor="let day of weekDays" 
+               class="day-column"
+               [class.today]="day.isToday"
+               (click)="onDayClick(day)">
+            
+            <!-- Cours pour ce jour -->
+            <div *ngFor="let course of getCoursesForDay(day)" 
+                 class="course-card"
+                 [style.background-color]="getCourseColor(course)"
+                 (click)="onCourseClick($event, course)">
+              <div class="course-time">{{ course.start_hour }} - {{ course.end_hour }}</div>
+              <div class="course-title">{{ course.title }}</div>
+              <div class="course-teacher" *ngIf="course.user">
+                {{ course.user.firstname }} {{ course.user.lastname }}
+              </div>
+              <div class="course-group" *ngIf="course.group">
+                {{ course.group.label }}
+              </div>
+            </div>
+            
+            <!-- Zone d'ajout si pas de cours -->
+            <div *ngIf="getCoursesForDay(day).length === 0" class="add-course-zone">
+              <i class="fas fa-plus text-muted"></i>
+              <span class="text-muted">Ajouter un cours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création de cours -->
+<div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createCourseModalLabel">
+          <i class="fas fa-plus-circle me-2"></i>Nouveau cours
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCancelCourse()"></button>
+      </div>
+      
+      <form [formGroup]="courseForm" (ngSubmit)="onSubmitCourse()">
+        <div class="modal-body">
+          <!-- Date sélectionnée -->
+          <div class="alert alert-info">
+            <i class="fas fa-calendar me-2"></i>
+            <strong>Date sélectionnée :</strong> {{ selectedDate | date:'fullDate':'':'fr-FR' }}
+          </div>
+
+          <!-- Sélection de groupe -->
+          <div class="mb-3">
+            <label for="courseGroup" class="form-label">Groupe <span class="text-danger">*</span></label>
+            <select 
+              id="courseGroup"
+              class="form-select"
+              formControlName="group_id"
+              [class.is-invalid]="isFieldInvalid('group_id')">
+              <option value="">Sélectionner un groupe</option>
+              <option *ngFor="let group of groups; trackBy: trackByGroupId" [value]="group.group_id">
+                {{ group.label }} ({{ group.session?.label || 'Session' }})
+              </option>
+            </select>
+            <div *ngIf="isFieldInvalid('group_id')" class="invalid-feedback">
+              Le groupe est obligatoire
+            </div>
+          </div>
+
+          <!-- Professeur assigné -->
+          <div class="mb-3">
+            <label for="user_id" class="form-label">Professeur assigné</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="user_id" 
+              formControlName="user_id"
+              placeholder="ID du professeur (optionnel)">
+            <small class="form-text text-muted">
+              Laissez vide si aucun professeur n'est encore assigné
+            </small>
+          </div>
+
+          <!-- Intitulé du cours -->
+          <div class="mb-3">
+            <label for="courseTitle" class="form-label">Intitulé du cours <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="courseTitle"
+              formControlName="title"
+              [class.is-invalid]="isFieldInvalid('title')"
+              placeholder="Ex: Grammaire française A1">
+            <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
+              L'intitulé du cours est obligatoire (minimum 3 caractères)
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Heure de début -->
+            <div class="col-md-6 mb-3">
+              <label for="courseStartHour" class="form-label">Heure de début <span class="text-danger">*</span></label>
+              <select 
+                id="courseStartHour"
+                class="form-select"
+                formControlName="start_hour"
+                [class.is-invalid]="isFieldInvalid('start_hour')">
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isFieldInvalid('start_hour')" class="invalid-feedback">
+                L'heure de début est obligatoire
+              </div>
+            </div>
+
+            <!-- Heure de fin -->
+            <div class="col-md-6 mb-3">
+              <label for="courseEndHour" class="form-label">Heure de fin <span class="text-danger">*</span></label>
+              <select 
+                id="courseEndHour"
+                class="form-select"
+                formControlName="end_hour"
+                [class.is-invalid]="isFieldInvalid('end_hour')">
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isFieldInvalid('end_hour')" class="invalid-feedback">
+                L'heure de fin est obligatoire
+              </div>
+            </div>
+          </div>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="error" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onCancelCourse()">
+            <i class="fas fa-times me-2"></i>Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading || courseForm.invalid">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <i *ngIf="!loading" class="fas fa-save me-2"></i>Créer le cours
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de détail/modification de cours -->
+<div class="modal fade" id="courseDetailsModal" tabindex="-1" aria-labelledby="courseDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <div>
+            <h5 class="modal-title" id="courseDetailsModalLabel">
+              <i class="fas fa-info-circle me-2"></i>Détails du cours
+            </h5>
+            <small class="text-muted" *ngIf="selectedCourse">
+              {{ selectedCourse.day | date:'fullDate':'':'fr-FR' }} • {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}
+            </small>
+          </div>
+          <div class="d-flex gap-2" *ngIf="selectedCourse">
+            <button type="button" class="btn btn-warning btn-sm" (click)="onEditCourse()">
+              <i class="fas fa-edit me-2"></i>Modifier le cours
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="onDeleteCourse()">
+              <i class="fas fa-trash me-2"></i>Supprimer le cours
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCloseDetailsModal()"></button>
+      </div>
+      
+      <div class="modal-body">
+        <div *ngIf="loadingCourseDetails" class="text-center my-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+          <p class="mt-2">Chargement des détails du cours...</p>
+        </div>
+
+        <div *ngIf="!loadingCourseDetails && selectedCourse">
+          <!-- Informations du cours -->
+          <div class="row mb-4">
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="card-title mb-0">
+                    <i class="fas fa-book me-2"></i>Informations du cours
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <strong>Intitulé :</strong><br>
+                      <span class="text-muted">{{ selectedCourse.title }}</span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Groupe :</strong><br>
+                      <span class="text-muted">{{ selectedCourse.group?.label || 'Non défini' }}</span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Professeur :</strong><br>
+                      <span class="text-muted">
+                        {{ selectedCourse.user ? (selectedCourse.user.firstname + ' ' + selectedCourse.user.lastname) : 'Non assigné' }}
+                      </span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Session :</strong><br>
+                      <span class="text-muted">{{ selectedCourse.session?.label || 'Non définie' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Statistiques
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Élèves inscrits :</span>
+                    <strong>{{ courseStudents.length }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Présents :</span>
+                    <strong class="text-success">{{ getPresentStudentsCount() }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Absents :</span>
+                    <strong class="text-danger">{{ getAbsentStudentsCount() }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liste des élèves -->
+          <div class="card">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                  <i class="fas fa-users me-2"></i>Liste des élèves ({{ courseStudents.length }})
+                </h6>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn btn-outline-success">
+                    <i class="fas fa-check me-1"></i>Marquer tous présents
+                  </button>
+                  <button type="button" class="btn btn-outline-danger">
+                    <i class="fas fa-times me-1"></i>Marquer tous absents
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="courseStudents.length === 0" class="text-center text-muted py-4">
+                <i class="fas fa-user-slash fa-3x mb-3"></i>
+                <p>Aucun élève inscrit dans ce groupe</p>
+              </div>
+
+              <div *ngIf="courseStudents.length > 0" class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Prénom</th>
+                      <th>Email</th>
+                      <th class="text-center">Statut</th>
+                      <th class="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let student of courseStudents; trackBy: trackByStudentId">
+                      <td>{{ student.lastname }}</td>
+                      <td>{{ student.firstname }}</td>
+                      <td>{{ student.email || '-' }}</td>
+                      <td class="text-center">
+                        <span class="badge" 
+                              [class]="getStudentStatusBadgeClass(student)">
+                          <i [class]="getStudentStatusIcon(student)" class="me-1"></i>
+                          {{ getStudentStatusLabel(student) }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button type="button" 
+                                  class="btn btn-outline-success" 
+                                  [class.active]="isStudentPresent(student)"
+                                  (click)="markStudentPresent(student)">
+                            <i class="fas fa-check"></i>
+                          </button>
+                          <button type="button" 
+                                  class="btn btn-outline-danger" 
+                                  [class.active]="isStudentAbsent(student)"
+                                  (click)="markStudentAbsent(student)">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="onCloseDetailsModal()">
+          <i class="fas fa-times me-2"></i>Fermer
+        </button>
+        <button type="button" class="btn btn-primary" *ngIf="selectedCourse">
+          <i class="fas fa-save me-2"></i>Enregistrer les présences
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition de cours -->
+<div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editCourseModalLabel">
+          <i class="fas fa-edit me-2"></i>Modifier le cours
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCancelEditCourse()"></button>
+      </div>
+      
+      <form [formGroup]="editCourseForm" (ngSubmit)="onSubmitEditCourse()">
+        <div class="modal-body">
+          <!-- Date sélectionnée -->
+          <div class="alert alert-info">
+            <i class="fas fa-calendar me-2"></i>
+            <strong>Date :</strong> {{ selectedCourse?.day | date:'fullDate':'':'fr-FR' }}
+          </div>
+
+          <!-- Sélection de groupe -->
+          <div class="mb-3">
+            <label for="editCourseGroup" class="form-label">Groupe <span class="text-danger">*</span></label>
+            <select 
+              id="editCourseGroup"
+              class="form-select"
+              formControlName="group_id"
+              [class.is-invalid]="isEditFieldInvalid('group_id')">
+              <option value="">Sélectionner un groupe</option>
+              <option *ngFor="let group of groups; trackBy: trackByGroupId" [value]="group.group_id">
+                {{ group.label }} ({{ group.session?.label || 'Session' }})
+              </option>
+            </select>
+            <div *ngIf="isEditFieldInvalid('group_id')" class="invalid-feedback">
+              Le groupe est obligatoire
+            </div>
+          </div>
+
+          <!-- Professeur assigné -->
+          <div class="mb-3">
+            <label for="editUser_id" class="form-label">Professeur assigné</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="editUser_id" 
+              formControlName="user_id"
+              placeholder="ID du professeur (optionnel)">
+            <small class="form-text text-muted">
+              Laissez vide si aucun professeur n'est assigné
+            </small>
+          </div>
+
+          <!-- Intitulé du cours -->
+          <div class="mb-3">
+            <label for="editCourseTitle" class="form-label">Intitulé du cours <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="editCourseTitle"
+              formControlName="title"
+              [class.is-invalid]="isEditFieldInvalid('title')"
+              placeholder="Ex: Grammaire française A1">
+            <div *ngIf="isEditFieldInvalid('title')" class="invalid-feedback">
+              L'intitulé du cours est obligatoire (minimum 3 caractères)
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Heure de début -->
+            <div class="col-md-6 mb-3">
+              <label for="editCourseStartHour" class="form-label">Heure de début <span class="text-danger">*</span></label>
+              <select 
+                id="editCourseStartHour"
+                class="form-select"
+                formControlName="start_hour"
+                [class.is-invalid]="isEditFieldInvalid('start_hour')">
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isEditFieldInvalid('start_hour')" class="invalid-feedback">
+                L'heure de début est obligatoire
+              </div>
+            </div>
+
+            <!-- Heure de fin -->
+            <div class="col-md-6 mb-3">
+              <label for="editCourseEndHour" class="form-label">Heure de fin <span class="text-danger">*</span></label>
+              <select 
+                id="editCourseEndHour"
+                class="form-select"
+                formControlName="end_hour"
+                [class.is-invalid]="isEditFieldInvalid('end_hour')">
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isEditFieldInvalid('end_hour')" class="invalid-feedback">
+                L'heure de fin est obligatoire
+              </div>
+            </div>
+          </div>
+
+          <!-- Date du cours (modification) -->
+          <div class="mb-3">
+            <label for="editCourseDay" class="form-label">Date du cours <span class="text-danger">*</span></label>
+            <input 
+              type="date" 
+              class="form-control" 
+              id="editCourseDay"
+              formControlName="day"
+              [class.is-invalid]="isEditFieldInvalid('day')">
+            <div *ngIf="isEditFieldInvalid('day')" class="invalid-feedback">
+              La date est obligatoire
+            </div>
+          </div>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="editError" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ editError }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onCancelEditCourse()">
+            <i class="fas fa-times me-2"></i>Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="editLoading || editCourseForm.invalid">
+            <span *ngIf="editLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <i *ngIf="!editLoading" class="fas fa-save me-2"></i>Enregistrer les modifications
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calendar-grid {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+  
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  .day-column-header {
+    padding: 15px 10px;
+    text-align: center;
+    border-right: 1px solid #dee2e6;
+    background: #f8f9fa;
+  }
+  
+  .day-column-header:last-child {
+    border-right: none;
+  }
+  
+  .day-column-header.today {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    font-weight: bold;
+  }
+  
+  .day-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 4px;
+  }
+  
+  .day-number {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #495057;
+  }
+  
+  .calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    min-height: 500px;
+  }
+  
+  .day-column {
+    border-right: 1px solid #dee2e6;
+    padding: 10px 8px;
+    min-height: 500px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+  
+  .day-column:last-child {
+    border-right: none;
+  }
+  
+  .day-column:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .day-column.today {
+    background-color: rgba(0, 123, 255, 0.02);
+  }
+  
+  .course-card {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .course-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .course-time {
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+  
+  .course-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  
+  .course-teacher {
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+  
+  .course-group {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-style: italic;
+  }
+  
+  .add-course-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .add-course-zone:hover {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  .add-course-zone i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+  
+  .add-course-zone span {
+    font-size: 0.8rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .calendar-header,
+    .calendar-body {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .day-column {
+      min-height: 200px;
+    }
+    
+    .course-card {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+  }
+</style> 
