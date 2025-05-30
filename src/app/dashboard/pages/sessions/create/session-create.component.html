@@ -1,0 +1,87 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-header pb-0">
+          <h6>{{ isEditMode ? 'Modifier la session' : 'Créer une nouvelle session' }}</h6>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+          </div>
+          
+          <form *ngIf="!loading" [formGroup]="sessionForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Message d'erreur général -->
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+            
+            <!-- Nom de la session -->
+            <div class="mb-3">
+              <label for="label" class="form-label">Nom de la session <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="label" 
+                formControlName="label"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('label') }">
+              <div *ngIf="isFieldInvalid('label')" class="invalid-feedback">
+                <div *ngIf="f['label'].errors?.['required']">Le nom de la session est obligatoire</div>
+                <div *ngIf="f['label'].errors?.['minlength']">Le nom doit comporter au moins 3 caractères</div>
+                <div *ngIf="f['label'].errors?.['maxlength']">Le nom ne peut pas dépasser 255 caractères</div>
+              </div>
+            </div>
+            
+            <!-- Dates de début et fin -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="started_at" class="form-label">Date de début <span class="text-danger">*</span></label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="started_at" 
+                  formControlName="started_at"
+                  [ngClass]="{ 'is-invalid': isFieldInvalid('started_at') }">
+                <div *ngIf="isFieldInvalid('started_at')" class="invalid-feedback">
+                  La date de début est obligatoire
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="finished_at" class="form-label">Date de fin <span class="text-danger">*</span></label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="finished_at" 
+                  formControlName="finished_at"
+                  [ngClass]="{ 'is-invalid': isFieldInvalid('finished_at') }">
+                <div *ngIf="isFieldInvalid('finished_at')" class="invalid-feedback">
+                  La date de fin est obligatoire
+                </div>
+              </div>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="d-flex justify-content-between">
+              <a [routerLink]="['/dashboard/sessions']" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Retour à la liste
+              </a>
+              <div>
+                <button type="button" class="btn btn-outline-secondary me-2" (click)="resetForm()">
+                  <i class="fas fa-undo me-2"></i> Réinitialiser
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="loading || sessionForm.invalid">
+                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  <i *ngIf="!loading" class="fas fa-save me-2"></i>
+                  {{ isEditMode ? 'Mettre à jour' : 'Créer la session' }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
