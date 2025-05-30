@@ -1,0 +1,134 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>Détails du groupe</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <div class="btn-group" role="group">
+        <a [routerLink]="['/dashboard/groups']" class="btn btn-secondary">
+          <i class="fas fa-arrow-left me-2"></i> Retour
+        </a>
+        <a [routerLink]="['/dashboard/groups/edit', groupId]" class="btn btn-primary">
+          <i class="fas fa-edit me-2"></i> Modifier
+        </a>
+        <button type="button" class="btn btn-danger" (click)="deleteGroup()" *ngIf="group">
+          <i class="fas fa-trash me-2"></i> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Informations générales</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+          </div>
+          
+          <div *ngIf="!loading && group">
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <p class="mb-1"><strong>Nom:</strong></p>
+                <p>{{ group.label }}</p>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <p class="mb-1"><strong>Session:</strong></p>
+                <p>{{ group.session?.label || '-' }}</p>
+              </div>
+            </div>
+            
+            <div class="row mb-3" *ngIf="group.more_info">
+              <div class="col-md-12">
+                <p class="mb-1"><strong>Informations complémentaires:</strong></p>
+                <p>{{ group.more_info }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="!loading && !group" class="alert alert-warning">
+            Groupe non trouvé
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-4">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col">
+              <h5 class="card-title">Étudiants associés</h5>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-plus me-2"></i> Ajouter un étudiant
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let student of students">
+                  <td>{{ student.lastname }}</td>
+                  <td>{{ student.firstname }}</td>
+                  <td>{{ student.email }}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button type="button" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button type="button" class="btn btn-warning">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button type="button" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="students.length === 0">
+                  <td colspan="4" class="text-center">Aucun étudiant associé à ce groupe</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title">Statistiques</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>Nombre d'étudiants:</div>
+            <div><strong>{{ students.length }}</strong></div>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <div>Session associée:</div>
+            <div><strong>{{ group?.session?.label || 'Aucune' }}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
