@@ -182,9 +182,8 @@ export class UserProfileComponent implements OnInit {
         }, 3000);
       },
       error: (error) => {
-        console.error('Erreur lors de la mise à jour du mot de passe:', error);
-        this.passwordError = `Erreur: ${error.message || 'Impossible de mettre à jour le mot de passe'}`;
         this.isSubmittingPassword = false;
+        this.passwordError = 'Erreur lors de la mise à jour du mot de passe';
       }
     });
   }
@@ -245,13 +244,11 @@ export class UserProfileComponent implements OnInit {
           if (!isNaN(date.getTime())) {
             userData.birthdate = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
           } else {
-            // Si la date n'est pas valide, ne pas l'inclure
-            delete userData.birthdate;
+            // Ne pas inclure la date si elle ne peut pas être formatée correctement
           }
         }
       } catch (error) {
-        console.error('Erreur lors du formatage de la date:', error);
-        delete userData.birthdate;
+        // Ne pas inclure la date si elle ne peut pas être formatée correctement
       }
     }
     
@@ -271,9 +268,8 @@ export class UserProfileComponent implements OnInit {
         }, 3000);
       },
       error: (error) => {
-        console.error('Erreur lors de la mise à jour:', error);
-        this.error = `Erreur: ${error.message || 'Impossible de mettre à jour l\'utilisateur'}`;
         this.isSubmitting = false;
+        this.error = 'Erreur lors de la mise à jour de l\'utilisateur';
       }
     });
   }
@@ -324,7 +320,6 @@ export class UserProfileComponent implements OnInit {
         }, 1500);
       },
       error: (error) => {
-        console.error('Erreur lors de la suppression:', error);
         this.deleteError = `Erreur: ${error.message || 'Impossible de supprimer l\'utilisateur'}`;
       }
     });

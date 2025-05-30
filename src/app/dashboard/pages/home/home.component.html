@@ -28,11 +28,82 @@
     <!-- TO-DO List -->
     <div class="todo-container">
       <div class="section-header">
-        <h2>TO-DO-LIST</h2>
-        <span class="badge">0 done this month</span>
+        <div class="header-left">
+          <h2>TO-DO-LIST</h2>
+          <div class="filter-container">
+            <button class="filter-btn" (click)="toggleFilters()" title="Filtrer les tâches">
+              <span class="filter-icon">{{ getFilterIcon() }}</span>
+              <span class="filter-text">{{ getFilterLabel() }} ({{ getFilteredTasksCount() }})</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [class.rotated]="showFilters">
+                <polyline points="6,9 12,15 18,9"></polyline>
+              </svg>
+            </button>
+            
+            <div class="filter-dropdown" *ngIf="showFilters">
+              <button 
+                class="filter-option" 
+                [class.active]="activeFilter === 'all'"
+                (click)="setFilter('all')">
+                📋 Toutes ({{ getAllTasksCount() }})
+              </button>
+              <button 
+                class="filter-option" 
+                [class.active]="activeFilter === 'pending'"
+                (click)="setFilter('pending')">
+                🕒 Pas commencé ({{ getPendingTasksCount() }})
+              </button>
+              <button 
+                class="filter-option" 
+                [class.active]="activeFilter === 'in_progress'"
+                (click)="setFilter('in_progress')">
+                ⚡ En cours ({{ getInProgressTasksCount() }})
+              </button>
+              <button 
+                class="filter-option" 
+                [class.active]="activeFilter === 'completed'"
+                (click)="setFilter('completed')">
+                ✅ Terminé ({{ getCompletedTasksCount() }})
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <span class="badge">{{ todoStats.completed }} done this month</span>
+          <button class="create-btn" (click)="openCreateModal()" title="Créer une nouvelle tâche">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Créer une tâche
+          </button>
+        </div>
       </div>
-      <div class="todo-list empty-state">
+      
+      <!-- Loading state -->
+      <div class="todo-list loading-state" *ngIf="isLoadingTodos">
+        <p>Chargement des tâches...</p>
+      </div>
+      
+      <!-- Error state -->
+      <div class="todo-list error-state" *ngIf="todoError && !isLoadingTodos">
+        <p>{{ todoError }}</p>
+        <button class="retry-btn" (click)="loadTodos()">Réessayer</button>
+      </div>
+      
+      <!-- Empty state -->
+      <div class="todo-list empty-state" *ngIf="!isLoadingTodos && !todoError && todoItems.length === 0">
         <p>Aucune tâche pour le moment</p>
+        <button class="create-first-btn" (click)="openCreateModal()">Créer votre première tâche</button>
+      </div>
+      
+      <!-- Todo items -->
+      <div class="todo-list" *ngIf="!isLoadingTodos && !todoError && todoItems.length > 0">
+        <app-todo-item 
+          *ngFor="let task of parentTasks" 
+          [task]="task"
+          (taskUpdated)="onSubtaskUpdated($event)">
+        </app-todo-item>
       </div>
     </div>
 
@@ -46,4 +117,12 @@
       </div>
     </div>
   </div>
-</div> 
+</div>
+
+<!-- Modal de création de tâche -->
+<app-create-todo-modal
+  [isOpen]="isCreateModalOpen"
+  [parentTasks]="parentTasks"
+  (close)="closeCreateModal()"
+  (submit)="onCreateTodo($event)">
+</app-create-todo-modal> 

@@ -1,23 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { StudentService } from '../../services/student.service';
+import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { StudentService, StudentListResponse } from '../../services/student.service';
 import { Student, StudentFilters, StudentListConfig, StudentSortConfig, StudentSortField } from '../../models/student.model';
-import { StudentSearchComponent } from '../student-search/student-search.component';
 
 @Component({
   selector: 'app-student-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, StudentSearchComponent],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './student-list.component.html',
   styleUrls: ['./student-list.component.scss']
 })
 export class StudentListComponent implements OnInit {
-  students: Student[] = [];
+  students: any[] = []; // Utilisation de any[] temporairement pour gérer les différences de structure
+  loading = false;
+  error: string | null = null;
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
   totalPages = 1;
+  showCreateModal = false; // Pour gérer l'affichage de la modal
   filters: StudentFilters = {
     firstName: '',
     lastName: '',
@@ -26,73 +29,179 @@ export class StudentListComponent implements OnInit {
     status: '',
     nationality: ''
   };
-  sortConfig: StudentSortConfig = {
-    field: 'personalInfo.lastName',
-    direction: 'asc'
-  };
 
-  constructor(private studentService: StudentService) {}
+  constructor(
+    private studentService: StudentService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadStudents();
   }
 
   loadStudents(): void {
+    this.loading = true;
+    this.error = null;
+    
     const config: StudentListConfig = {
       page: this.currentPage,
       pageSize: this.pageSize,
       filters: this.filters,
-      sort: this.sortConfig
+      sort: undefined
     };
 
-    this.studentService.getStudents(config).subscribe(result => {
-      this.students = result.students;
-      this.totalItems = result.total;
-      this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+    this.studentService.getStudents(config).subscribe({
+      next: (result: StudentListResponse) => {
+        console.log('Données reçues de l\'API:', result);
+        this.students = result.students || [];
+        this.totalItems = result.total || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Erreur lors du chargement des apprenants';
+        this.loading = false;
+        console.error('Erreur:', err);
+      }
     });
   }
 
-  onSearch(searchTerm: string): void {
-    this.filters = {
-      ...this.filters,
-      firstName: searchTerm,
-      lastName: searchTerm,
-      email: searchTerm
-    };
-    this.currentPage = 1;
-    this.loadStudents();
+  getStudentInitials(student: any): string {
+    // Adaptation pour gérer différentes structures de données
+    const firstName = student.firstname || student.personalInfo?.firstName || '';
+    const lastName = student.lastname || student.personalInfo?.lastName || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
-  onFiltersChange(filters: StudentFilters): void {
-    this.filters = filters;
-    this.currentPage = 1;
-    this.loadStudents();
+  getStudentName(student: any): string {
+    const firstName = student.firstname || student.personalInfo?.firstName || '';
+    const lastName = student.lastname || student.personalInfo?.lastName || '';
+    return `${firstName} ${lastName}`.trim();
   }
 
-  sort(field: StudentSortField): void {
-    if (this.sortConfig.field === field) {
-      this.sortConfig.direction = this.sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortConfig = {
-        field,
-        direction: 'asc'
-      };
-    }
-    this.loadStudents();
+  getStudentEmail(student: any): string {
+    return student.email || student.personalInfo?.email || 'Non renseigné';
   }
 
+  getStudentLevel(student: any): string {
+    return student.currentLevel?.name || student.level?.name || 'Non défini';
+  }
+
+  getStudentStatus(student: any): string {
+    return student.status?.name || 'Non défini';
+  }
+
+  getStudentNationality(student: any): string {
+    return student.nationality?.name || 'Non renseignée';
+  }
+
+  // Méthodes de pagination
   changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
       this.loadStudents();
     }
   }
 
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.changePage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.changePage(this.currentPage + 1);
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+    
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
+    
+    // Ajuster le début si on est proche de la fin
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  // Méthodes de recherche et filtrage
+  onSearch(searchTerm: string): void {
+    this.filters = {
+      ...this.filters,
+      firstName: searchTerm,
+      lastName: searchTerm
+    };
+    this.currentPage = 1; // Retour à la première page lors d'une recherche
+    this.loadStudents();
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      level: '',
+      status: '',
+      nationality: ''
+    };
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
   deleteStudent(id: number): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet apprenant ?')) {
-      this.studentService.deleteStudent(id).subscribe(() => {
-        this.loadStudents();
+      this.studentService.deleteStudent(id).subscribe({
+        next: () => {
+          // Si on supprime le dernier élément d'une page, revenir à la page précédente
+          if (this.students.length === 1 && this.currentPage > 1) {
+            this.currentPage--;
+          }
+          this.loadStudents();
+        },
+        error: (err) => {
+          console.error('Erreur lors de la suppression:', err);
+          alert('Erreur lors de la suppression de l\'étudiant');
+        }
       });
     }
+  }
+
+  // Méthode utilitaire pour l'affichage
+  getDisplayRange(): string {
+    if (this.totalItems === 0) return '0 résultat';
+    
+    const start = (this.currentPage - 1) * this.pageSize + 1;
+    const end = Math.min(this.currentPage * this.pageSize, this.totalItems);
+    
+    return `${start}-${end} sur ${this.totalItems}`;
+  }
+
+  // Méthodes pour gérer la modal
+  openCreateModal(): void {
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+  }
+
+  createSingleStudent(): void {
+    this.closeCreateModal();
+    this.router.navigate(['/dashboard/apprenants/new']);
+  }
+
+  importFromExcel(): void {
+    this.closeCreateModal();
+    this.router.navigate(['/dashboard/apprenants/import']);
   }
 } 

@@ -44,10 +44,11 @@ export class SidebarComponent implements OnInit, AfterViewChecked {
       requiredRole: 'admin' // Seuls les administrateurs peuvent voir cet élément
     },
     { 
-      label: 'Menus Déroulants', 
-      icon: 'menu', 
-      route: '/dashboard/menus', 
-      active: false 
+      label: 'Données de Référence', 
+      icon: 'database', 
+      route: '/dashboard/reference-data', 
+      active: false,
+      requiredRole: 'admin'
     },
     { 
       label: 'Périodes', 
