@@ -111,4 +111,10 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem(this.ACCESS_TOKEN_KEY);
   }
+  
+  // Méthode pour faciliter le debugging de l'API
+  logTokenToConsole(): void {
+    const token = this.getToken();
+    console.log('Token actuel:', token);
+  }
 } 
