@@ -1,6 +1,6 @@
 <div class="profile-container">
   <!-- Bannière colorée selon le statut -->
-  <div class="banner" [ngClass]="{'inactive-banner': student && student.status.code === 'INACTIVE'}">
+  <div class="banner" [ngClass]="{'inactive-banner': student && student.status?.label === 'Inactif'}">
   </div>
 
   <!-- Boutons flottants -->
@@ -51,58 +51,118 @@
     <!-- Carte principale avec nom et email -->
     <div class="main-student-card">
       <div class="student-header">
-        <h1>{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</h1>
-        <p class="email">{{ student.personalInfo.email }}</p>
+        <h1>{{ student.firstname }} {{ student.lastname }}</h1>
+        <p class="email">{{ student.email || 'Email non renseigné' }}</p>
       </div>
     </div>
 
-    <!-- Contenu principal en 4 colonnes -->
-    <div class="content-grid">
+    <!-- Section Profil Information - Pleine largeur -->
+    <div class="full-width-section profile-section">
+      <h3>Profil Information</h3>
+      <p class="section-subtitle">Informations personnelles de l'apprenant</p>
       
-      <!-- Colonne 1: Profil Information -->
-      <div class="profile-section">
-        <h3>Profil Information</h3>
-        <p class="section-subtitle">Informations personnelles de l'apprenant</p>
-        
-        <div class="profile-details">
+      <div class="profile-details-grid">
+        <div class="profile-column">
           <div class="detail-row">
             <span class="detail-label">Nom / prénom:</span>
-            <span class="detail-value">{{ student.personalInfo.firstName }} {{ student.personalInfo.lastName }}</span>
+            <span class="detail-value">{{ student.firstname }} {{ student.lastname }}</span>
           </div>
           
           <div class="detail-row">
             <span class="detail-label">Numéro de téléphone:</span>
-            <span class="detail-value">{{ student.personalInfo.phone || 'Non renseigné' }}</span>
+            <span class="detail-value">{{ student.phone || 'Non renseigné' }}</span>
           </div>
           
           <div class="detail-row">
             <span class="detail-label">Email:</span>
-            <span class="detail-value">{{ student.personalInfo.email }}</span>
+            <span class="detail-value">{{ student.email || 'Non renseigné' }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Lieu de naissance:</span>
+            <span class="detail-value">{{ student.placeOfBirth || 'Non renseigné' }}</span>
           </div>
           
           <div class="detail-row">
             <span class="detail-label">Nationalité:</span>
-            <span class="detail-value">{{ student.nationality.name }}</span>
+            <span class="detail-value">{{ getStudentNationality() }}</span>
           </div>
           
-          <div class="detail-row">
+          <div class="detail-row" *ngIf="student.birthdate">
             <span class="detail-label">Âge:</span>
-            <span class="detail-value">{{ calculateAge(student.personalInfo.birthDate) }} ans</span>
+            <span class="detail-value">{{ calculateAge(student.birthdate) }} ans</span>
+          </div>
+        </div>
+
+        <div class="profile-column">
+          <div class="detail-row">
+            <span class="detail-label">Niveau d'entrée:</span>
+            <span class="detail-value level-badge" [attr.data-level]="student.initialLevel?.code">
+              {{ student.initialLevel?.code }} - {{ student.initialLevel?.description }}
+            </span>
           </div>
 
-          <div class="detail-row">
-            <span class="detail-label">Niveau:</span>
-            <span class="detail-value level-badge" [attr.data-level]="student.level.code">{{ student.level.name }}</span>
+          <div class="detail-row" *ngIf="student.currentLevel">
+            <span class="detail-label">Niveau actuel:</span>
+            <span class="detail-value level-badge" [attr.data-level]="student.currentLevel.code">
+              {{ student.currentLevel.code }} - {{ student.currentLevel.description }}
+            </span>
           </div>
 
           <div class="detail-row">
             <span class="detail-label">Statut:</span>
-            <span class="detail-value status-badge" [attr.data-status]="student.status.code">{{ student.status.name }}</span>
+            <span class="detail-value status-badge">{{ getStudentStatus() }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Orientation:</span>
+            <span class="detail-value">{{ getStudentOrientation() }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Genre:</span>
+            <span class="detail-value">{{ getStudentGender() }}</span>
+          </div>
+        </div>
+
+        <div class="profile-column">
+          <h4 style="margin-bottom: 15px; color: #34495e; font-size: 15px;">Dates administratives</h4>
+          
+          <div class="detail-row" *ngIf="student.date_test_initial">
+            <span class="detail-label">Test initial:</span>
+            <span class="detail-value">{{ student.date_test_initial | date:'dd/MM/yyyy' }}</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="student.date_entree_france">
+            <span class="detail-label">Entrée en France:</span>
+            <span class="detail-value">{{ student.date_entree_france | date:'dd/MM/yyyy' }}</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="student.date_titre_sejour">
+            <span class="detail-label">Titre de séjour:</span>
+            <span class="detail-value">{{ student.date_titre_sejour | date:'dd/MM/yyyy' }}</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="student.date_cir">
+            <span class="detail-label">Date CIR:</span>
+            <span class="detail-value">{{ student.date_cir | date:'dd/MM/yyyy' }}</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Colonne 2: Généré des attestations -->
+    <!-- Section Commentaires - Pleine largeur -->
+    <div class="full-width-section comments-section" *ngIf="student.commentaire">
+      <h3>Commentaires</h3>
+      <div class="comments-content">
+        <p>{{ student.commentaire }}</p>
+      </div>
+    </div>
+
+    <!-- Grille 3 colonnes : Attestations, Absences, Évaluations -->
+    <div class="three-columns-grid">
+      
+      <!-- Colonne 1: Généré des attestations -->
       <div class="attestations-section">
         <h3>Généré des attestations</h3>
         
@@ -116,7 +176,7 @@
         </div>
       </div>
 
-      <!-- Colonne 3: Dernières Absences -->
+      <!-- Colonne 2: Dernières Absences -->
       <div class="absences-section">
         <h3>Dernières Absences</h3>
         
@@ -132,7 +192,7 @@
         </div>
       </div>
 
-      <!-- Colonne 4: Dernières évaluations -->
+      <!-- Colonne 3: Dernières évaluations -->
       <div class="evaluations-section">
         <h3>Dernières évaluations</h3>
         
@@ -154,9 +214,13 @@
       <h3>Suite de parcours</h3>
       <div class="parcours-content">
         <div class="parcours-icon">
-          <span class="level-badge-large" [attr.data-level]="student.level.code">{{ student.level.code }}</span>
+          <span class="level-badge-large" [attr.data-level]="(student.currentLevel || student.initialLevel)?.code">
+            {{ (student.currentLevel || student.initialLevel)?.code }}
+          </span>
         </div>
-        <p class="parcours-description">Niveau actuel: {{ student.level.name }}</p>
+        <p class="parcours-description">
+          Niveau actuel: {{ (student.currentLevel || student.initialLevel)?.description }}
+        </p>
         <p class="parcours-next" *ngIf="nextLevel">Prochain niveau: {{ nextLevel.name }}</p>
         <p class="parcours-max" *ngIf="!nextLevel">🎓 Niveau maximum atteint</p>
       </div>

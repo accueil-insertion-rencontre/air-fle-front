@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { StudentService } from '../../services/student.service';
 import { LevelService } from '../../services/level.service';
-import { Student } from '../../models/student.model';
+import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
+import { ApiStudent } from '../../models/student.model';
 import { Level } from '../../models/level.model';
 
 @Component({
@@ -14,24 +15,56 @@ import { Level } from '../../models/level.model';
   styleUrls: ['./student-profile.component.scss']
 })
 export class StudentProfileComponent implements OnInit {
-  student: Student | null = null;
+  student: ApiStudent | null = null;
   nextLevel: Level | null = null;
   loading = true;
   error: string | null = null;
+
+  // Données de référence pour le mapping
+  statuses: any[] = [];
+  nationalities: any[] = [];
+  frenchLevels: any[] = [];
+  genders: any[] = [];
+  orientations: any[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private studentService: StudentService,
-    private levelService: LevelService
+    private levelService: LevelService,
+    private referenceDataService: ReferenceDataService
   ) {}
 
   ngOnInit(): void {
+    this.loadReferenceData();
     this.loadStudent();
   }
 
+  private loadReferenceData(): void {
+    // Charger les données de référence pour faire le mapping
+    this.referenceDataService.getStatuses().subscribe(data => {
+      this.statuses = data;
+    });
+    
+    this.referenceDataService.getNationalities().subscribe(data => {
+      this.nationalities = data;
+    });
+    
+    this.referenceDataService.getFrenchLevels().subscribe(data => {
+      this.frenchLevels = data;
+    });
+
+    this.referenceDataService.getGenders().subscribe(data => {
+      this.genders = data;
+    });
+
+    this.referenceDataService.getOrientations().subscribe(data => {
+      this.orientations = data;
+    });
+  }
+
   loadStudent(): void {
-    const id = Number(this.route.snapshot.params['id']);
+    const id = this.route.snapshot.params['id'];
     if (!id) {
       this.error = 'ID étudiant invalide';
       this.loading = false;
@@ -43,6 +76,7 @@ export class StudentProfileComponent implements OnInit {
 
     this.studentService.getStudentById(id).subscribe({
       next: (student) => {
+        console.log('Données étudiant reçues:', student);
         this.student = student;
         this.loadNextLevel();
       },
@@ -55,26 +89,38 @@ export class StudentProfileComponent implements OnInit {
   }
 
   private loadNextLevel(): void {
-    if (!this.student) {
+    if (!this.student || !this.student.initialLevel) {
       this.loading = false;
       return;
     }
 
-    this.levelService.getNextLevel(this.student.level).subscribe({
+    // Pour le moment, on désactive le chargement du niveau suivant car l'API
+    // ne retourne pas exactement la structure attendée par LevelService
+    // TODO: Adapter LevelService pour fonctionner avec la vraie structure de l'API
+    this.nextLevel = null;
+    this.loading = false;
+    
+    /* 
+    // Code à réactiver quand LevelService sera adapté
+    const currentLevel = this.student.currentLevel || this.student.initialLevel;
+    
+    this.levelService.getNextLevel(currentLevel).subscribe({
       next: (nextLevel) => {
         this.nextLevel = nextLevel || null;
         this.loading = false;
       },
       error: (err) => {
         console.error('Erreur lors du chargement du niveau suivant:', err);
-        // On continue même si on ne peut pas charger le niveau suivant
         this.nextLevel = null;
         this.loading = false;
       }
     });
+    */
   }
 
-  calculateAge(birthDate: Date): number {
+  calculateAge(birthDate: string): number {
+    if (!birthDate) return 0;
+    
     const today = new Date();
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
@@ -87,15 +133,78 @@ export class StudentProfileComponent implements OnInit {
     return age;
   }
 
-  getRecentActivities() {
-    if (!this.student || !this.student.statusHistory) {
-      return [];
+  // Méthodes pour faire le mapping avec les données de référence
+  getStudentStatus(): string {
+    if (!this.student) return 'Non défini';
+    
+    // D'abord essayer l'objet complet
+    if (this.student.status?.label) {
+      return this.student.status.label;
     }
     
-    // Retourne les 3 dernières activités
-    return this.student.statusHistory
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 3);
+    // Sinon faire le mapping avec l'ID
+    if (this.student.status_id && this.statuses.length > 0) {
+      const status = this.statuses.find(s => s.id === this.student!.status_id);
+      return status?.label || 'Non défini';
+    }
+    
+    return 'Non défini';
+  }
+
+  getStudentNationality(): string {
+    if (!this.student) return 'Non renseignée';
+    
+    // D'abord essayer l'objet complet
+    if (this.student.nationality?.label) {
+      return this.student.nationality.label;
+    }
+    
+    // Sinon faire le mapping avec l'ID
+    if (this.student.nationality_id && this.nationalities.length > 0) {
+      const nationality = this.nationalities.find(n => n.id === this.student!.nationality_id);
+      return nationality?.label || 'Non renseignée';
+    }
+    
+    return 'Non renseignée';
+  }
+
+  getStudentGender(): string {
+    if (!this.student) return 'Non défini';
+    
+    // D'abord essayer l'objet complet
+    if (this.student.gender?.label) {
+      return this.student.gender.label;
+    }
+    
+    // Sinon faire le mapping avec l'ID
+    if (this.student.gender_id && this.genders.length > 0) {
+      const gender = this.genders.find(g => g.id === this.student!.gender_id);
+      return gender?.label || 'Non défini';
+    }
+    
+    return 'Non défini';
+  }
+
+  getStudentOrientation(): string {
+    if (!this.student) return 'Non définie';
+    
+    // D'abord essayer l'objet complet
+    if (this.student.orientation?.type) {
+      return this.student.orientation.type;
+    }
+    
+    // Sinon faire le mapping avec l'ID
+    if (this.student.orientation_id && this.orientations.length > 0) {
+      const orientation = this.orientations.find(o => o.id === this.student!.orientation_id);
+      return orientation?.type || 'Non définie';
+    }
+    
+    return 'Non définie';
+  }
+
+  getRecentActivities() {
+    // Pour l'instant, retourner un tableau vide car l'API ne semble pas fournir statusHistory
+    return [];
   }
 
   getActivityIcon(field: string): string {
@@ -112,9 +221,8 @@ export class StudentProfileComponent implements OnInit {
 
   changeLevel(): void {
     if (this.student) {
-      // Ici vous pourriez ouvrir un modal ou naviguer vers une page de changement de niveau
-      console.log('Changement de niveau pour:', this.student.personalInfo.firstName);
-      // Exemple: this.router.navigate(['/dashboard/apprenants', this.student.id, 'change-level']);
+      console.log('Changement de niveau pour:', this.student.firstname);
+      // TODO: Implémenter le changement de niveau
     }
   }
 
@@ -132,7 +240,7 @@ export class StudentProfileComponent implements OnInit {
     if (!this.student) return;
 
     const confirmDelete = confirm(
-      `Êtes-vous sûr de vouloir supprimer l'étudiant ${this.student.personalInfo.firstName} ${this.student.personalInfo.lastName} ?`
+      `Êtes-vous sûr de vouloir supprimer l'étudiant ${this.student.firstname} ${this.student.lastname} ?`
     );
 
     if (confirmDelete) {
@@ -151,43 +259,43 @@ export class StudentProfileComponent implements OnInit {
   // Nouvelles méthodes pour les fonctionnalités
   generateAttestation(): void {
     // TODO: Implémenter la génération d'attestation
-    console.log('Génération d\'attestation pour:', this.student?.personalInfo.firstName);
+    console.log('Génération d\'attestation pour:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   viewAbsences(): void {
     // TODO: Naviguer vers la page des absences
-    console.log('Voir les absences de:', this.student?.personalInfo.firstName);
+    console.log('Voir les absences de:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   addAbsence(): void {
     // TODO: Ouvrir le formulaire d'ajout d'absence
-    console.log('Ajouter une absence pour:', this.student?.personalInfo.firstName);
+    console.log('Ajouter une absence pour:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   manageAbsences(): void {
     // TODO: Naviguer vers la gestion des absences
-    console.log('Gérer les absences de:', this.student?.personalInfo.firstName);
+    console.log('Gérer les absences de:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   viewEvaluations(): void {
     // TODO: Naviguer vers la page des évaluations
-    console.log('Voir les évaluations de:', this.student?.personalInfo.firstName);
+    console.log('Voir les évaluations de:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   addEvaluation(): void {
     // TODO: Ouvrir le formulaire d'ajout d'évaluation
-    console.log('Ajouter une évaluation pour:', this.student?.personalInfo.firstName);
+    console.log('Ajouter une évaluation pour:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
   manageEvaluations(): void {
     // TODO: Naviguer vers la gestion des évaluations
-    console.log('Gérer les évaluations de:', this.student?.personalInfo.firstName);
+    console.log('Gérer les évaluations de:', this.student?.firstname);
     alert('Fonctionnalité en cours de développement');
   }
 
