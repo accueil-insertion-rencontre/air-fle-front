@@ -23,8 +23,73 @@ export interface StatusHistoryEntry {
   comment?: string;
 }
 
+// Interface pour les données réelles retournées par l'API
+export interface ApiStudent {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email?: string;
+  phone?: string;
+  birthdate?: string;
+  placeOfBirth?: string;
+  commentaire?: string;
+  date_test_initial?: string;
+  date_entree_france?: string;
+  date_titre_sejour?: string;
+  date_cir?: string;
+  
+  // Relations avec objets complets
+  gender?: {
+    id: string;
+    label: string;
+  };
+  nationality?: {
+    id: string;
+    label: string;
+  };
+  initialLevel?: {
+    id: string;
+    code: string;
+    description: string;
+  };
+  currentLevel?: {
+    id: string;
+    code: string;
+    description: string;
+  } | null;
+  status?: {
+    id: string;
+    label: string;
+  };
+  orientation?: {
+    id: string;
+    type: string;
+    description: string;
+  };
+  
+  // IDs de référence
+  gender_id: string;
+  nationality_id: string;
+  initial_level_id: string;
+  current_level_id?: string | null;
+  status_id: string;
+  orientation_id?: string;
+  financing_id: string;
+  exit_reason_id?: string | null;
+  departure_level_id?: string | null;
+  
+  // Arrays
+  addresses: any[];
+  disabilities: any[];
+  
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Interface originale pour compatibilité
 export interface Student {
-  id: number;
+  id: string;
   personalInfo: PersonalInfo;
   address: Address;
   nationality: Nationality;

@@ -2,11 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Student, StudentFilters, StudentListConfig } from '../models/student.model';
+import { Student, StudentFilters, StudentListConfig, ApiStudent } from '../models/student.model';
 import { environment } from '../../../../../environments/environment';
 
 export interface StudentListResponse {
-  students: Student[];
+  students: ApiStudent[];
   total: number;
 }
 
@@ -28,7 +28,7 @@ export interface CreateStudentRequest {
   
   // IDS OBLIGATOIRES
   gender_id: string;
-  entry_level_id: string; // Niveau déterminé par test de positionnement
+  initial_level_id: string; // Niveau déterminé par test de positionnement
   nationality_id: string;
   financing_id: string;
   status_id: string;
@@ -101,7 +101,7 @@ export class StudentService {
   /**
    * Récupère un étudiant par son ID
    */
-  getStudentById(id: number): Observable<Student> {
+  getStudentById(id: string): Observable<ApiStudent> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         if (response.success && response.data) {
@@ -135,14 +135,14 @@ export class StudentService {
   /**
    * Met à jour un étudiant existant
    */
-  updateStudent(id: number, student: Partial<Student>): Observable<Student> {
+  updateStudent(id: string, student: Partial<Student>): Observable<Student> {
     return this.http.put<Student>(`${this.apiUrl}/${id}`, student);
   }
 
   /**
    * Supprime un étudiant
    */
-  deleteStudent(id: number): Observable<void> {
+  deleteStudent(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
