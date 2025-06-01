@@ -63,7 +63,7 @@ export class StudentFormComponent implements OnInit {
       
       // IDS OBLIGATOIRES
       gender_id: ['', [Validators.required]],
-      entry_level_id: ['', [Validators.required]], // Niveau déterminé par test de positionnement
+      initial_level_id: ['', [Validators.required]], // Niveau déterminé par test de positionnement
       nationality_id: ['', [Validators.required]],
       financing_id: ['', [Validators.required]],
       status_id: ['', [Validators.required]],
@@ -193,7 +193,7 @@ export class StudentFormComponent implements OnInit {
         
         // IDS OBLIGATOIRES
         gender_id: formValue.gender_id,
-        entry_level_id: formValue.entry_level_id,
+        initial_level_id: formValue.initial_level_id,
         nationality_id: formValue.nationality_id,
         financing_id: formValue.financing_id,
         status_id: formValue.status_id
