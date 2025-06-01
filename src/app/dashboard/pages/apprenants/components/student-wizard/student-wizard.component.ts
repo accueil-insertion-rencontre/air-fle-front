@@ -1,0 +1,286 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { StudentService, CreateStudentRequest } from '../../services/student.service';
+import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
+
+interface WizardStep {
+  id: number;
+  title: string;
+  isCompleted: boolean;
+  isActive: boolean;
+}
+
+@Component({
+  selector: 'app-student-wizard',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './student-wizard.component.html',
+  styleUrls: ['./student-wizard.component.scss']
+})
+export class StudentWizardComponent implements OnInit {
+  // Forms pour chaque étape
+  personalInfoForm!: FormGroup;
+  contactForm!: FormGroup;
+  administrativeForm!: FormGroup;
+  additionalForm!: FormGroup;
+
+  // Données de référence
+  genders: any[] = [];
+  nationalities: any[] = [];
+  frenchLevels: any[] = [];
+  statuses: any[] = [];
+  financings: any[] = [];
+  orientations: any[] = [];
+  disabilities: any[] = [];
+
+  // État du wizard
+  currentStep = 1;
+  totalSteps = 4;
+  isSubmitting = false;
+  error: string | null = null;
+
+  steps: WizardStep[] = [
+    { id: 1, title: 'Informations personnelles', isCompleted: false, isActive: true },
+    { id: 2, title: 'Contact & Adresse', isCompleted: false, isActive: false },
+    { id: 3, title: 'Informations administratives', isCompleted: false, isActive: false },
+    { id: 4, title: 'Informations complémentaires', isCompleted: false, isActive: false }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    private studentService: StudentService,
+    private referenceDataService: ReferenceDataService,
+    private router: Router
+  ) {
+    this.initializeForms();
+  }
+
+  ngOnInit(): void {
+    this.loadReferenceData();
+  }
+
+  private initializeForms(): void {
+    // Étape 1 : Informations personnelles
+    this.personalInfoForm = this.fb.group({
+      firstname: ['', [Validators.required, Validators.minLength(2)]],
+      lastname: ['', [Validators.required, Validators.minLength(2)]],
+      birthdate: ['', Validators.required],
+      placeOfBirth: [''],
+      gender_id: ['', Validators.required]
+    });
+
+    // Étape 2 : Contact & Adresse
+    this.contactForm = this.fb.group({
+      email: ['', [Validators.email]],
+      phone: ['', [Validators.pattern(/^[+]?[0-9\s\-\(\)]{8,15}$/)]],
+      address: [''],
+      city: [''],
+      postalCode: [''],
+      country: ['France']
+    });
+
+    // Étape 3 : Informations administratives
+    this.administrativeForm = this.fb.group({
+      nationality_id: ['', Validators.required],
+      initial_level_id: ['', Validators.required],
+      current_level_id: [''],
+      status_id: ['', Validators.required],
+      financing_id: ['', Validators.required],
+      date_entree_france: [''],
+      date_titre_sejour: [''],
+      date_cir: ['']
+    });
+
+    // Étape 4 : Informations complémentaires
+    this.additionalForm = this.fb.group({
+      date_test_initial: [''],
+      orientation_id: [''],
+      disability_ids: [[]],
+      commentaire: ['']
+    });
+  }
+
+  private loadReferenceData(): void {
+    // Charger toutes les données de référence en parallèle
+    this.referenceDataService.getGenders().subscribe(data => this.genders = data);
+    this.referenceDataService.getNationalities().subscribe(data => this.nationalities = data);
+    this.referenceDataService.getFrenchLevels().subscribe(data => this.frenchLevels = data);
+    this.referenceDataService.getStatuses().subscribe(data => this.statuses = data);
+    this.referenceDataService.getFinancings().subscribe(data => this.financings = data);
+    this.referenceDataService.getOrientations().subscribe(data => this.orientations = data);
+    this.referenceDataService.getDisabilities().subscribe(data => this.disabilities = data);
+  }
+
+  // Navigation entre étapes
+  nextStep(): void {
+    if (this.isCurrentStepValid()) {
+      this.steps[this.currentStep - 1].isCompleted = true;
+      this.steps[this.currentStep - 1].isActive = false;
+      
+      if (this.currentStep < this.totalSteps) {
+        this.currentStep++;
+        this.steps[this.currentStep - 1].isActive = true;
+      }
+    } else {
+      this.markCurrentFormAsTouched();
+    }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.steps[this.currentStep - 1].isActive = false;
+      this.currentStep--;
+      this.steps[this.currentStep - 1].isActive = true;
+    }
+  }
+
+  goToStep(stepNumber: number): void {
+    if (stepNumber <= this.currentStep || this.steps[stepNumber - 1].isCompleted) {
+      this.steps[this.currentStep - 1].isActive = false;
+      this.currentStep = stepNumber;
+      this.steps[this.currentStep - 1].isActive = true;
+    }
+  }
+
+  private isCurrentStepValid(): boolean {
+    switch (this.currentStep) {
+      case 1: return this.personalInfoForm.valid;
+      case 2: return this.contactForm.valid;
+      case 3: return this.administrativeForm.valid;
+      case 4: return this.additionalForm.valid;
+      default: return false;
+    }
+  }
+
+  private markCurrentFormAsTouched(): void {
+    switch (this.currentStep) {
+      case 1: this.markFormGroupTouched(this.personalInfoForm); break;
+      case 2: this.markFormGroupTouched(this.contactForm); break;
+      case 3: this.markFormGroupTouched(this.administrativeForm); break;
+      case 4: this.markFormGroupTouched(this.additionalForm); break;
+    }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  // Validation et helpers
+  isFieldInvalid(formGroup: FormGroup, fieldName: string): boolean {
+    const field = formGroup.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
+  getFieldError(formGroup: FormGroup, fieldName: string): string {
+    const field = formGroup.get(fieldName);
+    if (!field || !field.errors || !field.touched) return '';
+
+    if (field.errors['required']) return `Ce champ est requis`;
+    if (field.errors['email']) return 'Format d\'email invalide';
+    if (field.errors['minlength']) return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
+    if (field.errors['pattern']) return 'Format invalide';
+
+    return 'Champ invalide';
+  }
+
+  // Gestion des handicaps (multiple sélection)
+  toggleDisability(disabilityId: string): void {
+    const currentDisabilities = this.additionalForm.get('disability_ids')?.value || [];
+    const index = currentDisabilities.indexOf(disabilityId);
+    
+    if (index > -1) {
+      currentDisabilities.splice(index, 1);
+    } else {
+      currentDisabilities.push(disabilityId);
+    }
+    
+    this.additionalForm.patchValue({ disability_ids: currentDisabilities });
+  }
+
+  isDisabilitySelected(disabilityId: string): boolean {
+    const currentDisabilities = this.additionalForm.get('disability_ids')?.value || [];
+    return currentDisabilities.includes(disabilityId);
+  }
+
+  // Soumission finale
+  onSubmit(): void {
+    if (!this.areAllFormsValid()) {
+      this.error = 'Veuillez remplir tous les champs obligatoires';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.error = null;
+
+    const studentData: CreateStudentRequest = this.buildStudentData();
+
+    this.studentService.createStudent(studentData).subscribe({
+      next: (student) => {
+        this.router.navigate(['/dashboard/apprenants']);
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        this.error = 'Erreur lors de la création de l\'étudiant : ' + (error.message || 'Erreur inconnue');
+      }
+    });
+  }
+
+  public areAllFormsValid(): boolean {
+    return this.personalInfoForm.valid && 
+           this.contactForm.valid && 
+           this.administrativeForm.valid && 
+           this.additionalForm.valid;
+  }
+
+  private buildStudentData(): CreateStudentRequest {
+    const personal = this.personalInfoForm.value;
+    const contact = this.contactForm.value;
+    const admin = this.administrativeForm.value;
+    const additional = this.additionalForm.value;
+
+    const studentData: CreateStudentRequest = {
+      // Informations personnelles obligatoires
+      firstname: personal.firstname,
+      lastname: personal.lastname,
+      birthdate: personal.birthdate,
+      gender_id: personal.gender_id,
+
+      // Informations administratives obligatoires
+      initial_level_id: admin.initial_level_id,
+      nationality_id: admin.nationality_id,
+      financing_id: admin.financing_id,
+      status_id: admin.status_id
+    };
+
+    // Ajouter les champs optionnels s'ils sont renseignés
+    if (personal.placeOfBirth) studentData.placeOfBirth = personal.placeOfBirth;
+    if (contact.email) studentData.email = contact.email;
+    if (contact.phone) studentData.phone = contact.phone;
+    if (admin.current_level_id) studentData.current_level_id = admin.current_level_id;
+    if (admin.date_entree_france) studentData.date_entree_france = admin.date_entree_france;
+    if (admin.date_titre_sejour) studentData.date_titre_sejour = admin.date_titre_sejour;
+    if (admin.date_cir) studentData.date_cir = admin.date_cir;
+    if (additional.date_test_initial) studentData.date_test_initial = additional.date_test_initial;
+    if (additional.orientation_id) studentData.orientation_id = additional.orientation_id;
+    if (additional.commentaire) studentData.commentaire = additional.commentaire;
+
+    return studentData;
+  }
+
+  // Navigation
+  cancel(): void {
+    this.router.navigate(['/dashboard/apprenants']);
+  }
+
+  // Utilitaires
+  getStepIcon(step: WizardStep): string {
+    if (step.isCompleted) return '✓';
+    if (step.isActive) return step.id.toString();
+    return step.id.toString();
+  }
+} 
