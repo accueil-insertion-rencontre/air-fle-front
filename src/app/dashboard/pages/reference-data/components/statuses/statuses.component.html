@@ -1,16 +1,16 @@
-<div class="nationalities-container">
+<div class="statuses-container">
   <!-- Actions -->
-  <div class="nationalities-actions">
+  <div class="statuses-actions">
     <button class="back-btn" (click)="goBack()">
       <span class="btn-icon">←</span>
       Retour
     </button>
     
-    <h2>🌍 Nationalités</h2>
+    <h2>📊 Statuts</h2>
     
     <button class="create-btn" (click)="openCreateModal()">
       <span class="btn-icon">+</span>
-      Ajouter une nationalité
+      Ajouter un statut
     </button>
   </div>
 
@@ -21,10 +21,10 @@
   </div>
 
   <!-- Contenu principal -->
-  <div class="nationalities-content">
-    <div class="nationalities-list">
+  <div class="statuses-content">
+    <div class="statuses-list">
       <!-- En-tête du tableau -->
-      <div class="nationalities-header">
+      <div class="statuses-header">
         <div class="column name">LIBELLÉ</div>
         <div class="column actions">ACTIONS</div>
       </div>
@@ -32,31 +32,31 @@
       <!-- Loading -->
       <div *ngIf="isLoading" class="loading-indicator">
         <div class="spinner"></div>
-        <span>Chargement des nationalités...</span>
+        <span>Chargement des statuts...</span>
       </div>
 
-      <!-- Liste des nationalités -->
+      <!-- Liste des statuts -->
       <div 
-        *ngFor="let nationality of nationalities; trackBy: trackByNationalityId" 
-        class="nationality-item"
+        *ngFor="let status of statuses; trackBy: trackByStatusId" 
+        class="status-item"
       >
         <div class="column name">
-          <div class="nationality-name">{{ nationality.label }}</div>
+          <div class="status-name">{{ status.label }}</div>
         </div>
         
         
         <div class="column actions">
-          <button class="edit-btn" (click)="openEditModal(nationality)">Modifier</button>
-          <button class="delete-btn" (click)="deleteNationality(nationality)">Supprimer</button>
+          <button class="edit-btn" (click)="openEditModal(status)">Modifier</button>
+          <button class="delete-btn" (click)="deleteStatus(status)">Supprimer</button>
         </div>
       </div>
 
       <!-- État vide -->
-      <div *ngIf="!isLoading && nationalities.length === 0" class="empty-state">
-        <p>Aucune nationalité trouvée</p>
+      <div *ngIf="!isLoading && statuses.length === 0" class="empty-state">
+        <p>Aucun statut trouvé</p>
         <button class="create-btn" (click)="openCreateModal()">
           <span class="btn-icon">+</span>
-          Ajouter une nationalité
+          Ajouter un statut
         </button>
       </div>
     </div>
@@ -67,19 +67,19 @@
 <div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Ajouter une nationalité</h2>
+      <h2>Ajouter un statut</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
     </div>
     
     <div class="modal-body">
-      <form [formGroup]="createForm" (ngSubmit)="createNationality()">
+      <form [formGroup]="createForm" (ngSubmit)="createStatus()">
         <div class="form-group">
           <label for="createLabel">Libellé *</label>
           <input 
             id="createLabel"
             type="text" 
             formControlName="label"
-            placeholder="Ex: Française, Algérienne..."
+            placeholder="Ex: Actif, Inactif, En attente..."
             [class.error]="createLabel?.invalid && createLabel?.touched"
           >
           <div *ngIf="createLabel?.invalid && createLabel?.touched" class="error-text">
@@ -105,19 +105,19 @@
 <div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Modifier la nationalité</h2>
+      <h2>Modifier le statut</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
     </div>
     
     <div class="modal-body">
-      <form [formGroup]="editForm" (ngSubmit)="updateNationality()">
+      <form [formGroup]="editForm" (ngSubmit)="updateStatus()">
         <div class="form-group">
           <label for="editLabel">Libellé *</label>
           <input 
             id="editLabel"
             type="text" 
             formControlName="label"
-            placeholder="Ex: Française, Algérienne..."
+            placeholder="Ex: Actif, Inactif, En attente..."
             [class.error]="editLabel?.invalid && editLabel?.touched"
           >
           <div *ngIf="editLabel?.invalid && editLabel?.touched" class="error-text">
