@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StudentService, StudentListResponse } from '../../services/student.service';
+import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
 import { Student, StudentFilters, StudentListConfig, StudentSortConfig, StudentSortField } from '../../models/student.model';
 
 @Component({
@@ -30,13 +31,35 @@ export class StudentListComponent implements OnInit {
     nationality: ''
   };
 
+  // Données de référence pour le mapping
+  statuses: any[] = [];
+  nationalities: any[] = [];
+  frenchLevels: any[] = [];
+
   constructor(
     private studentService: StudentService,
+    private referenceDataService: ReferenceDataService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.loadReferenceData();
     this.loadStudents();
+  }
+
+  private loadReferenceData(): void {
+    // Charger les données de référence pour faire le mapping
+    this.referenceDataService.getStatuses().subscribe(data => {
+      this.statuses = data;
+    });
+    
+    this.referenceDataService.getNationalities().subscribe(data => {
+      this.nationalities = data;
+    });
+    
+    this.referenceDataService.getFrenchLevels().subscribe(data => {
+      this.frenchLevels = data;
+    });
   }
 
   loadStudents(): void {
@@ -67,32 +90,74 @@ export class StudentListComponent implements OnInit {
   }
 
   getStudentInitials(student: any): string {
-    // Adaptation pour gérer différentes structures de données
-    const firstName = student.firstname || student.personalInfo?.firstName || '';
-    const lastName = student.lastname || student.personalInfo?.lastName || '';
+    // Utiliser les vraies propriétés de l'API
+    const firstName = student.firstname || '';
+    const lastName = student.lastname || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
   getStudentName(student: any): string {
-    const firstName = student.firstname || student.personalInfo?.firstName || '';
-    const lastName = student.lastname || student.personalInfo?.lastName || '';
+    // Utiliser les vraies propriétés de l'API
+    const firstName = student.firstname || '';
+    const lastName = student.lastname || '';
     return `${firstName} ${lastName}`.trim();
   }
 
   getStudentEmail(student: any): string {
-    return student.email || student.personalInfo?.email || 'Non renseigné';
+    // Utiliser la vraie propriété de l'API
+    return student.email || 'Non renseigné';
   }
 
   getStudentLevel(student: any): string {
-    return student.currentLevel?.name || student.level?.name || 'Non défini';
+    // Utiliser les vraies propriétés de l'API - d'abord chercher les objets complets
+    if (student.currentLevel) {
+      return `${student.currentLevel.code} - ${student.currentLevel.description}`;
+    } else if (student.initialLevel) {
+      return `${student.initialLevel.code} - ${student.initialLevel.description}`;
+    }
+    
+    // Si on a seulement les IDs, faire le mapping
+    if (student.current_level_id && this.frenchLevels.length > 0) {
+      const level = this.frenchLevels.find(l => l.id === student.current_level_id);
+      if (level) return `${level.code} - ${level.description}`;
+    }
+    
+    if (student.initial_level_id && this.frenchLevels.length > 0) {
+      const level = this.frenchLevels.find(l => l.id === student.initial_level_id);
+      if (level) return `${level.code} - ${level.description}`;
+    }
+    
+    return 'Non défini';
   }
 
   getStudentStatus(student: any): string {
-    return student.status?.name || 'Non défini';
+    // Utiliser la vraie propriété de l'API - d'abord l'objet complet
+    if (student.status?.label) {
+      return student.status.label;
+    }
+    
+    // Si on a seulement l'ID, faire le mapping avec les données de référence chargées
+    if (student.status_id && this.statuses.length > 0) {
+      const status = this.statuses.find(s => s.id === student.status_id);
+      return status?.label || 'Non défini';
+    }
+    
+    return 'Non défini';
   }
 
   getStudentNationality(student: any): string {
-    return student.nationality?.name || 'Non renseignée';
+    // Utiliser la vraie propriété de l'API - d'abord l'objet complet
+    if (student.nationality?.label) {
+      return student.nationality.label;
+    }
+    
+    // Si on a seulement l'ID, faire le mapping
+    if (student.nationality_id && this.nationalities.length > 0) {
+      const nationality = this.nationalities.find(n => n.id === student.nationality_id);
+      return nationality?.label || 'Non renseignée';
+    }
+    
+    return 'Non renseignée';
   }
 
   // Méthodes de pagination
@@ -158,7 +223,7 @@ export class StudentListComponent implements OnInit {
     this.loadStudents();
   }
 
-  deleteStudent(id: number): void {
+  deleteStudent(id: string): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet apprenant ?')) {
       this.studentService.deleteStudent(id).subscribe({
         next: () => {
