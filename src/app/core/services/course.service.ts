@@ -236,9 +236,63 @@ export class CourseService {
   /**
    * Récupère les cours par groupe
    */
-  getCoursesByGroupId(groupId: number): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.apiUrl}/group/${groupId}`)
-      .pipe(catchError(this.handleError));
+  getCoursesByGroupId(groupId: string | number): Observable<Course[]> {
+    console.log('Tentative de récupération des cours pour le groupe:', groupId);
+    
+    // L'endpoint direct n'existe pas, essayons plusieurs approches
+    return this.http.get<any>(`${this.apiUrl}/group/${groupId}`)
+      .pipe(
+        map(response => {
+          console.log('Réponse brute de l\'API pour getCoursesByGroupId (endpoint direct):', response);
+          
+          if (response && response.data && Array.isArray(response.data)) {
+            return response.data.map((course: any) => this.convertToFrontendModel(course));
+          }
+          
+          // Fallback: si la réponse est directement un tableau
+          if (Array.isArray(response)) {
+            return response.map((course: any) => this.convertToFrontendModel(course));
+          }
+          
+          console.warn('Aucun cours trouvé pour le groupe ou format inattendu:', response);
+          return [];
+        }),
+        catchError((error) => {
+          console.warn('Endpoint /courses/group/{id} non disponible (404), tentative de fallback:', error);
+          
+          // Fallback: récupérer tous les cours et filtrer côté client
+          return this.getCourses().pipe(
+            map((allCourses: Course[]) => {
+              console.log('Filtrage côté client des cours pour group_id:', groupId);
+              console.log('Tous les cours récupérés:', allCourses);
+              
+              const filteredCourses = allCourses.filter(course => {
+                const courseGroupId = course.group_id;
+                const match = courseGroupId?.toString() === groupId?.toString();
+                
+                if (match) {
+                  console.log('Cours trouvé pour le groupe:', course.title, 'group_id:', courseGroupId);
+                }
+                
+                return match;
+              });
+              
+              console.log(`${filteredCourses.length} cours trouvés pour le groupe ${groupId}`);
+              return filteredCourses;
+            }),
+            catchError((fallbackError) => {
+              console.error('Échec du fallback également:', fallbackError);
+              
+              // Dernier recours: retourner un tableau vide
+              console.warn('Retour d\'un tableau vide car aucune méthode n\'a fonctionné');
+              return new Observable<Course[]>(observer => {
+                observer.next([]);
+                observer.complete();
+              });
+            })
+          );
+        })
+      );
   }
 
   /**
