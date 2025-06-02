@@ -4,11 +4,13 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { CourseService } from '../../../../core/services/course.service';
 import { SessionService } from '../../../../core/services/session.service';
 import { GroupService } from '../../../../core/services/group.service';
+import { UserService } from '../../../../core/services/user.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { Course } from '../../../../core/models/course.model';
 import { Session } from '../../../../core/models/session.model';
 import { Group } from '../../../../core/models/group.model';
 import { Student } from '../../../../core/models/student.model';
+import { User, UserDisplayInfo } from '../../../../core/models/user.model';
 
 declare var bootstrap: any;
 
@@ -31,6 +33,7 @@ export class CourseCalendarComponent implements OnInit {
   weekDays: WeekDay[] = [];
   sessions: Session[] = [];
   groups: Group[] = [];
+  teachers: UserDisplayInfo[] = [];
   selectedSessionId: string | number | null = null;
   courses: Course[] = [];
   
@@ -71,6 +74,7 @@ export class CourseCalendarComponent implements OnInit {
     private courseService: CourseService,
     private sessionService: SessionService,
     private groupService: GroupService,
+    private userService: UserService,
     private alertService: AlertService,
     private formBuilder: FormBuilder
   ) {
@@ -79,7 +83,7 @@ export class CourseCalendarComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
-      user_id: [null] // Optionnel pour l'instant
+      user_id: [''] // Optionnel, donc pas de Validators.required
     });
 
     this.editCourseForm = this.formBuilder.group({
@@ -88,12 +92,13 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
       day: ['', Validators.required],
-      user_id: [null] // Optionnel pour l'instant
+      user_id: [''] // Optionnel, donc pas de Validators.required
     });
   }
 
   ngOnInit(): void {
     this.loadSessions();
+    this.loadTeachers();
     this.generateWeekView();
     this.loadCourses();
     
@@ -155,6 +160,23 @@ export class CourseCalendarComponent implements OnInit {
       error: (error) => {
         console.error('Erreur lors du chargement des sessions:', error);
         this.alertService.error('Impossible de charger les sessions');
+      }
+    });
+  }
+
+  /**
+   * Charge les professeurs disponibles
+   */
+  loadTeachers(): void {
+    this.userService.getTeachers().subscribe({
+      next: (teachers) => {
+        // Convertir les User en UserDisplayInfo
+        this.teachers = this.userService.getUsersDisplayInfo(teachers);
+        console.log('Professeurs chargés:', this.teachers);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des professeurs:', error);
+        this.alertService.error('Impossible de charger les professeurs');
       }
     });
   }
@@ -898,5 +920,24 @@ export class CourseCalendarComponent implements OnInit {
   isEditFieldInvalid(fieldName: string): boolean {
     const control = this.editCourseForm.get(fieldName);
     return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  /**
+   * Récupère les informations d'un professeur par son ID
+   */
+  getTeacherById(teacherId: string | number | null | undefined): UserDisplayInfo | null {
+    if (!teacherId) return null;
+    
+    return this.teachers.find(teacher => 
+      teacher.id.toString() === teacherId.toString()
+    ) || null;
+  }
+
+  /**
+   * Retourne le nom complet d'un professeur ou 'Non assigné'
+   */
+  getTeacherFullName(teacherId: string | number | null | undefined): string {
+    const teacher = this.getTeacherById(teacherId);
+    return teacher ? teacher.fullName : 'Non assigné';
   }
 } 
