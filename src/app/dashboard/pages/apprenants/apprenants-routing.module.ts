@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { StudentListComponent } from './components/student-list/student-list.component';
+import { StudentWizardComponent } from './components/student-wizard/student-wizard.component';
 import { StudentFormComponent } from './components/student-form/student-form.component';
 import { StudentProfileComponent } from './components/student-profile/student-profile.component';
 import { StudentImportComponent } from './components/student-import/student-import.component';
@@ -12,7 +13,7 @@ const routes: Routes = [
   },
   {
     path: 'new',
-    component: StudentFormComponent
+    component: StudentWizardComponent
   },
   {
     path: 'import',

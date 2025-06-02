@@ -1,85 +1,69 @@
-<div class="nationalities-container">
-  <!-- Actions -->
-  <div class="nationalities-actions">
+<div class="disabilities-container">
+  <div class="disabilities-actions">
     <button class="back-btn" (click)="goBack()">
       <span class="btn-icon">←</span>
       Retour
     </button>
-    
-    <h2>🌍 Nationalités</h2>
-    
+    <h2>♿ Handicaps</h2>
     <button class="create-btn" (click)="openCreateModal()">
       <span class="btn-icon">+</span>
-      Ajouter une nationalité
+      Ajouter un handicap
     </button>
   </div>
-
-  <!-- Message d'erreur -->
+  
   <div *ngIf="error" class="error-message">
     <p>{{ error }}</p>
     <button (click)="error = null" class="close-error">×</button>
   </div>
-
-  <!-- Contenu principal -->
-  <div class="nationalities-content">
-    <div class="nationalities-list">
-      <!-- En-tête du tableau -->
-      <div class="nationalities-header">
-        <div class="column name">LIBELLÉ</div>
+  
+  <div class="disabilities-content">
+    <div class="disabilities-list">
+      <div class="disabilities-header">
+        <div class="column label">LIBELLÉ</div>
+        <div class="column description">DESCRIPTION</div>
         <div class="column actions">ACTIONS</div>
       </div>
-
-      <!-- Loading -->
+      
       <div *ngIf="isLoading" class="loading-indicator">
         <div class="spinner"></div>
-        <span>Chargement des nationalités...</span>
+        <span>Chargement des handicaps...</span>
       </div>
-
-      <!-- Liste des nationalités -->
-      <div 
-        *ngFor="let nationality of nationalities; trackBy: trackByNationalityId" 
-        class="nationality-item"
-      >
-        <div class="column name">
-          <div class="nationality-name">{{ nationality.label }}</div>
-        </div>
-        
-        
+      
+      <div *ngFor="let disability of disabilities; trackBy: trackByDisabilityId" class="disability-item">
+        <div class="column label">{{ disability.label }}</div>
+        <div class="column description">{{ disability.description || '-' }}</div>
         <div class="column actions">
-          <button class="edit-btn" (click)="openEditModal(nationality)">Modifier</button>
-          <button class="delete-btn" (click)="deleteNationality(nationality)">Supprimer</button>
+          <button class="edit-btn" (click)="openEditModal(disability)">Modifier</button>
+          <button class="delete-btn" (click)="deleteDisability(disability)">Supprimer</button>
         </div>
       </div>
-
-      <!-- État vide -->
-      <div *ngIf="!isLoading && nationalities.length === 0" class="empty-state">
-        <p>Aucune nationalité trouvée</p>
+      
+      <div *ngIf="!isLoading && disabilities.length === 0" class="empty-state">
+        <p>Aucun handicap trouvé</p>
         <button class="create-btn" (click)="openCreateModal()">
           <span class="btn-icon">+</span>
-          Ajouter une nationalité
+          Ajouter un handicap
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal de création -->
 <div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Ajouter une nationalité</h2>
+      <h2>Ajouter un handicap</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
     </div>
-    
     <div class="modal-body">
-      <form [formGroup]="createForm" (ngSubmit)="createNationality()">
+      <form [formGroup]="createForm" (ngSubmit)="createDisability()">
         <div class="form-group">
           <label for="createLabel">Libellé *</label>
           <input 
             id="createLabel"
-            type="text" 
-            formControlName="label"
-            placeholder="Ex: Française, Algérienne..."
+            type="text"
+            formControlName="label" 
+            placeholder="Type de handicap"
             [class.error]="createLabel?.invalid && createLabel?.touched"
           >
           <div *ngIf="createLabel?.invalid && createLabel?.touched" class="error-text">
@@ -87,37 +71,39 @@
             <span *ngIf="createLabel?.hasError('minlength')">Le libellé doit contenir au moins 2 caractères</span>
           </div>
         </div>
-
+        <div class="form-group">
+          <label for="createDescription">Description</label>
+          <textarea 
+            id="createDescription"
+            formControlName="description" 
+            placeholder="Description du handicap (optionnel)"
+            rows="3"
+          ></textarea>
+        </div>
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" (click)="closeCreateModal()">
-            Annuler
-          </button>
-          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">
-            Créer
-          </button>
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Modal d'édition -->
 <div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Modifier la nationalité</h2>
+      <h2>Modifier le handicap</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
     </div>
-    
     <div class="modal-body">
-      <form [formGroup]="editForm" (ngSubmit)="updateNationality()">
+      <form [formGroup]="editForm" (ngSubmit)="updateDisability()">
         <div class="form-group">
           <label for="editLabel">Libellé *</label>
           <input 
             id="editLabel"
-            type="text" 
-            formControlName="label"
-            placeholder="Ex: Française, Algérienne..."
+            type="text"
+            formControlName="label" 
+            placeholder="Type de handicap"
             [class.error]="editLabel?.invalid && editLabel?.touched"
           >
           <div *ngIf="editLabel?.invalid && editLabel?.touched" class="error-text">
@@ -125,14 +111,18 @@
             <span *ngIf="editLabel?.hasError('minlength')">Le libellé doit contenir au moins 2 caractères</span>
           </div>
         </div>
-
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea 
+            id="editDescription"
+            formControlName="description" 
+            placeholder="Description du handicap (optionnel)"
+            rows="3"
+          ></textarea>
+        </div>
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" (click)="closeEditModal()">
-            Annuler
-          </button>
-          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
-            Sauvegarder
-          </button>
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">Sauvegarder</button>
         </div>
       </form>
     </div>

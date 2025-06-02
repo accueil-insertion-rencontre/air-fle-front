@@ -139,18 +139,18 @@
 
       <div class="form-row">
         <div class="form-group required">
-          <label for="entry_level_id">Niveau d'entrée *</label>
+          <label for="initial_level_id">Niveau d'entrée *</label>
           <select 
-            id="entry_level_id" 
-            formControlName="entry_level_id"
-            [class.invalid]="isFieldInvalid('entry_level_id')">
+            id="initial_level_id" 
+            formControlName="initial_level_id"
+            [class.invalid]="isFieldInvalid('initial_level_id')">
             <option value="">Sélectionnez un niveau</option>
             <option *ngFor="let level of frenchLevels" [value]="level.id">
               {{ level.code }} - {{ level.description }}
             </option>
           </select>
-          <div class="error-text" *ngIf="isFieldInvalid('entry_level_id')">
-            {{ getFieldError('entry_level_id') }}
+          <div class="error-text" *ngIf="isFieldInvalid('initial_level_id')">
+            {{ getFieldError('initial_level_id') }}
           </div>
           <small class="field-help">Niveau déterminé par le test de positionnement</small>
         </div>

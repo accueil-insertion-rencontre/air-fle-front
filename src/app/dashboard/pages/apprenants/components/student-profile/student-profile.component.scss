@@ -170,70 +170,111 @@ $gray-500: #A0AEC0;
     }
   }
   
-  // Grille de contenu principal - 4 colonnes exactes
-  .content-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    margin-bottom: 30px;
+  // Sections pleine largeur
+  .full-width-section {
+    background: $white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid $gray-200;
+    margin-bottom: 32px;
     
-    > div {
-      background: $white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border: 1px solid $gray-200;
-      
-      h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: $text-color;
-        margin: 0 0 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid $gray-200;
-      }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: $text-color;
+      margin: 0 0 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid $gray-200;
     }
-  }
-  
-  // Section Profil Information
-  .profile-section {
+    
     .section-subtitle {
-      font-size: 12px;
+      font-size: 13px;
       color: $light-text;
-      margin: 0 0 20px;
+      margin: 0 0 24px;
       font-style: italic;
     }
+  }
+
+  // Grille des détails du profil en 3 colonnes
+  .profile-details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
     
-    .profile-details {
+    .profile-column {
       .detail-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         
         &:last-child {
           margin-bottom: 0;
         }
         
         .detail-label {
-          font-size: 12px;
+          font-size: 13px;
           color: $light-text;
           font-weight: 500;
         }
         
         .detail-value {
-          font-size: 12px;
+          font-size: 13px;
           color: $text-color;
           font-weight: 600;
           text-align: right;
           
           &.level-badge, &.status-badge {
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 12px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 500;
           }
         }
+      }
+    }
+  }
+
+  // Section commentaires
+  .comments-section {
+    .comments-content {
+      background: $gray-50;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid $teal-300;
+      
+      p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: $text-color;
+        font-style: italic;
+      }
+    }
+  }
+
+  // Grille 3 colonnes pour attestations, absences, évaluations
+  .three-columns-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-bottom: 40px;
+    
+    > div {
+      background: $white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid $gray-200;
+      
+      h3 {
+        font-size: 17px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0 0 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid $gray-200;
       }
     }
   }
@@ -664,9 +705,14 @@ $gray-500: #A0AEC0;
 // Responsive
 @media (max-width: 1200px) {
   .profile-container {
-    .content-grid {
+    .profile-details-grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+      gap: 30px;
+    }
+    
+    .three-columns-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
     }
   }
 }
@@ -675,9 +721,23 @@ $gray-500: #A0AEC0;
   .profile-container {
     padding: 0 5px;
     
-    .content-grid {
+    .profile-details-grid {
       grid-template-columns: 1fr;
-      gap: 15px;
+      gap: 20px;
+    }
+    
+    .three-columns-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .full-width-section {
+      padding: 24px 20px;
+      margin-bottom: 24px;
+      
+      h3 {
+        font-size: 16px;
+      }
     }
     
     .main-student-card .student-header {
@@ -691,6 +751,7 @@ $gray-500: #A0AEC0;
     
     .parcours-section {
       margin-top: 20px;
+      padding: 20px;
     }
   }
 } 
