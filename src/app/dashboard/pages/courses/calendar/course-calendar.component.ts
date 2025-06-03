@@ -97,6 +97,8 @@ export class CourseCalendarComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('=== INIT COURSE CALENDAR ===');
+    
     this.loadSessions();
     this.loadTeachers();
     this.generateWeekView();
@@ -104,13 +106,8 @@ export class CourseCalendarComponent implements OnInit {
     
     // Surveiller les changements de group_id
     this.courseForm.get('group_id')?.valueChanges.subscribe(value => {
-      console.log('=== CHANGEMENT DE GROUPE (ValueChanges) ===');
-      console.log('Nouvelle valeur:', value);
-      console.log('Type:', typeof value);
-      
-      // Vérifier que l'UUID existe dans notre liste
       const group = this.groups.find(g => g.group_id === value || g.id === value);
-      console.log('Groupe trouvé:', group);
+      console.log('Groupe sélectionné:', group?.label || 'Aucun');
     });
   }
 
@@ -168,15 +165,16 @@ export class CourseCalendarComponent implements OnInit {
    * Charge les professeurs disponibles
    */
   loadTeachers(): void {
+    console.log('=== CHARGEMENT DES PROFESSEURS ===');
+    
     this.userService.getTeachers().subscribe({
       next: (teachers) => {
-        // Convertir les User en UserDisplayInfo
         this.teachers = this.userService.getUsersDisplayInfo(teachers);
-        console.log('Professeurs chargés:', this.teachers);
+        console.log('Professeurs chargés:', this.teachers.length);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des professeurs:', error);
-        this.alertService.error('Impossible de charger les professeurs');
+        this.teachers = [];
       }
     });
   }
@@ -446,13 +444,7 @@ export class CourseCalendarComponent implements OnInit {
     this.loading = true;
     this.error = '';
     
-    console.log('=== DIAGNOSTIC FORMULAIRE ===');
-    console.log('Form value:', this.courseForm.value);
-    console.log('Form valid:', this.courseForm.valid);
-    console.log('Form controls:', Object.keys(this.courseForm.controls));
-    console.log('group_id control:', this.courseForm.get('group_id'));
-    console.log('group_id value:', this.courseForm.get('group_id')?.value);
-    console.log('Groupes disponibles:', this.groups);
+    console.log('=== CREATION DE COURS ===');
     
     const courseData = {
       title: this.courseForm.value.title,
@@ -463,17 +455,18 @@ export class CourseCalendarComponent implements OnInit {
       user_id: this.courseForm.value.user_id
     };
     
-    console.log('Données de cours à envoyer:', courseData);
-    console.log('group_id type:', typeof courseData.group_id, 'value:', courseData.group_id);
+    console.log('Données de cours:', courseData);
     
     this.courseService.createCourse(courseData).subscribe({
       next: (course) => {
         this.loading = false;
         this.modal.hide();
         this.alertService.success('Cours créé avec succès !');
-        console.log('Cours créé:', course);
+        console.log('Cours créé:', course.title);
+        
         // Recharger le planning pour afficher le nouveau cours
         this.loadCourses();
+        
         // Réinitialiser le formulaire
         this.courseForm.reset({
           group_id: '',
@@ -577,9 +570,25 @@ export class CourseCalendarComponent implements OnInit {
     } else {
       console.warn('Aucun groupe trouvé pour ce cours, impossible de déterminer la session');
     }
+
+    // Extraire l'user_id depuis l'array users de l'API
+    let assignedUserId = course.user_id; // Valeur par défaut
+
+    // Si le cours a un array users (structure API), extraire le premier professeur
+    if ((course as any).users && Array.isArray((course as any).users) && (course as any).users.length > 0) {
+      const firstUser = (course as any).users[0];
+      if (firstUser && firstUser.user_id) {
+        assignedUserId = firstUser.user_id;
+        console.log('User ID extrait depuis API users array:', assignedUserId);
+      } else if (firstUser && firstUser.user && firstUser.user.id) {
+        assignedUserId = firstUser.user.id;
+        console.log('User ID extrait depuis API users[].user.id:', assignedUserId);
+      }
+    }
     
     return {
       ...course,
+      user_id: assignedUserId, // Assigner l'user_id extrait
       group: fullGroup ? {
         group_id: fullGroup.group_id,
         label: fullGroup.label
@@ -644,6 +653,18 @@ export class CourseCalendarComponent implements OnInit {
   onEditCourse(): void {
     if (!this.selectedCourse) return;
     
+    console.log('=== EDITION DU COURS ===');
+    console.log('Cours sélectionné:', this.selectedCourse.title, '| User ID:', this.selectedCourse.user_id);
+    
+    // Si pas de professeurs, essayer de les recharger
+    if (this.teachers.length === 0) {
+      console.log('Rechargement des professeurs...');
+      this.loadTeachers();
+    }
+    
+    // Normaliser user_id pour correspondre aux IDs des professeurs
+    let selectedUserId = this.selectedCourse.user_id;
+
     // Pré-remplir le formulaire d'édition avec les données actuelles du cours
     this.editCourseForm.patchValue({
       group_id: this.selectedCourse.group_id || '',
@@ -651,8 +672,10 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: this.selectedCourse.start_hour || '',
       end_hour: this.selectedCourse.end_hour || '',
       day: this.selectedCourse.day || '',
-      user_id: this.selectedCourse.user_id || null
+      user_id: selectedUserId || null
     });
+
+    console.log('Professeur pré-sélectionné dans le formulaire:', this.editCourseForm.get('user_id')?.value);
 
     // Réinitialiser les erreurs
     this.editError = '';
