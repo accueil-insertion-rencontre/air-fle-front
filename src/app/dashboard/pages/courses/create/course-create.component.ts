@@ -90,15 +90,15 @@ export class CourseCreateComponent implements OnInit {
   }
 
   loadTeachers(): void {
+    console.log('=== CHARGEMENT DES PROFESSEURS (COURSE-CREATE) ===');
     this.userService.getTeachers().subscribe({
       next: (teachers) => {
-        // Convertir les User en UserDisplayInfo
         this.teachers = this.userService.getUsersDisplayInfo(teachers);
-        console.log('Professeurs chargés dans course-create:', this.teachers);
+        console.log('Professeurs chargés pour course-create:', this.teachers.length);
       },
       error: (err) => {
-        console.error('Erreur lors du chargement des professeurs', err);
-        this.error = 'Impossible de charger les professeurs. Veuillez réessayer plus tard.';
+        console.error('Erreur lors du chargement des professeurs:', err);
+        this.teachers = [];
       }
     });
   }
