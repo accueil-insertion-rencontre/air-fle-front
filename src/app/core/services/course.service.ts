@@ -322,6 +322,20 @@ export class CourseService {
     
     console.log(`Jour converti: "${apiCourse.day}" -> "${dayFormatted}"`);
     
+    // Extraire l'user_id depuis l'array users de l'API
+    let extractedUserId = apiCourse.user_id || apiCourse.userId;
+    
+    if (apiCourse.users && Array.isArray(apiCourse.users) && apiCourse.users.length > 0) {
+      const firstUser = apiCourse.users[0];
+      if (firstUser && firstUser.user_id) {
+        extractedUserId = firstUser.user_id;
+        console.log('User ID extrait depuis API users array:', extractedUserId);
+      } else if (firstUser && firstUser.user && firstUser.user.id) {
+        extractedUserId = firstUser.user.id;
+        console.log('User ID extrait depuis API users[].user.id:', extractedUserId);
+      }
+    }
+    
     return {
       course_id: apiCourse.course_id || apiCourse.id,
       id: apiCourse.course_id || apiCourse.id,
@@ -331,7 +345,7 @@ export class CourseService {
       start_hour: apiCourse.start_hour ? this.extractTimeFromDate(apiCourse.start_hour) : apiCourse.startHour,
       end_hour: apiCourse.end_hour ? this.extractTimeFromDate(apiCourse.end_hour) : apiCourse.endHour,
       title: apiCourse.intitule || apiCourse.title,
-      user_id: apiCourse.user_id || apiCourse.userId,
+      user_id: extractedUserId, // Utiliser l'user_id extrait
       session: apiCourse.session ? {
         session_id: apiCourse.session.id || apiCourse.session.session_id,
         label: apiCourse.session.label
@@ -394,7 +408,7 @@ export class CourseService {
     const endDate = new Date(dayDate);
     endDate.setHours(parseInt(endParts[0], 10), parseInt(endParts[1], 10), 0);
     
-    const result = {
+    const result: any = {
       intitule: course.title,
       day: course.day,
       start_hour: startDate,
@@ -402,7 +416,12 @@ export class CourseService {
       group_id: course.group_id
     };
     
-    console.log('Format API avec day explicite:', result);
+    // Ajouter user_id si fourni (optionnel)
+    if (course.user_id) {
+      result.user_id = course.user_id;
+      console.log('Professeur assigné:', course.user_id);
+    }
+    
     return result;
   }
 
