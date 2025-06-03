@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { User, UserDisplayInfo } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
+// Service pour la gestion des utilisateurs - dernière modification: 03/06/2025
 interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -22,81 +23,97 @@ interface UsersResponse {
   };
 }
 
+interface Role {
+  id: string;
+  rolename: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
+  private rolesUrl = `${environment.apiUrl}/auth/roles`;
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Récupère l'ID du rôle "teacher"
+   */
+  private getTeacherRoleId(): Observable<string> {
+    return this.http.get<ApiResponse<{ roles: Role[] }>>(this.rolesUrl)
+      .pipe(
+        map(response => {
+          if (response && response.success && response.data && response.data.roles) {
+            const teacherRole = response.data.roles.find(role => role.rolename === 'teacher');
+            if (teacherRole) {
+              return teacherRole.id;
+            }
+          }
+          throw new Error('Rôle teacher introuvable');
+        }),
+        catchError(() => {
+          console.warn('Impossible de récupérer le rôle teacher, utilisation du fallback');
+          return throwError(() => new Error('Rôle teacher introuvable'));
+        })
+      );
+  }
 
   /**
    * Récupère tous les utilisateurs qui peuvent être professeurs (rôle teacher)
    */
   getTeachers(): Observable<User[]> {
-    let params = new HttpParams();
-    params = params.set('role', 'teacher');
+    console.log('=== RÉCUPÉRATION DES PROFESSEURS VIA API ===');
     
-    console.log('=== REQUÊTE POUR RÉCUPÉRER LES PROFESSEURS ===');
-    console.log('URL:', this.apiUrl);
-    console.log('Paramètres:', params.toString());
-    
-    return this.http.get<ApiResponse<UsersResponse>>(this.apiUrl, { params })
-      .pipe(
-        map(response => {
-          console.log('Réponse brute de l\'API pour getTeachers:', response);
-          
-          if (response && response.success && response.data) {
-            if (response.data.data && Array.isArray(response.data.data)) {
-              // Structure avec meta
-              console.log('Structure avec meta détectée, nombre d\'utilisateurs:', response.data.data.length);
-              return response.data.data.map((user: any) => this.convertToFrontendModel(user));
-            } else if (Array.isArray(response.data)) {
-              // Structure directe
-              console.log('Structure directe détectée, nombre d\'utilisateurs:', response.data.length);
-              return response.data.map((user: any) => this.convertToFrontendModel(user));
-            }
-          }
-          
-          // Fallback: si la réponse est directement un tableau
-          if (Array.isArray(response)) {
-            console.log('Réponse directement un tableau, nombre d\'utilisateurs:', response.length);
-            return response.map((user: any) => this.convertToFrontendModel(user));
-          }
-          
-          console.warn('Aucune structure de données reconnue, retour d\'un tableau vide');
-          return [];
-        }),
-        catchError(error => {
-          console.error('Erreur lors de la récupération des professeurs avec filtrage API:', error);
-          console.log('Tentative de fallback: récupération de tous les utilisateurs et filtrage côté client');
-          
-          // Fallback: récupérer tous les utilisateurs et filtrer côté client
-          return this.getTeachersFallback();
-        })
-      );
+    return this.getTeacherRoleId().pipe(
+      switchMap(teacherRoleId => {
+        console.log('ID du rôle teacher trouvé:', teacherRoleId);
+        
+        // Utiliser le filtrage côté API
+        const params = new HttpParams().set('role', teacherRoleId);
+        
+        return this.http.get<ApiResponse<UsersResponse>>(this.apiUrl, { params })
+          .pipe(
+            map(response => {
+              console.log('Réponse API pour les professeurs:', response);
+              
+              if (response && response.success && response.data) {
+                if (response.data.data && Array.isArray(response.data.data)) {
+                  return response.data.data.map((user: any) => this.convertToFrontendModel(user));
+                } else if (Array.isArray(response.data)) {
+                  return response.data.map((user: any) => this.convertToFrontendModel(user));
+                }
+              }
+              
+              return [];
+            })
+          );
+      }),
+      catchError(error => {
+        console.warn('Erreur lors de la récupération des professeurs via API, utilisation du fallback:', error);
+        return this.getTeachersFallback();
+      })
+    );
   }
 
   /**
    * Méthode de fallback : récupère tous les utilisateurs et filtre les teachers côté client
    */
   private getTeachersFallback(): Observable<User[]> {
-    console.log('=== FALLBACK: RÉCUPÉRATION DE TOUS LES UTILISATEURS ET FILTRAGE CÔTÉ CLIENT ===');
+    console.log('=== FALLBACK: FILTRAGE CÔTÉ CLIENT ===');
     
     return this.getAllUsers().pipe(
       map(users => {
-        console.log('Tous les utilisateurs récupérés:', users.length);
         const teachers = users.filter(user => {
           const isTeacher = user.role && (
             user.role.toLowerCase() === 'teacher' ||
             user.role.toLowerCase() === 'professeur' ||
             user.role.toLowerCase() === 'formateur'
           );
-          console.log(`User ${user.firstname} ${user.lastname} (role: ${user.role}) - Est professeur: ${isTeacher}`);
           return isTeacher;
         });
         
-        console.log('Professeurs filtrés côté client:', teachers.length);
+        console.log(`Professeurs trouvés en fallback: ${teachers.length}`);
         return teachers;
       })
     );
@@ -106,14 +123,9 @@ export class UserService {
    * Récupère tous les utilisateurs (pour une sélection plus large)
    */
   getAllUsers(): Observable<User[]> {
-    console.log('=== REQUÊTE POUR RÉCUPÉRER TOUS LES UTILISATEURS ===');
-    console.log('URL:', this.apiUrl);
-    
     return this.http.get<ApiResponse<UsersResponse>>(this.apiUrl)
       .pipe(
         map(response => {
-          console.log('Réponse brute de l\'API pour getAllUsers:', response);
-          
           if (response && response.success && response.data) {
             if (response.data.data && Array.isArray(response.data.data)) {
               // Structure avec meta
@@ -142,8 +154,6 @@ export class UserService {
     return this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`)
       .pipe(
         map(response => {
-          console.log('Réponse brute de l\'API pour getUserById:', response);
-          
           if (response && response.success && response.data) {
             return this.convertToFrontendModel(response.data);
           }
@@ -177,8 +187,6 @@ export class UserService {
    * Convertit les données de l'API vers le modèle frontend
    */
   private convertToFrontendModel(apiUser: any): User {
-    console.log('User API à convertir:', apiUser);
-    
     // Gérer différentes structures de rôles
     let roleName = '';
     if (apiUser.role) {
@@ -202,7 +210,6 @@ export class UserService {
       updated_at: apiUser.updated_at || apiUser.updatedAt
     };
     
-    console.log('User converti:', convertedUser);
     return convertedUser;
   }
 
