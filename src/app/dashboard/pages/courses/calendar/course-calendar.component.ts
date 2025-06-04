@@ -1644,4 +1644,24 @@ export class CourseCalendarComponent implements OnInit {
       this.alertService.error('Erreur lors de l\'enregistrement des présences');
     });
   }
+
+  /**
+   * Marque tous les élèves comme présents
+   */
+  markAllStudentsPresent(): void {
+    this.courseStudents.forEach(student => {
+      this.studentAttendanceMap.set(this.getStudentKey(student), 'present');
+    });
+    console.log('Tous les élèves marqués présents');
+  }
+
+  /**
+   * Marque tous les élèves comme absents
+   */
+  markAllStudentsAbsent(): void {
+    this.courseStudents.forEach(student => {
+      this.studentAttendanceMap.set(this.getStudentKey(student), 'absent');
+    });
+    console.log('Tous les élèves marqués absents');
+  }
 } 
