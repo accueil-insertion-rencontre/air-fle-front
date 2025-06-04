@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 // Interface pour le modèle Absence de l'API backend
@@ -127,17 +128,35 @@ export class AttendanceService {
 
   /**
    * Récupère les absences pour un cours spécifique
+   * NOTE: L'API ne supporte pas le filtrage par course_id, donc on récupère tout et on filtre côté client
    */
   getCourseAbsences(courseId: string): Observable<Absence[]> {
-    return this.http.get<Absence[]>(`${this.absenceApiUrl}?course_id=${courseId}`);
+    return this.getAllAbsences().pipe(
+      map(response => {
+        // L'API retourne { data: Absence[], meta: any }
+        const allAbsences = response.data || [];
+        
+        // Filtrer les absences pour le cours spécifique
+        const courseAbsences = allAbsences.filter(absence => 
+          absence.course_id === courseId || absence.course_id === courseId.toString()
+        );
+        
+        console.log(`[getCourseAbsences] Course ID: ${courseId}`);
+        console.log(`[getCourseAbsences] Total absences dans la base: ${allAbsences.length}`);
+        console.log(`[getCourseAbsences] Absences pour ce cours: ${courseAbsences.length}`);
+        console.log(`[getCourseAbsences] Absences filtrées:`, courseAbsences);
+        
+        return courseAbsences;
+      }),
+      catchError(error => {
+        console.error('[getCourseAbsences] Erreur lors de la récupération des absences:', error);
+        return of([]);
+      })
+    );
   }
 
-  /**
-   * Supprime toutes les absences pour un cours spécifique
-   */
-  deleteCourseAbsences(courseId: string): Observable<any> {
-    return this.http.delete<any>(`${this.absenceApiUrl}/course/${courseId}`);
-  }
+  // NOTE: L'endpoint DELETE /absences/course/{courseId} n'existe pas côté backend
+  // Il faut supprimer les absences individuellement si nécessaire
 
   // ===== MÉTHODES LEGACY POUR LA COMPATIBILITÉ =====
   // Ces méthodes restent pour ne pas casser le code existant

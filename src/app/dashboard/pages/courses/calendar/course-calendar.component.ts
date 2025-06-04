@@ -1538,107 +1538,74 @@ export class CourseCalendarComponent implements OnInit {
       return;
     }
 
-    console.log('=== SAUVEGARDE DES PRÉSENCES VIA API ABSENCES ===');
+    console.log('=== SAUVEGARDE DES PRÉSENCES (VERSION SIMPLIFIÉE) ===');
     console.log('Course ID:', courseId, 'type:', typeof courseId);
     console.log('Nombre d\'étudiants dans le cours:', this.courseStudents.length);
     console.log('Map des présences actuelle:', Array.from(this.studentAttendanceMap.entries()));
 
-    const absencesToCreate: any[] = [];
-    const studentsToProcess: string[] = [];
-
-    // Analyser les statuts des étudiants
+    // Analyser les statuts des étudiants avec logs détaillés
+    const studentsDetails: Array<{ student: any, key: any, status: any }> = [];
     this.courseStudents.forEach((student, index) => {
       const studentKey = this.getStudentKey(student);
       const status = this.studentAttendanceMap.get(studentKey);
       
-      console.log(`Élève ${index + 1} - ${student.firstname} ${student.lastname}:`);
-      console.log('  - studentKey:', studentKey, 'type:', typeof studentKey);
-      console.log('  - status:', status);
+      console.log(`=== ÉLÈVE ${index + 1}: ${student.firstname} ${student.lastname} ===`);
+      console.log('  - Student object:', student);
+      console.log('  - student.student_id:', student.student_id);
+      console.log('  - student.id:', student.id);
+      console.log('  - studentKey (calculé):', studentKey, 'type:', typeof studentKey);
+      console.log('  - status dans la Map:', status);
       
-      if (status && status !== 'unknown') {
-        studentsToProcess.push(studentKey.toString());
-        
-        // Seuls les statuts "non-présents" créent une absence
-        if (status === 'absent') {
-          absencesToCreate.push({
-            student_id: studentKey.toString(),
-            course_id: courseId.toString(),
-            reason: 'Absence enregistrée'
-          });
-          console.log('  - → Créera une absence');
-        } else if (status === 'late') {
-          absencesToCreate.push({
-            student_id: studentKey.toString(),
-            course_id: courseId.toString(),
-            reason: 'Retard'
-          });
-          console.log('  - → Créera une absence (retard)');
-        } else if (status === 'excused') {
-          absencesToCreate.push({
-            student_id: studentKey.toString(),
-            course_id: courseId.toString(),
-            reason: 'Absence excusée'
-          });
-          console.log('  - → Créera une absence (excusée)');
-        } else if (status === 'present') {
-          console.log('  - → Présent (pas d\'absence à créer)');
-        }
-      } else {
-        console.log('  - Statut ignoré (unknown ou undefined)');
+      studentsDetails.push({ student, key: studentKey, status });
+    });
+
+    // Identifier les absences à créer
+    const absencesToCreate: any[] = [];
+    studentsDetails.forEach(({ student, key, status }) => {
+      if (status === 'absent') {
+        absencesToCreate.push({
+          student_id: key.toString(),
+          course_id: courseId.toString(),
+          reason: 'Absence enregistrée'
+        });
+        console.log(`➤ ABSENCE À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
+      } else if (status === 'late') {
+        absencesToCreate.push({
+          student_id: key.toString(),
+          course_id: courseId.toString(),
+          reason: 'Retard'
+        });
+        console.log(`➤ RETARD À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
+      } else if (status === 'excused') {
+        absencesToCreate.push({
+          student_id: key.toString(),
+          course_id: courseId.toString(),
+          reason: 'Absence excusée'
+        });
+        console.log(`➤ ABSENCE EXCUSÉE À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
+      } else if (status === 'present') {
+        console.log(`✓ PRÉSENT: ${student.firstname} ${student.lastname} (pas d'absence)`);
       }
     });
 
-    console.log('=== DONNÉES FINALES À ENVOYER ===');
-    console.log('Absences à créer:', absencesToCreate);
-    console.log('Nombre d\'absences à enregistrer:', absencesToCreate.length);
-    console.log('Nombre d\'étudiants traités:', studentsToProcess.length);
+    console.log('=== RÉSUMÉ FINAL ===');
+    console.log('Total étudiants:', studentsDetails.length);
+    console.log('Absences à créer:', absencesToCreate.length);
+    console.log('Données d\'absences:', absencesToCreate);
 
-    if (studentsToProcess.length === 0) {
-      this.alertService.error('Aucune présence à enregistrer');
+    if (absencesToCreate.length === 0) {
+      this.alertService.success('Tous les étudiants sont présents ! Aucune absence à enregistrer.');
       return;
     }
 
     this.savingAttendance = true;
-    console.log('=== ÉTAPE 1: SUPPRESSION DES ABSENCES EXISTANTES ===');
-    
-    // Étape 1: Supprimer toutes les absences existantes pour ce cours
-    this.attendanceService.deleteCourseAbsences(courseId.toString()).subscribe({
-      next: (deleteResponse) => {
-        console.log('✅ Anciennes absences supprimées:', deleteResponse);
-        
-        // Étape 2: Créer les nouvelles absences
-        this.createNewAbsences(absencesToCreate, studentsToProcess.length);
-      },
-      error: (deleteError) => {
-        // Si la suppression échoue (par exemple 404 = pas d'absences), continuer quand même
-        console.log('ℹ️ Suppression des absences échouée (probablement aucune absence existante):', deleteError);
-        
-        // Continuer avec la création des nouvelles absences
-        this.createNewAbsences(absencesToCreate, studentsToProcess.length);
-      }
-    });
-  }
-
-  /**
-   * Crée les nouvelles absences après suppression des anciennes
-   */
-  private createNewAbsences(absencesToCreate: any[], totalStudents: number): void {
-    console.log('=== ÉTAPE 2: CRÉATION DES NOUVELLES ABSENCES ===');
-    
-    // Si aucune absence à créer, tous sont présents
-    if (absencesToCreate.length === 0) {
-      this.savingAttendance = false;
-      this.alertService.success('Tous les étudiants sont présents ! Aucune absence enregistrée.');
-      return;
-    }
-
-    console.log('=== APPEL API ABSENCES ===');
-    console.log('URL appelée:', `${environment.apiUrl}/absences`);
+    console.log('=== DÉBUT CRÉATION DES ABSENCES ===');
 
     // Créer toutes les absences en parallèle
-    const createPromises = absencesToCreate.map(absenceData => 
-      this.attendanceService.createAbsence(absenceData).toPromise()
-    );
+    const createPromises = absencesToCreate.map((absenceData, index) => {
+      console.log(`Création absence ${index + 1}:`, absenceData);
+      return this.attendanceService.createAbsence(absenceData).toPromise();
+    });
 
     Promise.allSettled(createPromises).then(results => {
       this.savingAttendance = false;
@@ -1646,48 +1613,35 @@ export class CourseCalendarComponent implements OnInit {
       const successful = results.filter(result => result.status === 'fulfilled');
       const failed = results.filter(result => result.status === 'rejected');
       
-      console.log('✅ Résultats de la sauvegarde:');
-      console.log('- Absences créées avec succès:', successful.length);
-      console.log('- Échecs:', failed.length);
+      console.log('=== RÉSULTATS DE LA SAUVEGARDE ===');
+      console.log('✅ Absences créées avec succès:', successful.length);
+      console.log('❌ Échecs:', failed.length);
+      
+      if (failed.length > 0) {
+        console.error('Détail des échecs:', failed.map(f => (f as any).reason));
+      }
       
       if (successful.length > 0) {
-        const presentCount = totalStudents - successful.length;
+        const presentCount = studentsDetails.length - successful.length;
         const message = `Présences enregistrées ! ${presentCount} présent(s), ${successful.length} absence(s)`;
         this.alertService.success(message);
         
-        // Recharger les absences existantes pour ce cours pour vérifier la cohérence
         console.log('🔄 Rechargement des absences pour vérification...');
-        this.loadExistingAttendance();
+        // Recharger après un petit délai pour laisser le temps à l'API
+        setTimeout(() => {
+          this.loadExistingAttendance();
+        }, 500);
       }
       
-      if (failed.length > 0) {
-        console.error('Erreurs lors de la création d\'absences:', failed);
+      if (failed.length > 0 && successful.length === 0) {
+        this.alertService.error('Erreur lors de l\'enregistrement des absences');
+      } else if (failed.length > 0) {
         this.alertService.error(`${failed.length} absence(s) n'ont pas pu être enregistrées`);
       }
     }).catch(error => {
       this.savingAttendance = false;
-      console.error('❌ ERREUR GLOBALE lors de la sauvegarde des absences:', error);
+      console.error('❌ ERREUR GLOBALE lors de la sauvegarde:', error);
       this.alertService.error('Erreur lors de l\'enregistrement des présences');
     });
-  }
-
-  /**
-   * Marque tous les élèves comme présents
-   */
-  markAllStudentsPresent(): void {
-    this.courseStudents.forEach(student => {
-      this.studentAttendanceMap.set(this.getStudentKey(student), 'present');
-    });
-    console.log('Tous les élèves marqués présents');
-  }
-
-  /**
-   * Marque tous les élèves comme absents
-   */
-  markAllStudentsAbsent(): void {
-    this.courseStudents.forEach(student => {
-      this.studentAttendanceMap.set(this.getStudentKey(student), 'absent');
-    });
-    console.log('Tous les élèves marqués absents');
   }
 } 
