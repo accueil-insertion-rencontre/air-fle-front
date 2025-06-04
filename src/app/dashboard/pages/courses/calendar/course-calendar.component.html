@@ -103,10 +103,135 @@
       
       <form [formGroup]="courseForm" (ngSubmit)="onSubmitCourse()">
         <div class="modal-body">
-          <!-- Date sélectionnée -->
-          <div class="alert alert-info">
-            <i class="fas fa-calendar me-2"></i>
-            <strong>Date sélectionnée :</strong> {{ selectedDate | date:'fullDate':'':'fr-FR' }}
+          <!-- Date sélectionnée ou mode multi-dates -->
+          <div class="alert" [ngClass]="isMultiDateMode ? 'alert-warning' : 'alert-info'">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="fas fa-calendar me-2"></i>
+                <strong *ngIf="!isMultiDateMode">Date sélectionnée :</strong>
+                <strong *ngIf="isMultiDateMode">Mode multi-dates activé :</strong>
+                <span *ngIf="!isMultiDateMode">{{ selectedDate | date:'fullDate':'':'fr-FR' }}</span>
+                <span *ngIf="isMultiDateMode">{{ selectedDates.length }} date(s) sélectionnée(s)</span>
+              </div>
+              <button type="button" 
+                      class="btn btn-sm"
+                      [ngClass]="isMultiDateMode ? 'btn-warning' : 'btn-outline-secondary'"
+                      (click)="toggleMultiDateMode()">
+                <i class="fas fa-calendar-plus me-1"></i>
+                {{ isMultiDateMode ? 'Mode simple' : 'Multi-dates' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuration multi-dates -->
+          <div *ngIf="isMultiDateMode" class="card mb-3">
+            <div class="card-header">
+              <h6 class="card-title mb-0">
+                <i class="fas fa-calendar-week me-2"></i>Configuration des dates
+              </h6>
+            </div>
+            <div class="card-body">
+              <!-- Type de récurrence -->
+              <div class="mb-3">
+                <label class="form-label">Type de récurrence</label>
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceNone" 
+                             [checked]="recurrenceType === 'none'"
+                             (change)="onRecurrenceTypeChange('none')">
+                      <label class="form-check-label" for="recurrenceNone">
+                        Aucune récurrence
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceWeekly"
+                             [checked]="recurrenceType === 'weekly'"
+                             (change)="onRecurrenceTypeChange('weekly')">
+                      <label class="form-check-label" for="recurrenceWeekly">
+                        Récurrence hebdomadaire
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceCustom"
+                             [checked]="recurrenceType === 'custom'"
+                             (change)="onRecurrenceTypeChange('custom')">
+                      <label class="form-check-label" for="recurrenceCustom">
+                        Dates personnalisées
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuration récurrence hebdomadaire -->
+              <div *ngIf="recurrenceType === 'weekly'" class="mb-3">
+                <label for="weeklyOccurrences" class="form-label">Nombre d'occurrences</label>
+                <div class="input-group" style="max-width: 200px;">
+                  <button class="btn btn-outline-secondary" type="button" 
+                          (click)="onWeeklyOccurrencesChange(weeklyOccurrences - 1)"
+                          [disabled]="weeklyOccurrences <= 1">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" 
+                         class="form-control text-center" 
+                         id="weeklyOccurrences"
+                         [value]="weeklyOccurrences"
+                         (input)="onWeeklyOccurrencesChange($any($event.target).value)"
+                         min="1" 
+                         [max]="maxWeeklyOccurrences">
+                  <button class="btn btn-outline-secondary" type="button"
+                          (click)="onWeeklyOccurrencesChange(weeklyOccurrences + 1)"
+                          [disabled]="weeklyOccurrences >= maxWeeklyOccurrences">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  Créer ce cours {{ weeklyOccurrences }} fois, chaque semaine à partir du {{ selectedDate | date:'shortDate':'':'fr-FR' }}
+                </small>
+              </div>
+
+              <!-- Configuration dates personnalisées -->
+              <div *ngIf="recurrenceType === 'custom'" class="mb-3">
+                <label class="form-label">Ajouter une date</label>
+                <div class="input-group mb-2" style="max-width: 300px;">
+                  <input type="date" 
+                         class="form-control" 
+                         #customDateInput
+                         [min]="selectedDate">
+                  <button class="btn btn-outline-primary" type="button"
+                          (click)="addCustomDate(customDateInput.value); customDateInput.value = ''">
+                    <i class="fas fa-plus"></i> Ajouter
+                  </button>
+                </div>
+              </div>
+
+              <!-- Liste des dates sélectionnées -->
+              <div *ngIf="selectedDates.length > 0" class="mb-3">
+                <label class="form-label">Dates sélectionnées ({{ selectedDates.length }})</label>
+                <div class="row g-2">
+                  <div class="col-md-6" *ngFor="let date of selectedDates; let i = index">
+                    <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
+                      <small class="text-muted me-2">{{ i + 1 }}.</small>
+                      <span class="flex-grow-1">{{ formatDateForDisplay(date) }}</span>
+                      <button type="button" 
+                              class="btn btn-sm btn-outline-danger"
+                              (click)="removeCustomDate(date)"
+                              [disabled]="selectedDates.length === 1">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <small class="form-text text-muted">
+                  Un cours sera créé pour chacune de ces dates avec les mêmes paramètres.
+                </small>
+              </div>
+            </div>
           </div>
 
           <!-- Sélection de groupe -->
@@ -129,10 +254,10 @@
 
           <!-- Professeur assigné -->
           <div class="mb-3">
-            <label for="user_id" class="form-label">Professeur assigné</label>
+            <label for="courseTeacher" class="form-label">Professeur assigné</label>
             <select 
-              class="form-select" 
-              id="user_id" 
+              id="courseTeacher"
+              class="form-select"
               formControlName="user_id">
               <option value="">Aucun professeur assigné</option>
               <option *ngFor="let teacher of teachers" [value]="teacher.id">
@@ -140,7 +265,7 @@
               </option>
             </select>
             <small class="form-text text-muted">
-              Sélectionnez un professeur ou laissez vide si aucun n'est assigné
+              Sélectionnez un professeur ou laissez vide si aucun n'est assigné pour le moment
             </small>
           </div>
 
@@ -235,7 +360,9 @@
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="loading || courseForm.invalid">
             <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-            <i *ngIf="!loading" class="fas fa-save me-2"></i>Créer le cours
+            <i *ngIf="!loading" class="fas fa-save me-2"></i>
+            <span *ngIf="!isMultiDateMode">Créer le cours</span>
+            <span *ngIf="isMultiDateMode">Créer {{ selectedDates.length }} cours</span>
           </button>
         </div>
       </form>
