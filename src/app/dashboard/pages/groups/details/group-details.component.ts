@@ -181,9 +181,9 @@ export class GroupDetailsComponent implements OnInit {
       // Supprimer tous les cours individuellement avec gestion d'erreur par cours
       const deleteResults = await Promise.allSettled(
         courses.map(async course => {
-          const courseId = course.course_id || course.id;
-          if (courseId) {
-            console.log('Suppression du cours:', course.title, 'ID:', courseId);
+        const courseId = course.course_id || course.id;
+        if (courseId) {
+          console.log('Suppression du cours:', course.title, 'ID:', courseId);
             try {
               await this.courseService.deleteCourse(courseId).toPromise();
               console.log('✅ Cours supprimé avec succès:', course.title);
@@ -192,10 +192,10 @@ export class GroupDetailsComponent implements OnInit {
               console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
               return { success: false, course: course.title, error };
             }
-          } else {
-            console.warn('Cours sans ID trouvé:', course);
+        } else {
+          console.warn('Cours sans ID trouvé:', course);
             return { success: false, course: course.title || 'Cours sans nom', error: 'Pas d\'ID' };
-          }
+        }
         })
       );
       
@@ -209,7 +209,7 @@ export class GroupDetailsComponent implements OnInit {
         console.warn(`${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`);
         // On continue quand même avec la suppression du groupe
       } else {
-        console.log('Tous les cours ont été supprimés avec succès');
+      console.log('Tous les cours ont été supprimés avec succès');
       }
       
     } catch (error) {

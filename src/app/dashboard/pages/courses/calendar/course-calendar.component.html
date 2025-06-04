@@ -118,7 +118,7 @@
           <div class="alert" [ngClass]="isMultiDateMode ? 'alert-warning' : 'alert-info'">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <i class="fas fa-calendar me-2"></i>
+            <i class="fas fa-calendar me-2"></i>
                 <strong *ngIf="!isMultiDateMode">Date sélectionnée :</strong>
                 <strong *ngIf="isMultiDateMode">Mode multi-dates activé :</strong>
                 <span *ngIf="!isMultiDateMode">{{ selectedDate | date:'fullDate':'':'fr-FR' }}</span>
@@ -296,7 +296,7 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input 
+            <input 
                   type="color" 
                   class="form-control form-control-color" 
                   id="customColor"
@@ -457,7 +457,7 @@
                         {{ selectedCourse.user.firstname }} {{ selectedCourse.user.lastname }}
                         <span class="text-muted" *ngIf="selectedCourse.user.email">
                           ({{ selectedCourse.user.email }})
-                        </span>
+                      </span>
                       </div>
                     </div>
                   </div>

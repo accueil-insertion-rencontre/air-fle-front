@@ -351,7 +351,7 @@ export class GroupListComponent implements OnInit, AfterViewInit {
         let errorMessage = 'Erreur lors de la suppression du groupe.';
         
         if (err.status === 500) {
-          if (err.error && err.error.message) {
+        if (err.error && err.error.message) {
             if (err.error.message.includes('constraint') || err.error.message.includes('foreign key')) {
               errorMessage = 'Impossible de supprimer le groupe : il est encore lié à d\'autres éléments dans la base de données.\n\n' +
                            'Causes possibles :\n' +
@@ -376,7 +376,7 @@ export class GroupListComponent implements OnInit, AfterViewInit {
         } else if (err.status === 403) {
           errorMessage = 'Vous n\'avez pas les permissions nécessaires pour supprimer ce groupe.';
         } else if (err.error && err.error.message) {
-          errorMessage = `Erreur API: ${err.error.message}`;
+            errorMessage = `Erreur API: ${err.error.message}`;
         }
         
         this.alertService.error(errorMessage);
@@ -429,9 +429,9 @@ export class GroupListComponent implements OnInit, AfterViewInit {
       // Supprimer tous les cours individuellement avec gestion d'erreur par cours
       const deleteResults = await Promise.allSettled(
         courses.map(async course => {
-          const courseId = course.course_id || course.id;
-          if (courseId) {
-            console.log('Suppression du cours:', course.title, 'ID:', courseId);
+        const courseId = course.course_id || course.id;
+        if (courseId) {
+          console.log('Suppression du cours:', course.title, 'ID:', courseId);
             try {
               await this.courseService.deleteCourse(courseId).toPromise();
               console.log('✅ Cours supprimé avec succès:', course.title);
@@ -440,10 +440,10 @@ export class GroupListComponent implements OnInit, AfterViewInit {
               console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
               return { success: false, course: course.title, error };
             }
-          } else {
-            console.warn('Cours sans ID trouvé:', course);
+        } else {
+          console.warn('Cours sans ID trouvé:', course);
             return { success: false, course: course.title || 'Cours sans nom', error: 'Pas d\'ID' };
-          }
+        }
         })
       );
       
@@ -457,7 +457,7 @@ export class GroupListComponent implements OnInit, AfterViewInit {
         console.warn(`${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`);
         // On continue quand même avec la suppression du groupe
       } else {
-        console.log('Tous les cours ont été supprimés avec succès');
+      console.log('Tous les cours ont été supprimés avec succès');
       }
       
     } catch (error) {

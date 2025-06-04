@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AttendanceService, AttendanceRecord, AttendanceStats } from '../../../../../core/services/attendance.service';
+import { AttendanceService, Absence, AttendanceRecord } from '../../../../../core/services/attendance.service';
 import { AlertService } from '../../../../../core/services/alert.service';
 
 @Component({
@@ -11,11 +11,11 @@ import { AlertService } from '../../../../../core/services/alert.service';
   styleUrls: ['./student-absence-history.component.scss']
 })
 export class StudentAbsenceHistoryComponent implements OnInit {
-  @Input() studentId!: number;
+  @Input() studentId!: string | number;
   @Input() studentName!: string;
 
-  attendanceHistory: AttendanceRecord[] = [];
-  attendanceStats: AttendanceStats | null = null;
+  absenceHistory: Absence[] = [];
+  absenceStats: { total_absences: number; absence_rate?: number } | null = null;
   loading = false;
   error = '';
 
@@ -26,72 +26,83 @@ export class StudentAbsenceHistoryComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.studentId) {
-      this.loadAttendanceHistory();
-      this.loadAttendanceStats();
+      this.loadAbsenceHistory();
+      this.calculateAbsenceStats();
     }
   }
 
-  loadAttendanceHistory(): void {
+  loadAbsenceHistory(): void {
     this.loading = true;
     this.error = '';
 
-    this.attendanceService.getStudentAttendanceHistory(this.studentId).subscribe({
-      next: (history) => {
-        this.attendanceHistory = history.sort((a, b) => 
-          new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+    this.attendanceService.getStudentAbsences(this.studentId.toString()).subscribe({
+      next: (absences: Absence[]) => {
+        this.absenceHistory = absences.sort((a: Absence, b: Absence) => 
+          new Date(b.course?.day || '').getTime() - new Date(a.course?.day || '').getTime()
         );
         this.loading = false;
+        this.calculateAbsenceStats();
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement de l\'historique:', error);
-        this.error = 'Impossible de charger l\'historique des présences';
+      error: (error: any) => {
+        console.error('Erreur lors du chargement de l\'historique des absences:', error);
+        this.error = 'Impossible de charger l\'historique des absences';
+        this.loading = false;
+        
+        // Si l'API d'absence n'est pas encore implémentée, essayer l'ancienne méthode
+        if (error.status === 404) {
+          console.log('API d\'absence non trouvée, utilisation de l\'API legacy...');
+          this.loadLegacyAttendanceHistory();
+        }
+      }
+    });
+  }
+
+  /**
+   * Méthode de fallback pour utiliser l'ancienne API d'attendance
+   */
+  private loadLegacyAttendanceHistory(): void {
+    const numericStudentId = typeof this.studentId === 'string' ? parseInt(this.studentId) : this.studentId;
+    
+    this.attendanceService.getStudentAttendanceHistory(numericStudentId).subscribe({
+      next: (records: AttendanceRecord[]) => {
+        // Convertir les AttendanceRecord en Absence pour l'affichage
+        this.absenceHistory = records
+          .filter((record: AttendanceRecord) => record.status === 'absent')
+          .map((record: AttendanceRecord) => ({
+            id: record.id?.toString() || 'legacy',
+            student_id: this.studentId.toString(),
+            course_id: record.course_id.toString(),
+            reason: record.comment || 'Absence enregistrée',
+            course: {
+              course_id: record.course_id.toString(),
+              intitule: 'Cours',
+              day: record.created_at
+            }
+          })) as Absence[];
+        this.loading = false;
+        this.calculateAbsenceStats();
+      },
+      error: (legacyError: any) => {
+        console.error('Erreur lors du chargement via l\'API legacy:', legacyError);
+        this.error = 'Impossible de charger l\'historique des absences';
         this.loading = false;
       }
     });
   }
 
-  loadAttendanceStats(): void {
-    this.attendanceService.getStudentAttendanceStats(this.studentId).subscribe({
-      next: (stats) => {
-        this.attendanceStats = stats;
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des statistiques:', error);
-      }
-    });
+  calculateAbsenceStats(): void {
+    this.absenceStats = {
+      total_absences: this.absenceHistory.length,
+      absence_rate: 0 // Sera calculé quand on aura le nombre total de cours
+    };
   }
 
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'present': return 'Présent';
-      case 'absent': return 'Absent';
-      case 'late': return 'En retard';
-      case 'excused': return 'Absent excusé';
-      default: return 'Non défini';
-    }
-  }
-
-  getStatusBadgeClass(status: string): string {
-    switch (status) {
-      case 'present': return 'badge bg-success';
-      case 'absent': return 'badge bg-danger';
-      case 'late': return 'badge bg-warning text-dark';
-      case 'excused': return 'badge bg-secondary';
-      default: return 'badge bg-light text-dark';
-    }
-  }
-
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'present': return 'fas fa-check';
-      case 'absent': return 'fas fa-times';
-      case 'late': return 'fas fa-clock';
-      case 'excused': return 'fas fa-times-circle';
-      default: return 'fas fa-question';
-    }
-  }
-
-  formatDate(dateString: string): string {
+  /**
+   * Formate une date pour l'affichage
+   */
+  formatDate(dateString: string | undefined): string {
+    if (!dateString) return 'Date inconnue';
+    
     return new Date(dateString).toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
@@ -100,10 +111,59 @@ export class StudentAbsenceHistoryComponent implements OnInit {
     });
   }
 
-  formatTime(dateString: string): string {
+  /**
+   * Formate une heure pour l'affichage
+   */
+  formatTime(dateString: string | undefined): string {
+    if (!dateString) return '--:--';
+    
     return new Date(dateString).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit'
+    });
+  }
+
+  /**
+   * Supprime une absence
+   */
+  deleteAbsence(absence: Absence): void {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer cette absence ?`)) {
+      return;
+    }
+
+    this.attendanceService.deleteAbsence(absence.id).subscribe({
+      next: () => {
+        this.absenceHistory = this.absenceHistory.filter(a => a.id !== absence.id);
+        this.calculateAbsenceStats();
+        this.alertService.success('Absence supprimée avec succès');
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la suppression:', error);
+        this.alertService.error('Erreur lors de la suppression de l\'absence');
+      }
+    });
+  }
+
+  /**
+   * Modifie la raison d'une absence
+   */
+  editAbsenceReason(absence: Absence): void {
+    const newReason = prompt('Modifier la raison de l\'absence:', absence.reason || '');
+    
+    if (newReason === null) return; // Annulé
+    
+    this.attendanceService.updateAbsence(absence.id, { reason: newReason }).subscribe({
+      next: (updatedAbsence: Absence) => {
+        const index = this.absenceHistory.findIndex(a => a.id === absence.id);
+        if (index > -1) {
+          this.absenceHistory[index] = updatedAbsence;
+        }
+        this.alertService.success('Raison d\'absence mise à jour');
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la modification:', error);
+        this.alertService.error('Erreur lors de la modification de la raison');
+      }
     });
   }
 } 

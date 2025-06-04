@@ -271,9 +271,24 @@ export class StudentProfileComponent implements OnInit {
   }
 
   addAbsence(): void {
-    // TODO: Implémenter l'ajout d'absence manuelle
-    console.log('Ajouter une absence pour:', this.student?.firstname);
-    alert('Fonctionnalité d\'ajout d\'absence en cours de développement');
+    if (!this.student) return;
+
+    const courseId = prompt('ID du cours pour lequel ajouter une absence:');
+    if (!courseId) return;
+
+    const reason = prompt('Raison de l\'absence (optionnelle):');
+
+    const absenceData = {
+      student_id: this.student.id,
+      course_id: courseId,
+      reason: reason || undefined
+    };
+
+    // TODO: Implémenter l'ajout d'absence avec l'API
+    console.log('Ajout d\'absence pour:', this.student.firstname, absenceData);
+    
+    // Pour l'instant, afficher que la fonctionnalité est en développement
+    alert(`Fonctionnalité d'ajout d'absence en cours de développement.\n\nDonnées qui seraient envoyées:\nÉtudiant: ${this.student.firstname} ${this.student.lastname}\nCours: ${courseId}\nRaison: ${reason || 'Aucune'}`);
   }
 
   manageAbsences(): void {

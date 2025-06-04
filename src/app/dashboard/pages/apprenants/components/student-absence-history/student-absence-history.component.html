@@ -1,56 +1,32 @@
 <div class="attendance-history-container">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">
-      <i class="fas fa-calendar-check me-2"></i>
-      Historique des présences - {{ studentName }}
+      <i class="fas fa-calendar-times me-2"></i>
+      Historique des absences - {{ studentName }}
     </h4>
   </div>
 
-  <!-- Statistiques de présence -->
-  <div class="row mb-4" *ngIf="attendanceStats">
+  <!-- Statistiques d'absences -->
+  <div class="row mb-4" *ngIf="absenceStats">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
           <h6 class="card-title mb-0">
-            <i class="fas fa-chart-pie me-2"></i>Statistiques globales
+            <i class="fas fa-chart-pie me-2"></i>Statistiques des absences
           </h6>
         </div>
         <div class="card-body">
           <div class="row text-center">
-            <div class="col-md-2">
+            <div class="col-md-6">
               <div class="stat-item">
-                <div class="stat-number text-primary">{{ attendanceStats.total_sessions }}</div>
-                <div class="stat-label">Sessions totales</div>
+                <div class="stat-number text-danger">{{ absenceStats.total_absences }}</div>
+                <div class="stat-label">Absences totales</div>
               </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-6">
               <div class="stat-item">
-                <div class="stat-number text-success">{{ attendanceStats.present_count }}</div>
-                <div class="stat-label">Présences</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="stat-item">
-                <div class="stat-number text-danger">{{ attendanceStats.absent_count }}</div>
-                <div class="stat-label">Absences</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="stat-item">
-                <div class="stat-number text-warning">{{ attendanceStats.late_count }}</div>
-                <div class="stat-label">Retards</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="stat-item">
-                <div class="stat-number text-secondary">{{ attendanceStats.excused_count }}</div>
-                <div class="stat-label">Absences excusées</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="stat-item">
-                <div class="stat-number text-info">{{ attendanceStats.attendance_rate | number:'1.1-1' }}%</div>
-                <div class="stat-label">Taux de présence</div>
+                <div class="stat-number text-info">{{ absenceStats.absence_rate || 0 | number:'1.1-1' }}%</div>
+                <div class="stat-label">Taux d'absence</div>
               </div>
             </div>
           </div>
@@ -64,7 +40,7 @@
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Chargement...</span>
     </div>
-    <div class="mt-2">Chargement de l'historique...</div>
+    <div class="mt-2">Chargement de l'historique des absences...</div>
   </div>
 
   <!-- Message d'erreur -->
@@ -73,54 +49,87 @@
     {{ error }}
   </div>
 
-  <!-- Historique des présences -->
+  <!-- Historique des absences -->
   <div class="card" *ngIf="!loading && !error">
     <div class="card-header">
-      <h6 class="card-title mb-0">
-        <i class="fas fa-history me-2"></i>
-        Historique détaillé ({{ attendanceHistory.length }} entrées)
-      </h6>
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">
+          <i class="fas fa-history me-2"></i>
+          Historique détaillé ({{ absenceHistory.length }} absences)
+        </h6>
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-success btn-sm" title="Ajouter une absence">
+            <i class="fas fa-plus me-1"></i>Ajouter
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" title="Exporter">
+            <i class="fas fa-download me-1"></i>Exporter
+          </button>
+        </div>
+      </div>
     </div>
     <div class="card-body">
-      <div *ngIf="attendanceHistory.length === 0" class="text-center text-muted py-4">
-        <i class="fas fa-calendar-times fa-3x mb-3"></i>
-        <p>Aucun enregistrement de présence disponible</p>
+      <div *ngIf="absenceHistory.length === 0" class="text-center text-muted py-4">
+        <i class="fas fa-calendar-check fa-3x mb-3 text-success"></i>
+        <h5>Aucune absence enregistrée</h5>
+        <p>Cet étudiant n'a aucune absence dans son historique</p>
       </div>
 
-      <div class="table-responsive" *ngIf="attendanceHistory.length > 0">
+      <div class="table-responsive" *ngIf="absenceHistory.length > 0">
         <table class="table table-hover">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Heure</th>
+              <th>Date du cours</th>
               <th>Cours</th>
-              <th class="text-center">Statut</th>
-              <th>Commentaire</th>
+              <th>Horaires</th>
+              <th>Raison</th>
+              <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let record of attendanceHistory">
+            <tr *ngFor="let absence of absenceHistory">
               <td>
-                <strong>{{ formatDate(record.created_at || '') }}</strong>
-              </td>
-              <td>
-                {{ formatTime(record.created_at || '') }}
+                <div class="d-flex flex-column">
+                  <strong>{{ formatDate(absence.course?.day) }}</strong>
+                  <small class="text-muted">{{ formatTime(absence.course?.day) }}</small>
+                </div>
               </td>
               <td>
                 <div class="course-info">
-                  <div class="course-title">Cours #{{ record.course_id }}</div>
-                  <small class="text-muted">ID: {{ record.course_id }}</small>
+                  <div class="course-title">
+                    {{ absence.course?.intitule || 'Cours sans titre' }}
+                  </div>
+                  <small class="text-muted">ID: {{ absence.course_id }}</small>
                 </div>
               </td>
-              <td class="text-center">
-                <span [class]="getStatusBadgeClass(record.status)">
-                  <i [class]="getStatusIcon(record.status)" class="me-1"></i>
-                  {{ getStatusLabel(record.status) }}
+              <td>
+                <div class="course-hours" *ngIf="absence.course?.start_hour && absence.course?.end_hour">
+                  {{ absence.course?.start_hour }} - {{ absence.course?.end_hour }}
+                </div>
+                <span class="text-muted" *ngIf="!absence.course?.start_hour">
+                  Horaires non définis
                 </span>
               </td>
               <td>
-                <span *ngIf="record.comment" class="text-muted">{{ record.comment }}</span>
-                <span *ngIf="!record.comment" class="text-muted fst-italic">-</span>
+                <div class="absence-reason">
+                  <span *ngIf="absence.reason" class="text-dark">{{ absence.reason }}</span>
+                  <span *ngIf="!absence.reason" class="text-muted fst-italic">Aucune raison spécifiée</span>
+                </div>
+              </td>
+              <td class="text-center">
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm" 
+                          (click)="editAbsenceReason(absence)"
+                          title="Modifier la raison">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" 
+                          class="btn btn-outline-danger btn-sm" 
+                          (click)="deleteAbsence(absence)"
+                          title="Supprimer l'absence">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
