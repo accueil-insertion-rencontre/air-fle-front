@@ -307,8 +307,6 @@ export class CourseService {
    * Convertit les données de l'API vers le modèle frontend
    */
   private convertToFrontendModel(apiCourse: any): Course {
-    console.log('Course API à convertir:', apiCourse);
-    
     // Gérer la conversion de la date
     let dayFormatted = '';
     if (apiCourse.day) {
@@ -320,8 +318,6 @@ export class CourseService {
       }
     }
     
-    console.log(`Jour converti: "${apiCourse.day}" -> "${dayFormatted}"`);
-    
     // Extraire l'user_id depuis l'array users de l'API
     let extractedUserId = apiCourse.user_id || apiCourse.userId;
     
@@ -329,10 +325,8 @@ export class CourseService {
       const firstUser = apiCourse.users[0];
       if (firstUser && firstUser.user_id) {
         extractedUserId = firstUser.user_id;
-        console.log('User ID extrait depuis API users array:', extractedUserId);
       } else if (firstUser && firstUser.user && firstUser.user.id) {
         extractedUserId = firstUser.user.id;
-        console.log('User ID extrait depuis API users[].user.id:', extractedUserId);
       }
     }
     
@@ -346,6 +340,7 @@ export class CourseService {
       end_hour: apiCourse.end_hour ? this.extractTimeFromDate(apiCourse.end_hour) : apiCourse.endHour,
       title: apiCourse.intitule || apiCourse.title,
       user_id: extractedUserId, // Utiliser l'user_id extrait
+      color: apiCourse.color, // Couleur personnalisée
       session: apiCourse.session ? {
         session_id: apiCourse.session.id || apiCourse.session.session_id,
         label: apiCourse.session.label
@@ -420,6 +415,12 @@ export class CourseService {
     if (course.user_id) {
       result.user_id = course.user_id;
       console.log('Professeur assigné:', course.user_id);
+    }
+    
+    // Ajouter color si fournie (optionnel)
+    if (course.color) {
+      result.color = course.color;
+      console.log('Couleur assignée:', course.color);
     }
     
     return result;
