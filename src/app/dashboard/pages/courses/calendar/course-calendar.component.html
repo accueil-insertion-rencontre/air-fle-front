@@ -144,6 +144,36 @@
             </small>
           </div>
 
+          <!-- Couleur du cours -->
+          <div class="mb-3">
+            <label for="courseColor" class="form-label">Couleur du cours</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <select 
+                  class="form-select" 
+                  id="courseColor" 
+                  formControlName="color">
+                  <option value="">Couleur par défaut (basée sur le groupe)</option>
+                  <option *ngFor="let color of predefinedColors" [value]="color.value">
+                    {{ color.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input 
+                  type="color" 
+                  class="form-control form-control-color" 
+                  id="customColor"
+                  formControlName="color"
+                  style="height: 38px;"
+                  title="Choisir une couleur personnalisée">
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur personnalisée
+            </small>
+          </div>
+
           <!-- Intitulé du cours -->
           <div class="mb-3">
             <label for="courseTitle" class="form-label">Intitulé du cours <span class="text-danger">*</span></label>
@@ -252,30 +282,55 @@
           <div class="row mb-4">
             <div class="col-md-8">
               <div class="card">
-                <div class="card-header">
-                  <h6 class="card-title mb-0">
-                    <i class="fas fa-book me-2"></i>Informations du cours
-                  </h6>
+                <div class="card-header d-flex align-items-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <span>Informations générales</span>
                 </div>
                 <div class="card-body">
                   <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <strong>Intitulé :</strong><br>
-                      <span class="text-muted">{{ selectedCourse.title }}</span>
+                    <div class="col-md-6">
+                      <p><strong>Titre :</strong> {{ selectedCourse.title }}</p>
+                      <p><strong>Date :</strong> {{ selectedCourse.day | date:'fullDate':'':'fr-FR' }}</p>
+                      <p><strong>Horaires :</strong> {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}</p>
                     </div>
-                    <div class="col-md-6 mb-3">
-                      <strong>Groupe :</strong><br>
-                      <span class="text-muted">{{ selectedCourse.group?.label || 'Non défini' }}</span>
+                    <div class="col-md-6">
+                      <p><strong>Groupe :</strong> {{ selectedCourse.group?.label || 'Non défini' }}</p>
+                      <p><strong>Session :</strong> {{ selectedCourse.session?.label || 'Non définie' }}</p>
+                      <div class="d-flex align-items-center">
+                        <strong class="me-2">Couleur :</strong>
+                        <div 
+                          class="rounded me-2" 
+                          [style.background-color]="getCourseColor(selectedCourse)"
+                          style="width: 30px; height: 20px; border: 1px solid #ddd;">
+                        </div>
+                        <span class="text-muted small">
+                          {{ selectedCourse.color ? selectedCourse.color : 'Par défaut (basée sur le groupe)' }}
+                        </span>
+                      </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                      <strong>Professeur :</strong><br>
-                      <span class="text-muted">
-                        {{ getTeacherFullName(selectedCourse.user_id) }}
-                      </span>
+                  </div>
+                  
+                  <!-- Professeur assigné -->
+                  <div class="row mt-3" *ngIf="selectedCourse.user">
+                    <div class="col-12">
+                      <div class="alert alert-info">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                        <strong>Professeur assigné :</strong> 
+                        {{ selectedCourse.user.firstname }} {{ selectedCourse.user.lastname }}
+                        <span class="text-muted" *ngIf="selectedCourse.user.email">
+                          ({{ selectedCourse.user.email }})
+                        </span>
+                      </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                      <strong>Session :</strong><br>
-                      <span class="text-muted">{{ selectedCourse.session?.label || 'Non définie' }}</span>
+                  </div>
+                  
+                  <!-- Aucun professeur -->
+                  <div class="row mt-3" *ngIf="!selectedCourse.user">
+                    <div class="col-12">
+                      <div class="alert alert-warning">
+                        <i class="fas fa-user-slash me-2"></i>
+                        <strong>Aucun professeur assigné</strong>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -441,6 +496,36 @@
             </select>
             <small class="form-text text-muted">
               Sélectionnez un professeur ou laissez vide si aucun n'est assigné
+            </small>
+          </div>
+
+          <!-- Couleur du cours -->
+          <div class="mb-3">
+            <label for="editCourseColor" class="form-label">Couleur du cours</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <select 
+                  class="form-select" 
+                  id="editCourseColor" 
+                  formControlName="color">
+                  <option value="">Couleur par défaut (basée sur le groupe)</option>
+                  <option *ngFor="let color of predefinedColors" [value]="color.value">
+                    {{ color.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input 
+                  type="color" 
+                  class="form-control form-control-color" 
+                  id="editCustomColor"
+                  formControlName="color"
+                  style="height: 38px;"
+                  title="Choisir une couleur personnalisée">
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur personnalisée
             </small>
           </div>
 
