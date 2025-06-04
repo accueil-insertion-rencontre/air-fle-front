@@ -401,8 +401,11 @@ export class CourseCalendarComponent implements OnInit {
     const dateKey = this.formatDateForApi(day.date);
     const daysCourses = this.courses.filter(course => course.day === dateKey);
     
+    // Enrichir chaque cours avec les données complètes
+    const enrichedCourses = daysCourses.map(course => this.enrichCourseData(course));
+    
     // Trier les cours par heure de début, puis par date de création
-    const sortedCourses = daysCourses.sort((a, b) => {
+    const sortedCourses = enrichedCourses.sort((a, b) => {
       // Première priorité : trier par heure de début (plus tôt en premier)
       if (a.start_hour && b.start_hour) {
         const timeComparison = a.start_hour.localeCompare(b.start_hour);
@@ -424,10 +427,11 @@ export class CourseCalendarComponent implements OnInit {
       return idA.toString().localeCompare(idB.toString());
     });
     
-    console.log(`Cours pour ${dateKey} (triés):`, sortedCourses.map(c => ({
+    console.log(`Cours enrichis pour ${dateKey}:`, sortedCourses.map(c => ({
       title: c.title,
       start_hour: c.start_hour,
-      created_at: c.created_at
+      teacher: c.user ? `${c.user.firstname} ${c.user.lastname}` : 'Aucun',
+      group: c.group?.label || 'Aucun'
     })));
     
     return sortedCourses;
@@ -455,11 +459,38 @@ export class CourseCalendarComponent implements OnInit {
     for (let i = 0; i < groupIdStr.length; i++) {
       const char = groupIdStr.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convertir en 32bit integer
+      hash = hash & hash; // Convertit en entier 32-bit
     }
     
-    const index = Math.abs(hash) % this.courseColors.length;
-    return this.courseColors[index];
+    // S'assurer que le hash est positif
+    const positiveHash = Math.abs(hash);
+    
+    // Sélectionner une couleur basée sur le hash
+    const colorIndex = positiveHash % this.courseColors.length;
+    return this.courseColors[colorIndex];
+  }
+
+  /**
+   * Génère une couleur avec opacité pour le background de la carte
+   */
+  getCourseColorWithOpacity(course: Course): string {
+    const originalColor = this.getCourseColor(course);
+    return this.hexToRgba(originalColor, 0.4);
+  }
+
+  /**
+   * Convertit une couleur hex en rgba avec opacité
+   */
+  private hexToRgba(hex: string, opacity: number): string {
+    // Enlever le # si présent
+    hex = hex.replace('#', '');
+    
+    // Convertir en RGB
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
 
   /**
@@ -676,7 +707,7 @@ export class CourseCalendarComponent implements OnInit {
         if (successful.length === 0) {
           this.error = 'Erreur lors de la création des cours';
         } else {
-          this.alertService.warning(`${failed.length} cours n'ont pas pu être créés`);
+          this.alertService.error(`${failed.length} cours n'ont pas pu être créés`);
         }
       }
     }).catch(error => {
@@ -810,10 +841,28 @@ export class CourseCalendarComponent implements OnInit {
         console.log('User ID extrait depuis API users[].user.id:', assignedUserId);
       }
     }
+
+    // Enrichir avec les données complètes du professeur
+    let fullUser: { user_id?: string | number; firstname?: string; lastname?: string; email?: string } | undefined = undefined;
+    if (assignedUserId) {
+      const teacher = this.getTeacherById(assignedUserId);
+      if (teacher) {
+        fullUser = {
+          user_id: teacher.id,
+          firstname: teacher.fullName.split(' ')[0] || '',
+          lastname: teacher.fullName.split(' ').slice(1).join(' ') || '',
+          email: teacher.email
+        };
+        console.log('Professeur enrichi:', fullUser);
+      } else {
+        console.warn('Professeur non trouvé dans la liste pour user_id:', assignedUserId);
+      }
+    }
     
     return {
       ...course,
       user_id: assignedUserId, // Assigner l'user_id extrait
+      user: fullUser, // Ajouter les données complètes du professeur
       group: fullGroup ? {
         group_id: fullGroup.group_id,
         label: fullGroup.label
