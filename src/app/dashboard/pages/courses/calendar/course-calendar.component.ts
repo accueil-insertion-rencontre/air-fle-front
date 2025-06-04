@@ -57,6 +57,13 @@ export class CourseCalendarComponent implements OnInit {
   editLoading = false;
   editError = '';
   
+  // Propriétés pour la création multi-dates
+  isMultiDateMode = false;
+  selectedDates: string[] = [];
+  recurrenceType: 'none' | 'weekly' | 'custom' = 'none';
+  weeklyOccurrences = 1;
+  maxWeeklyOccurrences = 10;
+  
   // Hours for time selection in modal
   timeOptions = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -100,7 +107,12 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
       user_id: [''], // Optionnel, donc pas de Validators.required
-      color: [''] // Couleur optionnelle
+      color: [''], // Couleur optionnelle
+      // Nouveaux champs pour multi-dates
+      is_multi_date: [false],
+      recurrence_type: ['none'],
+      weekly_occurrences: [1, [Validators.min(1), Validators.max(10)]],
+      custom_dates: [[]]
     });
 
     this.editCourseForm = this.formBuilder.group({
@@ -351,32 +363,28 @@ export class CourseCalendarComponent implements OnInit {
   onDayClick(day: WeekDay): void {
     console.log('=== CLIC SUR JOUR ===');
     console.log('Jour cliqué:', day);
-    console.log('Date du jour:', day.date);
-    console.log('Nom du jour:', day.dayName);
-    console.log('Numéro du jour:', day.dayNumber);
-    console.log('Date complète:', day.date.toString());
-    console.log('Date locale:', day.date.toLocaleDateString('fr-FR'));
-    console.log('Fuseau horaire:', day.date.getTimezoneOffset());
     
     this.selectedDate = this.formatDateForApi(day.date);
-    console.log('Date formatée pour API:', this.selectedDate);
-    console.log('Vérification format:', {
-      year: day.date.getFullYear(),
-      month: day.date.getMonth() + 1,
-      day: day.date.getDate()
-    });
+    
+    // Réinitialiser les propriétés multi-dates
+    this.isMultiDateMode = false;
+    this.selectedDates = [this.selectedDate];
+    this.recurrenceType = 'none';
+    this.weeklyOccurrences = 1;
     
     this.courseForm.patchValue({
       group_id: '',
       start_hour: '09:00', // Heure par défaut
       end_hour: '10:00',   // Heure par défaut
-      title: ''
+      title: '',
+      is_multi_date: false,
+      recurrence_type: 'none',
+      weekly_occurrences: 1,
+      custom_dates: [this.selectedDate]
     });
     
     console.log('=== OUVERTURE MODAL ===');
     console.log('Date sélectionnée:', this.selectedDate);
-    console.log('Formulaire réinitialisé:', this.courseForm.value);
-    console.log('Groupes disponibles:', this.groups.length, this.groups);
     
     // Ouvrir la modal
     const modalElement = document.getElementById('createCourseModal');
@@ -462,6 +470,133 @@ export class CourseCalendarComponent implements OnInit {
   }
 
   /**
+   * Bascule le mode multi-dates
+   */
+  toggleMultiDateMode(): void {
+    this.isMultiDateMode = !this.isMultiDateMode;
+    
+    if (this.isMultiDateMode) {
+      this.courseForm.patchValue({
+        is_multi_date: true,
+        recurrence_type: this.recurrenceType,
+        custom_dates: this.selectedDates
+      });
+    } else {
+      this.courseForm.patchValue({
+        is_multi_date: false,
+        recurrence_type: 'none',
+        custom_dates: [this.selectedDate]
+      });
+      this.selectedDates = [this.selectedDate];
+      this.recurrenceType = 'none';
+    }
+    
+    console.log('Mode multi-dates:', this.isMultiDateMode);
+  }
+
+  /**
+   * Change le type de récurrence
+   */
+  onRecurrenceTypeChange(type: 'none' | 'weekly' | 'custom'): void {
+    this.recurrenceType = type;
+    
+    if (type === 'weekly') {
+      this.generateWeeklyDates();
+    } else if (type === 'custom') {
+      this.selectedDates = [this.selectedDate];
+    } else {
+      this.selectedDates = [this.selectedDate];
+    }
+    
+    this.courseForm.patchValue({
+      recurrence_type: type,
+      custom_dates: this.selectedDates
+    });
+    
+    console.log('Type de récurrence changé:', type, 'Dates:', this.selectedDates);
+  }
+
+  /**
+   * Génère les dates pour la récurrence hebdomadaire
+   */
+  generateWeeklyDates(): void {
+    this.selectedDates = [];
+    const startDate = new Date(this.selectedDate);
+    
+    for (let i = 0; i < this.weeklyOccurrences; i++) {
+      const newDate = new Date(startDate);
+      newDate.setDate(startDate.getDate() + (i * 7));
+      this.selectedDates.push(this.formatDateForApi(newDate));
+    }
+    
+    this.courseForm.patchValue({
+      custom_dates: this.selectedDates
+    });
+    
+    console.log(`${this.weeklyOccurrences} occurrences hebdomadaires générées:`, this.selectedDates);
+  }
+
+  /**
+   * Change le nombre d'occurrences hebdomadaires
+   */
+  onWeeklyOccurrencesChange(occurrences: number): void {
+    this.weeklyOccurrences = Math.max(1, Math.min(occurrences, this.maxWeeklyOccurrences));
+    
+    if (this.recurrenceType === 'weekly') {
+      this.generateWeeklyDates();
+    }
+    
+    this.courseForm.patchValue({
+      weekly_occurrences: this.weeklyOccurrences
+    });
+  }
+
+  /**
+   * Ajoute une date personnalisée
+   */
+  addCustomDate(dateString: string): void {
+    if (dateString && !this.selectedDates.includes(dateString)) {
+      this.selectedDates.push(dateString);
+      this.selectedDates.sort(); // Trier les dates
+      
+      this.courseForm.patchValue({
+        custom_dates: this.selectedDates
+      });
+      
+      console.log('Date ajoutée:', dateString, 'Total:', this.selectedDates.length);
+    }
+  }
+
+  /**
+   * Supprime une date personnalisée
+   */
+  removeCustomDate(dateString: string): void {
+    const index = this.selectedDates.indexOf(dateString);
+    if (index > -1) {
+      this.selectedDates.splice(index, 1);
+      
+      this.courseForm.patchValue({
+        custom_dates: this.selectedDates
+      });
+      
+      console.log('Date supprimée:', dateString, 'Restantes:', this.selectedDates.length);
+    }
+  }
+
+  /**
+   * Formate une date pour l'affichage utilisateur
+   */
+  formatDateForDisplay(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  /**
    * Soumet le formulaire de création de cours
    */
   onSubmitCourse(): void {
@@ -472,9 +607,8 @@ export class CourseCalendarComponent implements OnInit {
     
     console.log('=== CREATION DE COURS ===');
     
-    const courseData = {
+    const baseCourseData = {
       title: this.courseForm.value.title,
-      day: this.selectedDate,
       start_hour: this.courseForm.value.start_hour,
       end_hour: this.courseForm.value.end_hour,
       group_id: this.courseForm.value.group_id,
@@ -482,41 +616,104 @@ export class CourseCalendarComponent implements OnInit {
       color: this.courseForm.value.color
     };
     
-    console.log('Données de cours:', courseData);
+    // Déterminer les dates à créer
+    const datesToCreate = this.isMultiDateMode ? this.selectedDates : [this.selectedDate];
     
-    this.courseService.createCourse(courseData).subscribe({
-      next: (course) => {
-        this.loading = false;
-        this.modal.hide();
-        this.alertService.success('Cours créé avec succès !');
-        console.log('Cours créé:', course.title);
+    console.log('Données de cours de base:', baseCourseData);
+    console.log('Dates à créer:', datesToCreate);
+    
+    // Créer les cours pour chaque date
+    this.createCoursesForDates(baseCourseData, datesToCreate);
+  }
+
+  /**
+   * Crée les cours pour toutes les dates sélectionnées
+   */
+  private createCoursesForDates(baseCourseData: any, dates: string[]): void {
+    const courseCreationPromises: Promise<any>[] = [];
+    
+    dates.forEach(date => {
+      const courseData = {
+        ...baseCourseData,
+        day: date
+      };
+      
+      const promise = new Promise((resolve, reject) => {
+        this.courseService.createCourse(courseData).subscribe({
+          next: (course) => resolve(course),
+          error: (error) => reject(error)
+        });
+      });
+      
+      courseCreationPromises.push(promise);
+    });
+    
+    // Attendre que tous les cours soient créés
+    Promise.allSettled(courseCreationPromises).then(results => {
+      this.loading = false;
+      
+      const successful = results.filter(result => result.status === 'fulfilled');
+      const failed = results.filter(result => result.status === 'rejected');
+      
+      if (successful.length > 0) {
+        const message = dates.length === 1 
+          ? 'Cours créé avec succès !'
+          : `${successful.length} cours créés avec succès${failed.length > 0 ? `, ${failed.length} échecs` : ''} !`;
         
-        // Recharger le planning pour afficher le nouveau cours
+        this.alertService.success(message);
+        this.modal.hide();
+        
+        // Recharger le planning pour afficher les nouveaux cours
         this.loadCourses();
         
         // Réinitialiser le formulaire
-        this.courseForm.reset({
-          group_id: '',
-          title: '',
-          start_hour: '',
-          end_hour: '',
-          user_id: null,
-          color: ''
-        });
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('Erreur lors de la création du cours:', error);
-        this.error = error?.error?.message || 'Une erreur est survenue lors de la création du cours';
+        this.resetCourseForm();
       }
+      
+      if (failed.length > 0) {
+        console.error('Erreurs lors de la création:', failed);
+        
+        if (successful.length === 0) {
+          this.error = 'Erreur lors de la création des cours';
+        } else {
+          this.alertService.warning(`${failed.length} cours n'ont pas pu être créés`);
+        }
+      }
+    }).catch(error => {
+      this.loading = false;
+      console.error('Erreur générale lors de la création des cours:', error);
+      this.error = 'Une erreur est survenue lors de la création des cours';
     });
+  }
+
+  /**
+   * Réinitialise le formulaire de cours
+   */
+  private resetCourseForm(): void {
+    this.courseForm.reset({
+      group_id: '',
+      title: '',
+      start_hour: '',
+      end_hour: '',
+      user_id: null,
+      color: '',
+      is_multi_date: false,
+      recurrence_type: 'none',
+      weekly_occurrences: 1,
+      custom_dates: []
+    });
+    
+    this.isMultiDateMode = false;
+    this.selectedDates = [];
+    this.recurrenceType = 'none';
+    this.weeklyOccurrences = 1;
   }
 
   /**
    * Annule la création de cours
    */
   onCancelCourse(): void {
-    this.courseForm.reset();
+    this.resetCourseForm();
     this.error = '';
     this.modal?.hide();
   }
