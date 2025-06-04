@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CourseService } from '../../../../core/services/course.service';
 import { SessionService } from '../../../../core/services/session.service';
 import { GroupService } from '../../../../core/services/group.service';
 import { UserService } from '../../../../core/services/user.service';
+import { AttendanceService, AttendanceRecord, AttendanceStatus } from '../../../../core/services/attendance.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { Course } from '../../../../core/models/course.model';
 import { Session } from '../../../../core/models/session.model';
@@ -49,7 +50,9 @@ export class CourseCalendarComponent implements OnInit {
   selectedCourse: Course | null = null;
   courseStudents: Student[] = [];
   loadingCourseDetails = false;
-  studentAttendanceMap: Map<number | string, 'present' | 'absent' | 'unknown'> = new Map();
+  studentAttendanceMap: Map<number | string, 'present' | 'absent' | 'late' | 'excused' | 'unknown'> = new Map();
+  attendanceRecords: AttendanceRecord[] = [];
+  savingAttendance = false;
   
   // Propriétés pour le modal d'édition de cours
   editModal: any;
@@ -98,6 +101,7 @@ export class CourseCalendarComponent implements OnInit {
     private sessionService: SessionService,
     private groupService: GroupService,
     private userService: UserService,
+    private attendanceService: AttendanceService,
     private alertService: AlertService,
     private formBuilder: FormBuilder
   ) {
@@ -891,7 +895,6 @@ export class CourseCalendarComponent implements OnInit {
       next: (group) => {
         console.log('Groupe chargé:', group);
         this.courseStudents = group.students || [];
-        this.loadingCourseDetails = false;
         
         // Initialiser les statuts de présence (par défaut : inconnu)
         this.courseStudents.forEach(student => {
@@ -900,6 +903,9 @@ export class CourseCalendarComponent implements OnInit {
           }
         });
         
+        // Charger les présences existantes pour ce cours
+        this.loadExistingAttendance();
+        
         console.log('Élèves du cours:', this.courseStudents);
       },
       error: (error) => {
@@ -907,6 +913,40 @@ export class CourseCalendarComponent implements OnInit {
         this.courseStudents = [];
         this.loadingCourseDetails = false;
         this.alertService.error('Impossible de charger les élèves du groupe');
+      }
+    });
+  }
+
+  /**
+   * Charge les présences existantes pour le cours sélectionné
+   */
+  loadExistingAttendance(): void {
+    if (!this.selectedCourse?.course_id && !this.selectedCourse?.id) {
+      this.loadingCourseDetails = false;
+      return;
+    }
+
+    const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
+    
+    this.attendanceService.getCourseAttendance(courseId).subscribe({
+      next: (records) => {
+        this.attendanceRecords = records;
+        
+        // Mettre à jour la map des présences avec les données existantes
+        records.forEach(record => {
+          this.studentAttendanceMap.set(record.student_id, record.status);
+        });
+        
+        this.loadingCourseDetails = false;
+        console.log('Présences chargées:', records);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des présences:', error);
+        this.loadingCourseDetails = false;
+        // Ne pas afficher d'erreur si l'API n'existe pas encore
+        if (error.status !== 404) {
+          console.warn('API des présences non disponible ou cours sans présences enregistrées');
+        }
       }
     });
   }
@@ -1049,6 +1089,22 @@ export class CourseCalendarComponent implements OnInit {
   }
 
   /**
+   * Marque un élève en retard
+   */
+  markStudentLate(student: Student): void {
+    this.studentAttendanceMap.set(student.student_id, 'late');
+    console.log(`Élève ${student.firstname} ${student.lastname} marqué en retard`);
+  }
+
+  /**
+   * Marque un élève comme absent excusé
+   */
+  markStudentExcused(student: Student): void {
+    this.studentAttendanceMap.set(student.student_id, 'excused');
+    console.log(`Élève ${student.firstname} ${student.lastname} marqué absent excusé`);
+  }
+
+  /**
    * Vérifie si un élève est marqué présent
    */
   isStudentPresent(student: Student): boolean {
@@ -1063,6 +1119,20 @@ export class CourseCalendarComponent implements OnInit {
   }
 
   /**
+   * Vérifie si un élève est marqué en retard
+   */
+  isStudentLate(student: Student): boolean {
+    return this.studentAttendanceMap.get(student.student_id) === 'late';
+  }
+
+  /**
+   * Vérifie si un élève est marqué absent excusé
+   */
+  isStudentExcused(student: Student): boolean {
+    return this.studentAttendanceMap.get(student.student_id) === 'excused';
+  }
+
+  /**
    * Retourne le libellé du statut d'un élève
    */
   getStudentStatusLabel(student: Student): string {
@@ -1070,6 +1140,8 @@ export class CourseCalendarComponent implements OnInit {
     switch (status) {
       case 'present': return 'Présent';
       case 'absent': return 'Absent';
+      case 'late': return 'En retard';
+      case 'excused': return 'Absent excusé';
       default: return 'Non défini';
     }
   }
@@ -1082,6 +1154,8 @@ export class CourseCalendarComponent implements OnInit {
     switch (status) {
       case 'present': return 'badge bg-success';
       case 'absent': return 'badge bg-danger';
+      case 'late': return 'badge bg-warning';
+      case 'excused': return 'badge bg-secondary';
       default: return 'badge bg-secondary';
     }
   }
@@ -1094,6 +1168,8 @@ export class CourseCalendarComponent implements OnInit {
     switch (status) {
       case 'present': return 'fas fa-check';
       case 'absent': return 'fas fa-times';
+      case 'late': return 'fas fa-clock';
+      case 'excused': return 'fas fa-times-circle';
       default: return 'fas fa-question';
     }
   }
@@ -1113,6 +1189,24 @@ export class CourseCalendarComponent implements OnInit {
   getAbsentStudentsCount(): number {
     return this.courseStudents.filter(student => 
       this.studentAttendanceMap.get(student.student_id) === 'absent'
+    ).length;
+  }
+
+  /**
+   * Compte le nombre d'élèves en retard
+   */
+  getLateStudentsCount(): number {
+    return this.courseStudents.filter(student => 
+      this.studentAttendanceMap.get(student.student_id) === 'late'
+    ).length;
+  }
+
+  /**
+   * Compte le nombre d'élèves absents excusés
+   */
+  getExcusedStudentsCount(): number {
+    return this.courseStudents.filter(student => 
+      this.studentAttendanceMap.get(student.student_id) === 'excused'
     ).length;
   }
 
@@ -1239,5 +1333,76 @@ export class CourseCalendarComponent implements OnInit {
   getTeacherFullName(teacherId: string | number | null | undefined): string {
     const teacher = this.getTeacherById(teacherId);
     return teacher ? teacher.fullName : 'Non assigné';
+  }
+
+  /**
+   * Sauvegarde toutes les présences du cours
+   */
+  saveAllAttendances(): void {
+    if (!this.selectedCourse?.course_id && !this.selectedCourse?.id) {
+      this.alertService.error('Aucun cours sélectionné');
+      return;
+    }
+
+    const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
+    
+    if (!courseId) {
+      this.alertService.error('ID de cours invalide');
+      return;
+    }
+    
+    const attendances: AttendanceStatus[] = [];
+
+    // Préparer les données de présence pour tous les élèves avec un statut défini
+    this.courseStudents.forEach(student => {
+      const status = this.studentAttendanceMap.get(student.student_id);
+      if (status && status !== 'unknown') {
+        attendances.push({
+          student_id: student.student_id,
+          status: status as 'present' | 'absent' | 'late' | 'excused'
+        });
+      }
+    });
+
+    if (attendances.length === 0) {
+      this.alertService.error('Aucune présence à enregistrer');
+      return;
+    }
+
+    this.savingAttendance = true;
+
+    this.attendanceService.saveCourseAttendance(Number(courseId), attendances).subscribe({
+      next: (records) => {
+        this.savingAttendance = false;
+        this.attendanceRecords = records;
+        this.alertService.success(`${records.length} présence(s) enregistrée(s) avec succès !`);
+        console.log('Présences sauvegardées:', records);
+      },
+      error: (error) => {
+        this.savingAttendance = false;
+        console.error('Erreur lors de la sauvegarde des présences:', error);
+        this.alertService.error('Erreur lors de l\'enregistrement des présences');
+      }
+    });
+  }
+
+  /**
+   * Marque tous les élèves comme présents
+   */
+  markAllStudentsPresent(): void {
+    this.courseStudents.forEach(student => {
+      this.studentAttendanceMap.set(student.student_id, 'present');
+    });
+    console.log('Tous les élèves marqués présents');
+  }
+
+  /**
+   * Marque tous les élèves comme absents
+   */
+  markAllStudentsAbsent(): void {
+    this.courseStudents.forEach(student => {
+      this.studentAttendanceMap.set(student.student_id, 'absent');
+    });
+    console.log('Tous les élèves marqués absents');
   }
 } 
