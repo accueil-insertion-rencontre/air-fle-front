@@ -93,17 +93,20 @@
               </div>
             </div>
             
-            <!-- Professeur (optionnel pour l'instant) -->
+            <!-- Professeur assigné -->
             <div class="mb-3">
               <label for="user_id" class="form-label">Professeur assigné</label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <select 
+                class="form-select" 
                 id="user_id" 
-                formControlName="user_id"
-                placeholder="ID du professeur (optionnel)">
+                formControlName="user_id">
+                <option value="">Aucun professeur assigné</option>
+                <option *ngFor="let teacher of teachers" [value]="teacher.id">
+                  {{ teacher.fullName }} ({{ teacher.email }})
+                </option>
+              </select>
               <small class="form-text text-muted">
-                Laissez vide si aucun professeur n'est encore assigné
+                Sélectionnez un professeur ou laissez vide si aucun n'est assigné
               </small>
             </div>
             

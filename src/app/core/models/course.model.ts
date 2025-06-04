@@ -11,6 +11,7 @@ export interface Course {
   end_hour: string; // Format HH:MM
   title: string; // Intitulé du cours
   user_id?: number | string; // ID du professeur assigné
+  color?: string; // Couleur hexadécimale personnalisée (ex: #FF5733)
   
   // Relations
   session?: {

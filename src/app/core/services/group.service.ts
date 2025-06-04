@@ -274,6 +274,7 @@ export class GroupService {
     }
     
     // Logging pour debug - afficher tout le contenu de l'objet
+    console.log('=== CONVERSION GROUPE API ===');
     console.log('Groupe API à convertir (contenu complet):', JSON.stringify(apiGroup, null, 2));
     console.log('Toutes les clés de l\'objet API:', Object.keys(apiGroup));
     
@@ -284,7 +285,51 @@ export class GroupService {
     const sessionId = apiGroup.session_id || apiGroup.sessionId;
     console.log('session_id trouvé:', sessionId, 'type:', typeof sessionId);
     
+    // Traitement spécial pour les étudiants avec la structure Prisma
+    let students: any[] = [];
+    if (apiGroup.students && Array.isArray(apiGroup.students)) {
+      console.log('=== TRAITEMENT DES ÉTUDIANTS ===');
+      console.log('Structure students brute de l\'API:', apiGroup.students);
+      
+      students = apiGroup.students.map((studentRelation: any) => {
+        // Structure Prisma: { student: { id, firstname, lastname, ... } }
+        if (studentRelation.student) {
+          console.log('Étudiant trouvé dans relation Prisma:', studentRelation.student);
+          return {
+            // Utiliser les données de l'étudiant directement
+            id: studentRelation.student.id,
+            student_id: studentRelation.student.id, // Compatibilité
+            firstname: studentRelation.student.firstname,
+            lastname: studentRelation.student.lastname,
+            email: studentRelation.student.email,
+            // Copier toutes les autres propriétés
+            ...studentRelation.student
+          };
+        }
+        // Si la structure est déjà plate (cas de fallback)
+        else if (studentRelation.id || studentRelation.student_id) {
+          console.log('Étudiant avec structure plate:', studentRelation);
     return {
+            id: studentRelation.id || studentRelation.student_id,
+            student_id: studentRelation.student_id || studentRelation.id,
+            firstname: studentRelation.firstname,
+            lastname: studentRelation.lastname,
+            email: studentRelation.email,
+            ...studentRelation
+          };
+        }
+        else {
+          console.warn('Structure d\'étudiant non reconnue:', studentRelation);
+          return studentRelation;
+        }
+      });
+      
+      console.log('Étudiants traités pour le frontend:', students);
+    } else {
+      console.log('Aucun étudiant trouvé ou structure non array:', apiGroup.students);
+    }
+    
+    const convertedGroup = {
       group_id: groupId,
       label: apiGroup.label || '',
       // Convertir les propriétés camelCase en snake_case
@@ -293,8 +338,8 @@ export class GroupService {
       ended_at: apiGroup.endedAt ? new Date(apiGroup.endedAt) : undefined,
       more_info: apiGroup.moreInfo || apiGroup.more_info,
       external_id: apiGroup.externalId || apiGroup.external_id,
-      // Conserver les propriétés de relation
-      students: apiGroup.students || [],
+      // Utiliser les étudiants traités
+      students: students,
       session: apiGroup.session,
       // Ajouter également les propriétés camelCase pour compatibilité
       sessionId: sessionId,
@@ -303,6 +348,12 @@ export class GroupService {
       moreInfo: apiGroup.moreInfo || apiGroup.more_info,
       externalId: apiGroup.externalId || apiGroup.external_id
     };
+    
+    console.log('=== GROUPE CONVERTI FINAL ===');
+    console.log('Groupe converti:', convertedGroup);
+    console.log('Nombre d\'étudiants dans le groupe converti:', convertedGroup.students?.length || 0);
+    
+    return convertedGroup;
   }
   
   // Convertir un modèle de groupe du frontend vers le format API

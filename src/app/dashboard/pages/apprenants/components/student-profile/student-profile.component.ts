@@ -4,13 +4,14 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { StudentService } from '../../services/student.service';
 import { LevelService } from '../../services/level.service';
 import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
+import { StudentAbsenceHistoryComponent } from '../student-absence-history/student-absence-history.component';
 import { ApiStudent } from '../../models/student.model';
 import { Level } from '../../models/level.model';
 
 @Component({
   selector: 'app-student-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, StudentAbsenceHistoryComponent],
   templateUrl: './student-profile.component.html',
   styleUrls: ['./student-profile.component.scss']
 })
@@ -19,6 +20,7 @@ export class StudentProfileComponent implements OnInit {
   nextLevel: Level | null = null;
   loading = true;
   error: string | null = null;
+  showAbsenceHistory = false;
 
   // Données de référence pour le mapping
   statuses: any[] = [];
@@ -264,21 +266,35 @@ export class StudentProfileComponent implements OnInit {
   }
 
   viewAbsences(): void {
-    // TODO: Naviguer vers la page des absences
-    console.log('Voir les absences de:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    this.showAbsenceHistory = true;
+    console.log('Affichage historique des absences pour:', this.student?.firstname);
   }
 
   addAbsence(): void {
-    // TODO: Ouvrir le formulaire d'ajout d'absence
-    console.log('Ajouter une absence pour:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    if (!this.student) return;
+
+    const courseId = prompt('ID du cours pour lequel ajouter une absence:');
+    if (!courseId) return;
+
+    const reason = prompt('Raison de l\'absence (optionnelle):');
+
+    const absenceData = {
+      student_id: this.student.id,
+      course_id: courseId,
+      reason: reason || undefined
+    };
+
+    // TODO: Implémenter l'ajout d'absence avec l'API
+    console.log('Ajout d\'absence pour:', this.student.firstname, absenceData);
+    
+    // Pour l'instant, afficher que la fonctionnalité est en développement
+    alert(`Fonctionnalité d'ajout d'absence en cours de développement.\n\nDonnées qui seraient envoyées:\nÉtudiant: ${this.student.firstname} ${this.student.lastname}\nCours: ${courseId}\nRaison: ${reason || 'Aucune'}`);
   }
 
   manageAbsences(): void {
-    // TODO: Naviguer vers la gestion des absences
-    console.log('Gérer les absences de:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    // Basculer vers la vue de gestion des absences
+    this.showAbsenceHistory = !this.showAbsenceHistory;
+    console.log('Basculer la gestion des absences de:', this.student?.firstname);
   }
 
   viewEvaluations(): void {
