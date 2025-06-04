@@ -236,9 +236,63 @@ export class CourseService {
   /**
    * Récupère les cours par groupe
    */
-  getCoursesByGroupId(groupId: number): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.apiUrl}/group/${groupId}`)
-      .pipe(catchError(this.handleError));
+  getCoursesByGroupId(groupId: string | number): Observable<Course[]> {
+    console.log('Tentative de récupération des cours pour le groupe:', groupId);
+    
+    // L'endpoint direct n'existe pas, essayons plusieurs approches
+    return this.http.get<any>(`${this.apiUrl}/group/${groupId}`)
+      .pipe(
+        map(response => {
+          console.log('Réponse brute de l\'API pour getCoursesByGroupId (endpoint direct):', response);
+          
+          if (response && response.data && Array.isArray(response.data)) {
+            return response.data.map((course: any) => this.convertToFrontendModel(course));
+          }
+          
+          // Fallback: si la réponse est directement un tableau
+          if (Array.isArray(response)) {
+            return response.map((course: any) => this.convertToFrontendModel(course));
+          }
+          
+          console.warn('Aucun cours trouvé pour le groupe ou format inattendu:', response);
+          return [];
+        }),
+        catchError((error) => {
+          console.warn('Endpoint /courses/group/{id} non disponible (404), tentative de fallback:', error);
+          
+          // Fallback: récupérer tous les cours et filtrer côté client
+          return this.getCourses().pipe(
+            map((allCourses: Course[]) => {
+              console.log('Filtrage côté client des cours pour group_id:', groupId);
+              console.log('Tous les cours récupérés:', allCourses);
+              
+              const filteredCourses = allCourses.filter(course => {
+                const courseGroupId = course.group_id;
+                const match = courseGroupId?.toString() === groupId?.toString();
+                
+                if (match) {
+                  console.log('Cours trouvé pour le groupe:', course.title, 'group_id:', courseGroupId);
+                }
+                
+                return match;
+              });
+              
+              console.log(`${filteredCourses.length} cours trouvés pour le groupe ${groupId}`);
+              return filteredCourses;
+            }),
+            catchError((fallbackError) => {
+              console.error('Échec du fallback également:', fallbackError);
+              
+              // Dernier recours: retourner un tableau vide
+              console.warn('Retour d\'un tableau vide car aucune méthode n\'a fonctionné');
+              return new Observable<Course[]>(observer => {
+                observer.next([]);
+                observer.complete();
+              });
+            })
+          );
+        })
+      );
   }
 
   /**
@@ -253,8 +307,6 @@ export class CourseService {
    * Convertit les données de l'API vers le modèle frontend
    */
   private convertToFrontendModel(apiCourse: any): Course {
-    console.log('Course API à convertir:', apiCourse);
-    
     // Gérer la conversion de la date
     let dayFormatted = '';
     if (apiCourse.day) {
@@ -266,7 +318,17 @@ export class CourseService {
       }
     }
     
-    console.log(`Jour converti: "${apiCourse.day}" -> "${dayFormatted}"`);
+    // Extraire l'user_id depuis l'array users de l'API
+    let extractedUserId = apiCourse.user_id || apiCourse.userId;
+    
+    if (apiCourse.users && Array.isArray(apiCourse.users) && apiCourse.users.length > 0) {
+      const firstUser = apiCourse.users[0];
+      if (firstUser && firstUser.user_id) {
+        extractedUserId = firstUser.user_id;
+      } else if (firstUser && firstUser.user && firstUser.user.id) {
+        extractedUserId = firstUser.user.id;
+      }
+    }
     
     return {
       course_id: apiCourse.course_id || apiCourse.id,
@@ -277,7 +339,8 @@ export class CourseService {
       start_hour: apiCourse.start_hour ? this.extractTimeFromDate(apiCourse.start_hour) : apiCourse.startHour,
       end_hour: apiCourse.end_hour ? this.extractTimeFromDate(apiCourse.end_hour) : apiCourse.endHour,
       title: apiCourse.intitule || apiCourse.title,
-      user_id: apiCourse.user_id || apiCourse.userId,
+      user_id: extractedUserId, // Utiliser l'user_id extrait
+      color: apiCourse.color, // Couleur personnalisée
       session: apiCourse.session ? {
         session_id: apiCourse.session.id || apiCourse.session.session_id,
         label: apiCourse.session.label
@@ -340,7 +403,7 @@ export class CourseService {
     const endDate = new Date(dayDate);
     endDate.setHours(parseInt(endParts[0], 10), parseInt(endParts[1], 10), 0);
     
-    const result = {
+    const result: any = {
       intitule: course.title,
       day: course.day,
       start_hour: startDate,
@@ -348,7 +411,18 @@ export class CourseService {
       group_id: course.group_id
     };
     
-    console.log('Format API avec day explicite:', result);
+    // Ajouter user_id si fourni (optionnel)
+    if (course.user_id) {
+      result.user_id = course.user_id;
+      console.log('Professeur assigné:', course.user_id);
+    }
+    
+    // Ajouter color si fournie (optionnel)
+    if (course.color) {
+      result.color = course.color;
+      console.log('Couleur assignée:', course.color);
+    }
+    
     return result;
   }
 

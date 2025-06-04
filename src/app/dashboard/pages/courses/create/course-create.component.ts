@@ -4,8 +4,10 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { CourseService } from '../../../../core/services/course.service';
 import { SessionService } from '../../../../core/services/session.service';
+import { UserService } from '../../../../core/services/user.service';
 import { Session } from '../../../../core/models/session.model';
 import { Course } from '../../../../core/models/course.model';
+import { UserDisplayInfo } from '../../../../core/models/user.model';
 import { AlertService } from '../../../../core/services/alert.service';
 
 @Component({
@@ -23,6 +25,7 @@ export class CourseCreateComponent implements OnInit {
   isEditMode = false;
   courseId?: string | number;
   sessions: Session[] = [];
+  teachers: UserDisplayInfo[] = [];
   
   // Créneaux horaires disponibles
   timeSlots = [
@@ -37,6 +40,7 @@ export class CourseCreateComponent implements OnInit {
     private route: ActivatedRoute,
     private courseService: CourseService,
     private sessionService: SessionService,
+    private userService: UserService,
     private alertService: AlertService
   ) {
     this.courseForm = this.formBuilder.group({
@@ -45,12 +49,13 @@ export class CourseCreateComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
-      user_id: [null] // Optionnel pour l'instant
+      user_id: [''] // Optionnel, donc pas de Validators.required
     });
   }
 
   ngOnInit(): void {
     this.loadSessions();
+    this.loadTeachers();
     
     // Vérifier si nous sommes en mode édition
     this.route.params.subscribe(params => {
@@ -80,6 +85,20 @@ export class CourseCreateComponent implements OnInit {
       error: (err) => {
         console.error('Erreur lors du chargement des sessions', err);
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
+      }
+    });
+  }
+
+  loadTeachers(): void {
+    console.log('=== CHARGEMENT DES PROFESSEURS (COURSE-CREATE) ===');
+    this.userService.getTeachers().subscribe({
+      next: (teachers) => {
+        this.teachers = this.userService.getUsersDisplayInfo(teachers);
+        console.log('Professeurs chargés pour course-create:', this.teachers.length);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des professeurs:', err);
+        this.teachers = [];
       }
     });
   }

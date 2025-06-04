@@ -47,6 +47,49 @@
               </div>
             </div>
             
+            <!-- Section étudiants -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Étudiants du groupe</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="openAddStudentModal()">
+                  <i class="fas fa-plus me-2"></i> Ajouter des étudiants
+                </button>
+              </div>
+              
+              <!-- Liste des étudiants sélectionnés -->
+              <div *ngIf="selectedStudents.length > 0" class="row g-2 mb-3">
+                <div class="col-12">
+                  <div class="alert alert-info d-flex align-items-center">
+                    <i class="fas fa-users me-2"></i>
+                    <span>{{ selectedStudents.length }} étudiant(s) sélectionné(s)</span>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4" *ngFor="let student of selectedStudents; trackBy: trackByStudentId">
+                  <div class="card">
+                    <div class="card-body py-2">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <div class="fw-bold">{{ student.firstname }} {{ student.lastname }}</div>
+                          <small class="text-muted" *ngIf="student.email">{{ student.email }}</small>
+                        </div>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger" 
+                                (click)="removeStudentFromSelection(student)"
+                                title="Retirer de la sélection">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div *ngIf="selectedStudents.length === 0" class="text-center text-muted py-3">
+                <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                Aucun étudiant sélectionné pour ce groupe
+              </div>
+            </div>
+            
             <!-- Boutons d'action -->
             <div class="d-flex justify-content-between">
               <a [routerLink]="['/dashboard/groups']" class="btn btn-secondary">
@@ -65,6 +108,104 @@
             </div>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'ajout d'étudiants -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addStudentModalLabel">
+          <i class="fas fa-user-plus me-2"></i>Sélectionner des étudiants
+        </h5>
+        <button type="button" class="btn-close" (click)="closeAddStudentModal()"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Barre de recherche -->
+        <div class="mb-3">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Rechercher par nom, prénom ou email..."
+              [(ngModel)]="searchTerm"
+              (keyup)="onStudentSearch()">
+          </div>
+        </div>
+
+        <!-- État de chargement -->
+        <div *ngIf="loadingStudents" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+          <div class="mt-2">Chargement des étudiants...</div>
+        </div>
+
+        <!-- Liste des étudiants disponibles -->
+        <div *ngIf="!loadingStudents">
+          <div class="alert alert-info d-flex align-items-center" *ngIf="filteredStudents.length === 0 && availableStudents.length === 0">
+            <i class="fas fa-info-circle me-2"></i>
+            Aucun étudiant disponible.
+          </div>
+
+          <div class="alert alert-warning d-flex align-items-center" *ngIf="filteredStudents.length === 0 && availableStudents.length > 0">
+            <i class="fas fa-search me-2"></i>
+            Aucun étudiant ne correspond à votre recherche.
+          </div>
+
+          <div class="row g-2" *ngIf="filteredStudents.length > 0">
+            <div class="col-12" *ngFor="let student of filteredStudents; trackBy: trackByStudentId">
+              <div class="card" 
+                   [class.border-primary]="isStudentSelected(student)"
+                   [class.bg-light]="isStudentSelected(student)"
+                   style="cursor: pointer;"
+                   (click)="toggleStudentSelection(student)">
+                <div class="card-body py-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      <div class="form-check me-3">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          [checked]="isStudentSelected(student)"
+                          (click)="$event.stopPropagation(); toggleStudentSelection(student)">
+                      </div>
+                      <div>
+                        <div class="fw-bold">{{ student.firstname }} {{ student.lastname }}</div>
+                        <small class="text-muted" *ngIf="student.email">{{ student.email }}</small>
+                        <small class="text-muted" *ngIf="student.phone"> • {{ student.phone }}</small>
+                      </div>
+                    </div>
+                    <div class="badge bg-primary" *ngIf="isStudentSelected(student)">
+                      <i class="fas fa-check"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Résumé de la sélection -->
+        <div class="mt-3" *ngIf="selectedStudents.length > 0">
+          <div class="alert alert-success d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <span>{{ selectedStudents.length }} étudiant(s) sélectionné(s)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAddStudentModal()">
+          <i class="fas fa-times me-2"></i>Fermer
+        </button>
       </div>
     </div>
   </div>

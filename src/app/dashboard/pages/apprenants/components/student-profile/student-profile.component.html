@@ -180,15 +180,28 @@
       <div class="absences-section">
         <h3>Dernières Absences</h3>
         
-        <div class="empty-state">
+        <div class="empty-state" *ngIf="!showAbsenceHistory">
           <p>Aucune absence enregistrée</p>
           <p class="empty-subtitle">Les absences apparaîtront ici</p>
         </div>
         
-        <div class="action-buttons-row">
+        <div class="action-buttons-row" *ngIf="!showAbsenceHistory">
           <button class="action-btn-small blue" (click)="viewAbsences()">Voir tout</button>
           <button class="action-btn-small orange" (click)="addAbsence()">Ajouter</button>
           <button class="action-btn-small red" (click)="manageAbsences()">Gérer</button>
+        </div>
+
+        <!-- Composant d'historique des absences -->
+        <div *ngIf="showAbsenceHistory && student">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-sm btn-outline-secondary" (click)="showAbsenceHistory = false">
+              <i class="fas fa-arrow-left me-2"></i>Retour
+            </button>
+          </div>
+          <app-student-absence-history 
+            [studentId]="student.id"
+            [studentName]="student.firstname + ' ' + student.lastname">
+          </app-student-absence-history>
         </div>
       </div>
 
