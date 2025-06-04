@@ -70,6 +70,22 @@ export class CourseCalendarComponent implements OnInit {
     '#e83e8c', '#20c997', '#fd7e14', '#6610f2', '#17a2b8'
   ];
 
+  // Couleurs prédéfinies pour la sélection utilisateur
+  predefinedColors = [
+    { name: 'Bleu', value: '#007bff' },
+    { name: 'Vert', value: '#28a745' },
+    { name: 'Rouge', value: '#dc3545' },
+    { name: 'Jaune', value: '#ffc107' },
+    { name: 'Violet', value: '#6f42c1' },
+    { name: 'Rose', value: '#e83e8c' },
+    { name: 'Turquoise', value: '#20c997' },
+    { name: 'Orange', value: '#fd7e14' },
+    { name: 'Indigo', value: '#6610f2' },
+    { name: 'Cyan', value: '#17a2b8' },
+    { name: 'Gris', value: '#6c757d' },
+    { name: 'Sombre', value: '#343a40' }
+  ];
+
   constructor(
     private courseService: CourseService,
     private sessionService: SessionService,
@@ -83,7 +99,8 @@ export class CourseCalendarComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
-      user_id: [''] // Optionnel, donc pas de Validators.required
+      user_id: [''], // Optionnel, donc pas de Validators.required
+      color: [''] // Couleur optionnelle
     });
 
     this.editCourseForm = this.formBuilder.group({
@@ -92,7 +109,8 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: ['', Validators.required],
       end_hour: ['', Validators.required],
       day: ['', Validators.required],
-      user_id: [''] // Optionnel, donc pas de Validators.required
+      user_id: [''], // Optionnel, donc pas de Validators.required
+      color: [''] // Couleur optionnelle
     });
   }
 
@@ -408,10 +426,18 @@ export class CourseCalendarComponent implements OnInit {
   }
 
   /**
-   * Génère une couleur pour un cours basée sur son groupe
+   * Génère une couleur pour un cours basée sur sa couleur personnalisée ou son groupe
    */
   getCourseColor(course: Course): string {
-    if (!course.group_id) return this.courseColors[0];
+    // Priorité 1: Couleur personnalisée du cours
+    if (course.color) {
+      return course.color;
+    }
+
+    // Priorité 2: Couleur basée sur le groupe (fallback)
+    if (!course.group_id) {
+      return this.courseColors[0];
+    }
     
     // S'assurer qu'on travaille avec une string
     const groupIdStr = course.group_id.toString();
@@ -452,7 +478,8 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: this.courseForm.value.start_hour,
       end_hour: this.courseForm.value.end_hour,
       group_id: this.courseForm.value.group_id,
-      user_id: this.courseForm.value.user_id
+      user_id: this.courseForm.value.user_id,
+      color: this.courseForm.value.color
     };
     
     console.log('Données de cours:', courseData);
@@ -473,7 +500,8 @@ export class CourseCalendarComponent implements OnInit {
           title: '',
           start_hour: '',
           end_hour: '',
-          user_id: null
+          user_id: null,
+          color: ''
         });
       },
       error: (error) => {
@@ -654,7 +682,7 @@ export class CourseCalendarComponent implements OnInit {
     if (!this.selectedCourse) return;
     
     console.log('=== EDITION DU COURS ===');
-    console.log('Cours sélectionné:', this.selectedCourse.title, '| User ID:', this.selectedCourse.user_id);
+    console.log('Cours sélectionné:', this.selectedCourse.title, '| User ID:', this.selectedCourse.user_id, '| Couleur:', this.selectedCourse.color);
     
     // Si pas de professeurs, essayer de les recharger
     if (this.teachers.length === 0) {
@@ -672,10 +700,12 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: this.selectedCourse.start_hour || '',
       end_hour: this.selectedCourse.end_hour || '',
       day: this.selectedCourse.day || '',
-      user_id: selectedUserId || null
+      user_id: selectedUserId || null,
+      color: this.selectedCourse.color || ''
     });
 
     console.log('Professeur pré-sélectionné dans le formulaire:', this.editCourseForm.get('user_id')?.value);
+    console.log('Couleur pré-sélectionnée dans le formulaire:', this.editCourseForm.get('color')?.value);
 
     // Réinitialiser les erreurs
     this.editError = '';
@@ -862,7 +892,8 @@ export class CourseCalendarComponent implements OnInit {
       start_hour: this.editCourseForm.value.start_hour,
       end_hour: this.editCourseForm.value.end_hour,
       group_id: this.editCourseForm.value.group_id,
-      user_id: this.editCourseForm.value.user_id
+      user_id: this.editCourseForm.value.user_id,
+      color: this.editCourseForm.value.color
     };
     
     console.log('Données de cours à modifier:', courseData);
