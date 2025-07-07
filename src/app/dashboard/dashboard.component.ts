@@ -18,7 +18,7 @@ interface BreadcrumbItem {
   standalone: true,
   imports: [CommonModule, RouterModule, SidebarComponent, NavbarComponent],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   isSidebarOpen = true;
@@ -26,15 +26,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly mobileBreakpoint = 768;
   readonly smallScreenBreakpoint = 480;
   private routerSubscription: Subscription | null = null;
-  
+
   userName = '';
   pageTitle = 'Index';
   breadcrumbs: BreadcrumbItem[] = [
     { label: 'Général', path: '/dashboard' },
-    { label: 'Utilisateurs', active: true }
+    { label: 'Utilisateurs', active: true },
   ];
 
-  constructor(private router: Router, private authService: AuthService) {
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {
     this.checkScreenSize();
   }
 
@@ -46,7 +49,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   checkScreenSize() {
     const wasMobile = this.isMobile;
     this.isMobile = window.innerWidth < this.smallScreenBreakpoint;
-    
+
     // Seulement changer l'état si on passe de mobile à desktop ou vice versa
     if (wasMobile !== this.isMobile) {
       if (this.isMobile) {
@@ -62,22 +65,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Initialiser la route active au chargement
     this.updateBreadcrumbs();
-    
+
     // S'abonner aux changements de route
-    this.routerSubscription = this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      this.updateBreadcrumbs();
-      
-      // Fermer la sidebar sur changement de route en mode mobile
-      if (this.isMobile) {
-        this.isSidebarOpen = false;
-      }
-    });
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.updateBreadcrumbs();
+
+        // Fermer la sidebar sur changement de route en mode mobile
+        if (this.isMobile) {
+          this.isSidebarOpen = false;
+        }
+      });
 
     this.loadUserInfo();
   }
-  
+
   ngOnDestroy(): void {
     // Nettoyer l'abonnement au router
     if (this.routerSubscription) {
@@ -89,73 +92,73 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Permettre le toggle quand le bouton est visible et cliqué
     this.isSidebarOpen = !this.isSidebarOpen;
   }
-  
+
   handleOpenTicket(): void {
     // Implémenter la logique d'ouverture de ticket
     // Par exemple, ouvrir un modal ou naviguer vers une page de ticket
     // this.router.navigate(['/dashboard/ticket/new']);
   }
-  
+
   handleOpenReleaseNotes(): void {
     // Implémenter la logique d'ouverture des notes de mise à jour
     // Par exemple, ouvrir un modal ou naviguer vers une page de notes
     // this.router.navigate(['/dashboard/release-notes']);
   }
-  
+
   private updateBreadcrumbs(): void {
-    // Ici, vous pouvez implémenter une logique pour mettre à jour 
+    // Ici, vous pouvez implémenter une logique pour mettre à jour
     // dynamiquement le fil d'Ariane en fonction de la route actuelle
     const url = this.router.url;
-    
+
     if (url.includes('/users')) {
       this.pageTitle = 'Utilisateurs';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Utilisateurs', active: true }
+        { label: 'Utilisateurs', active: true },
       ];
     } else if (url.includes('/profile')) {
       this.pageTitle = 'Profil';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Profil', active: true }
+        { label: 'Profil', active: true },
       ];
     } else if (url.includes('/apprenants')) {
       this.pageTitle = 'Apprenants';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Apprenants', active: true }
+        { label: 'Apprenants', active: true },
       ];
     } else if (url.includes('/periodes')) {
       this.pageTitle = 'Périodes';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Périodes', active: true }
+        { label: 'Périodes', active: true },
       ];
     } else if (url.includes('/heures')) {
       this.pageTitle = 'Heures travaillées';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Heures travaillées', active: true }
+        { label: 'Heures travaillées', active: true },
       ];
     } else if (url.includes('/adresses')) {
       this.pageTitle = 'Adresses';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Adresses', active: true }
+        { label: 'Adresses', active: true },
       ];
     } else if (url.includes('/examens')) {
       this.pageTitle = 'Examens';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Examens', active: true }
+        { label: 'Examens', active: true },
       ];
     } else if (url.includes('/parcours')) {
       this.pageTitle = 'Suivi de parcours';
       this.breadcrumbs = [
         { label: 'Général', path: '/dashboard' },
-        { label: 'Suivi de parcours', active: true }
+        { label: 'Suivi de parcours', active: true },
       ];
-    } 
+    }
     // Nouvelles routes
     else if (url.includes('/groups')) {
       if (url.includes('/create')) {
@@ -163,20 +166,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Groupes', path: '/dashboard/groups' },
-          { label: 'Nouveau groupe', active: true }
+          { label: 'Nouveau groupe', active: true },
         ];
       } else if (url.includes('/edit')) {
         this.pageTitle = 'Édition de groupe';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Groupes', path: '/dashboard/groups' },
-          { label: 'Modifier groupe', active: true }
+          { label: 'Modifier groupe', active: true },
         ];
       } else {
         this.pageTitle = 'Groupes';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
-          { label: 'Groupes', active: true }
+          { label: 'Groupes', active: true },
         ];
       }
     } else if (url.includes('/sessions')) {
@@ -185,20 +188,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Sessions', path: '/dashboard/sessions' },
-          { label: 'Nouvelle session', active: true }
+          { label: 'Nouvelle session', active: true },
         ];
-      } else if (url.match(/\/sessions\/\d+/)) { // Match /sessions/{id} pattern
+      } else if (url.match(/\/sessions\/\d+/)) {
+        // Match /sessions/{id} pattern
         this.pageTitle = 'Détails de session';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Sessions', path: '/dashboard/sessions' },
-          { label: 'Détails', active: true }
+          { label: 'Détails', active: true },
         ];
       } else {
         this.pageTitle = 'Sessions';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
-          { label: 'Sessions', active: true }
+          { label: 'Sessions', active: true },
         ];
       }
     } else if (url.includes('/courses')) {
@@ -207,34 +211,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Cours', path: '/dashboard/courses' },
-          { label: 'Nouveau cours', active: true }
+          { label: 'Nouveau cours', active: true },
         ];
       } else if (url.includes('/edit')) {
         this.pageTitle = 'Édition de cours';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
           { label: 'Cours', path: '/dashboard/courses' },
-          { label: 'Modifier cours', active: true }
+          { label: 'Modifier cours', active: true },
         ];
       } else {
         this.pageTitle = 'Cours';
         this.breadcrumbs = [
           { label: 'Général', path: '/dashboard' },
-          { label: 'Cours', active: true }
+          { label: 'Cours', active: true },
         ];
       }
     } else {
       this.pageTitle = 'Dashboard';
-      this.breadcrumbs = [
-        { label: 'Général', active: true }
-      ];
+      this.breadcrumbs = [{ label: 'Général', active: true }];
     }
   }
 
   loadUserInfo() {
     const user = this.authService.currentUser;
     if (user) {
-      this.userName = `${user.firstname} ${user.lastname}`;
+      // Essayer les nouveaux noms de champs d'abord, puis les anciens en fallback
+      const firstName = user.user_firstname || (user as any).firstname || '';
+      const lastName = user.user_lastname || (user as any).lastname || '';
+      this.userName = `${firstName} ${lastName}`.trim();
+      
+      // Debug pour voir ce qui arrive
+      console.log('User data in navbar:', user);
+      console.log('Computed userName:', this.userName);
     }
   }
-} 
+}

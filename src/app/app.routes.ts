@@ -6,16 +6,16 @@ import { authGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   {
     path: 'auth',
-    children: AUTH_ROUTES
+    children: AUTH_ROUTES,
   },
   {
     path: 'dashboard',
     canActivate: [authGuard],
-    children: DASHBOARD_ROUTES
+    children: DASHBOARD_ROUTES,
   },
   {
     path: '',
     redirectTo: 'auth/login',
-    pathMatch: 'full'
-  }
+    pathMatch: 'full',
+  },
 ];

@@ -2,46 +2,92 @@ import { Group } from './group.model';
 import { User } from './user.model';
 
 export interface Course {
+  // ✅ NOUVEAUX CHAMPS API
+  course_uuid?: string;
+  course_name: string;
+  course_day: string; // Format YYYY-MM-DD
+  course_start_hour: string; // Format HH:MM
+  course_end_hour: string; // Format HH:MM
+  group_uuid: string;
+  course_color?: string;
+  course_created_at?: Date;
+
+  // 🔄 ANCIENS CHAMPS (pour compatibilité temporaire - à supprimer progressivement)
   course_id?: number | string;
   id?: number | string;
-  session_id: number | string;
-  group_id?: number | string; // ID du groupe (UUID dans l'API)
-  day: string; // Format YYYY-MM-DD
-  start_hour: string; // Format HH:MM
-  end_hour: string; // Format HH:MM
-  title: string; // Intitulé du cours
-  user_id?: number | string; // ID du professeur assigné
-  color?: string; // Couleur hexadécimale personnalisée (ex: #FF5733)
-  
-  // Relations
+  session_id?: number | string;
+  group_id?: number | string; 
+  day?: string; 
+  start_hour?: string; 
+  end_hour?: string; 
+  title?: string; 
+  intitule?: string; 
+  user_id?: number | string; 
+  user_uuid?: string;
+  color?: string;
+
+  // Relations enrichies
   session?: {
+    session_uuid?: string;
+    session_label?: string;
+    // Anciens pour compatibilité
     session_id?: number | string;
     label?: string;
   };
   group?: {
+    group_uuid?: string;
+    group_label?: string;
+    // Anciens pour compatibilité
     group_id?: number | string;
     label?: string;
   };
   user?: {
+    user_uuid?: string;
+    user_firstname?: string;
+    user_lastname?: string;
+    user_mail?: string;
+    // Anciens pour compatibilité
     user_id?: number | string;
     firstname?: string;
     lastname?: string;
     email?: string;
   };
-  
+
   // Timestamps
   created_at?: string;
   updated_at?: string;
 }
 
+// Interface pour les requêtes de création
+export interface CreateCourseRequest {
+  course_name: string;
+  course_day: string;
+  course_start_hour: string;
+  course_end_hour: string;
+  group_uuid: string;
+  course_color?: string;
+  user_uuid?: string;
+}
+
+// Interface pour les requêtes de mise à jour
+export interface UpdateCourseRequest {
+  course_name?: string;
+  course_day?: string;
+  course_start_hour?: string;
+  course_end_hour?: string;
+  group_uuid?: string;
+  course_color?: string;
+  user_uuid?: string;
+}
+
 export interface Schedule {
-  id?: number;
+  id?: number | string;
   title: string;
   start: Date;
   end: Date;
-  groupId?: number;
+  groupId?: number | string;
   color?: string;
   allDay?: boolean;
-  sessionId?: number;
-  courseId?: number;
-} 
+  sessionId?: number | string;
+  courseId?: number | string;
+}

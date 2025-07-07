@@ -3,7 +3,14 @@
     <div class="modal-header">
       <h3>Créer une nouvelle tâche</h3>
       <button type="button" class="close-btn" (click)="onClose()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -13,34 +20,37 @@
     <form [formGroup]="todoForm" (ngSubmit)="onSubmit()" class="todo-form">
       <div class="form-group">
         <label for="title">Titre *</label>
-        <input 
-          type="text" 
-          id="title" 
+        <input
+          type="text"
+          id="title"
           formControlName="title"
           placeholder="Ex: Préparation cours A1"
-          [class.error]="title?.invalid && title?.touched">
+          [class.error]="title?.invalid && title?.touched"
+        />
         <div class="error-message" *ngIf="title?.invalid && title?.touched">
           <span *ngIf="title?.errors?.['required']">Le titre est obligatoire</span>
-          <span *ngIf="title?.errors?.['minlength']">Le titre doit contenir au moins 3 caractères</span>
-          <span *ngIf="title?.errors?.['maxlength']">Le titre ne peut pas dépasser 100 caractères</span>
+          <span *ngIf="title?.errors?.['minlength']"
+            >Le titre doit contenir au moins 3 caractères</span
+          >
+          <span *ngIf="title?.errors?.['maxlength']"
+            >Le titre ne peut pas dépasser 100 caractères</span
+          >
         </div>
       </div>
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea 
-          id="description" 
+        <textarea
+          id="description"
           formControlName="description"
           placeholder="Décrivez la tâche en détail..."
-          rows="3"></textarea>
+          rows="3"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label for="dueAt">Date d'échéance</label>
-        <input 
-          type="datetime-local" 
-          id="dueAt" 
-          formControlName="dueAt">
+        <input type="datetime-local" id="dueAt" formControlName="dueAt" />
       </div>
 
       <div class="form-group" *ngIf="parentTasks.length > 0">
@@ -57,7 +67,8 @@
       <!-- Information sur les sous-tâches obligatoires -->
       <div class="form-group info-group" *ngIf="!todoForm.value.parentTaskId">
         <div class="info-message">
-          💡 <strong>Les sous-tâches sont maintenant obligatoires</strong> - ajoutez au moins une sous-tâche pour créer votre tâche.
+          💡 <strong>Les sous-tâches sont maintenant obligatoires</strong> - ajoutez au moins une
+          sous-tâche pour créer votre tâche.
         </div>
       </div>
 
@@ -66,7 +77,14 @@
         <div class="subtasks-header">
           <h4>Sous-tâches</h4>
           <button type="button" class="add-subtask-btn" (click)="addSubtask()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -75,20 +93,28 @@
         </div>
 
         <div class="subtasks-list" formArrayName="subtasks">
-          <div 
-            *ngFor="let subtask of subtasks.controls; let i = index" 
+          <div
+            *ngFor="let subtask of subtasks.controls; let i = index"
             class="subtask-item"
-            [formGroupName]="i">
-            
+            [formGroupName]="i"
+          >
             <div class="subtask-header">
               <span class="subtask-number">{{ i + 1 }}.</span>
-              <button 
-                type="button" 
-                class="remove-subtask-btn" 
+              <button
+                type="button"
+                class="remove-subtask-btn"
                 (click)="removeSubtask(i)"
                 *ngIf="subtasks.length > 1"
-                title="Supprimer cette sous-tâche">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                title="Supprimer cette sous-tâche"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -97,18 +123,20 @@
 
             <div class="subtask-fields">
               <div class="form-group">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   formControlName="title"
                   placeholder="Titre de la sous-tâche"
-                  [class.error]="subtask.get('title')?.invalid && subtask.get('title')?.touched">
+                  [class.error]="subtask.get('title')?.invalid && subtask.get('title')?.touched"
+                />
               </div>
 
               <div class="form-group">
-                <textarea 
+                <textarea
                   formControlName="description"
                   placeholder="Description (optionnelle)"
-                  rows="2"></textarea>
+                  rows="2"
+                ></textarea>
               </div>
             </div>
 
@@ -125,14 +153,23 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isSubmitting">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onClose()"
+          [disabled]="isSubmitting"
+        >
           Annuler
         </button>
-        <button type="submit" class="btn btn-primary" [disabled]="!isMainFormValid() || isSubmitting">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!isMainFormValid() || isSubmitting"
+        >
           <span *ngIf="isSubmitting">Création...</span>
           <span *ngIf="!isSubmitting">Créer la tâche</span>
         </button>
       </div>
     </form>
   </div>
-</div> 
+</div>

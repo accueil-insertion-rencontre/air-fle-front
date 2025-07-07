@@ -4,25 +4,26 @@
       <span class="btn-icon">+</span>
       Créer un étudiant
     </button>
-    
+
     <!-- Barre de recherche -->
     <div class="search-container">
-      <input 
-        type="text" 
-        placeholder="Rechercher par nom ou prénom..." 
+      <input
+        type="text"
+        placeholder="Rechercher par nom ou prénom..."
         #searchInput
         (keyup.enter)="onSearch(searchInput.value)"
-        class="search-input">
+        class="search-input"
+      />
       <button (click)="onSearch(searchInput.value)" class="search-btn">Rechercher</button>
-      <button (click)="clearFilters(); searchInput.value=''" class="clear-btn">Effacer</button>
+      <button (click)="clearFilters(); searchInput.value = ''" class="clear-btn">Effacer</button>
     </div>
   </div>
-  
+
   <!-- Informations sur les résultats -->
   <div class="results-info" *ngIf="!loading">
     <span>{{ getDisplayRange() }}</span>
   </div>
-  
+  a
   <div class="students-content">
     <div class="students-list">
       <div class="students-header">
@@ -32,7 +33,7 @@
         <div class="column nationality">NATIONALITÉ</div>
         <div class="column actions"></div>
       </div>
-      
+
       <div class="student-item" *ngFor="let student of students">
         <div class="column author">
           <div class="student-avatar">
@@ -45,77 +46,81 @@
             <div class="student-email">{{ getStudentEmail(student) }}</div>
           </div>
         </div>
-        
+
         <div class="column level">
-          <div class="level-badge" [attr.data-level]="student.currentLevel?.code || student.level?.code">
+          <div
+            class="level-badge"
+            [attr.data-level]="student.currentLevel?.code || student.level?.code"
+          >
             {{ getStudentLevel(student) }}
           </div>
         </div>
-        
+
         <div class="column status">
           <div class="status-badge" [attr.data-status]="student.status?.code">
             {{ getStudentStatus(student) }}
           </div>
         </div>
-        
+
         <div class="column nationality">
           <div class="nationality-name">{{ getStudentNationality(student) }}</div>
         </div>
-        
+
         <div class="column actions">
-          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.id, 'view']">Voir</button>
+          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">
+            Voir
+          </button>
         </div>
       </div>
-      
+
       <div *ngIf="loading" class="loading-indicator">
         <div class="spinner"></div>
         <span>Chargement des apprenants...</span>
       </div>
-      
+
       <div *ngIf="!loading && students.length === 0" class="empty-state">
         <p>Aucun apprenant trouvé</p>
       </div>
-      
+
       <div *ngIf="error" class="error-message">
         <p>{{ error }}</p>
         <button (click)="loadStudents()" class="retry-btn">Réessayer</button>
       </div>
     </div>
   </div>
-  
+
   <!-- Pagination -->
   <div class="pagination-container" *ngIf="!loading && totalPages > 1">
     <div class="pagination">
       <!-- Bouton Précédent -->
-      <button 
-        class="pagination-btn" 
-        [disabled]="currentPage === 1"
-        (click)="previousPage()">
+      <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
         ‹ Précédent
       </button>
-      
+
       <!-- Numéros de page -->
-      <button 
-        *ngFor="let page of getPageNumbers()" 
+      <button
+        *ngFor="let page of getPageNumbers()"
         class="pagination-btn"
         [class.active]="page === currentPage"
-        (click)="changePage(page)">
+        (click)="changePage(page)"
+      >
         {{ page }}
       </button>
-      
+
       <!-- Bouton Suivant -->
-      <button 
-        class="pagination-btn" 
-        [disabled]="currentPage === totalPages"
-        (click)="nextPage()">
+      <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
         Suivant ›
       </button>
     </div>
-    
+
     <!-- Sélecteur de taille de page -->
     <div class="page-size-selector">
       <label>Éléments par page:</label>
-      <select [(ngModel)]="pageSize" (change)="currentPage = 1; loadStudents()" class="page-size-select">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="currentPage = 1; loadStudents()"
+        class="page-size-select"
+      >
         <option value="5">5</option>
         <option value="10">10</option>
         <option value="20">20</option>
@@ -131,7 +136,7 @@
         <h2>Comment souhaitez-vous ajouter des étudiants ?</h2>
         <button class="close-btn" (click)="closeCreateModal()">×</button>
       </div>
-      
+
       <div class="modal-body">
         <div class="option-cards">
           <div class="option-card" (click)="createSingleStudent()">
@@ -140,7 +145,7 @@
             <p>Ajouter un nouvel étudiant individuellement avec le formulaire complet</p>
             <div class="option-badge individual">Individuel</div>
           </div>
-          
+
           <div class="option-card" (click)="importFromExcel()">
             <div class="option-icon">📊</div>
             <h3>Importer depuis Excel</h3>
@@ -151,4 +156,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

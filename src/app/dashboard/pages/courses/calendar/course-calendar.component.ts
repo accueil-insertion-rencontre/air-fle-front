@@ -1,18 +1,28 @@
+import {
+  AlertService,
+  AttendanceRecord,
+  AttendanceService,
+  AttendanceStatus,
+  AuthService,
+  CourseService,
+  GroupService,
+  SessionService,
+  UserService,
+} from '@core/services';
+
+import { Course, Group, Session, Student, User, UserDisplayInfo } from '@core/models';
+
+import { environment } from '@environments/environment';
+
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { CourseService } from '../../../../core/services/course.service';
-import { SessionService } from '../../../../core/services/session.service';
-import { GroupService } from '../../../../core/services/group.service';
-import { UserService } from '../../../../core/services/user.service';
-import { AttendanceService, AttendanceRecord, AttendanceStatus } from '../../../../core/services/attendance.service';
-import { AlertService } from '../../../../core/services/alert.service';
-import { Course } from '../../../../core/models/course.model';
-import { Session } from '../../../../core/models/session.model';
-import { Group } from '../../../../core/models/group.model';
-import { Student } from '../../../../core/models/student.model';
-import { User, UserDisplayInfo } from '../../../../core/models/user.model';
-import { environment } from '../../../../../environments/environment';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
 
 declare var bootstrap: any;
 
@@ -28,7 +38,7 @@ interface WeekDay {
   templateUrl: './course-calendar.component.html',
   styleUrls: ['./course-calendar.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule]
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
 })
 export class CourseCalendarComponent implements OnInit {
   currentWeek = new Date();
@@ -38,47 +48,79 @@ export class CourseCalendarComponent implements OnInit {
   teachers: UserDisplayInfo[] = [];
   selectedSessionId: string | number | null = null;
   courses: Course[] = [];
-  
+
   // Modal properties
   courseForm: FormGroup;
   modal: any;
   selectedDate: string = '';
   loading = false;
   error = '';
-  
+
   // Propriétés pour le modal de détail de cours
   detailsModal: any;
   selectedCourse: Course | null = null;
   courseStudents: Student[] = [];
   loadingCourseDetails = false;
-  studentAttendanceMap: Map<number | string, 'present' | 'absent' | 'late' | 'excused' | 'unknown'> = new Map();
+  studentAttendanceMap: Map<
+    number | string,
+    'present' | 'absent' | 'late' | 'excused' | 'unknown'
+  > = new Map();
   attendanceRecords: AttendanceRecord[] = [];
   savingAttendance = false;
-  
+
   // Propriétés pour le modal d'édition de cours
   editModal: any;
   editCourseForm: FormGroup;
   editLoading = false;
   editError = '';
-  
+
   // Propriétés pour la création multi-dates
   isMultiDateMode = false;
   selectedDates: string[] = [];
   recurrenceType: 'none' | 'weekly' | 'custom' = 'none';
   weeklyOccurrences = 1;
   maxWeeklyOccurrences = 10;
-  
+
   // Hours for time selection in modal
   timeOptions = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
+    '08:00',
+    '08:30',
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '12:00',
+    '12:30',
+    '13:00',
+    '13:30',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
+    '17:00',
+    '17:30',
+    '18:00',
+    '18:30',
+    '19:00',
+    '19:30',
   ];
 
   // Couleurs pour les cours
   courseColors = [
-    '#007bff', '#28a745', '#dc3545', '#ffc107', '#6f42c1',
-    '#e83e8c', '#20c997', '#fd7e14', '#6610f2', '#17a2b8'
+    '#007bff',
+    '#28a745',
+    '#dc3545',
+    '#ffc107',
+    '#6f42c1',
+    '#e83e8c',
+    '#20c997',
+    '#fd7e14',
+    '#6610f2',
+    '#17a2b8',
   ];
 
   // Couleurs prédéfinies pour la sélection utilisateur
@@ -94,8 +136,12 @@ export class CourseCalendarComponent implements OnInit {
     { name: 'Indigo', value: '#6610f2' },
     { name: 'Cyan', value: '#17a2b8' },
     { name: 'Gris', value: '#6c757d' },
-    { name: 'Sombre', value: '#343a40' }
+    { name: 'Sombre', value: '#343a40' },
   ];
+
+  // Cache pour éviter les appels répétés
+  private coursesCache = new Map<string, Course[]>();
+  private lastCoursesUpdate = 0;
 
   constructor(
     private courseService: CourseService,
@@ -104,46 +150,44 @@ export class CourseCalendarComponent implements OnInit {
     private userService: UserService,
     private attendanceService: AttendanceService,
     private alertService: AlertService,
+    private authService: AuthService,
     private formBuilder: FormBuilder
   ) {
     this.courseForm = this.formBuilder.group({
-      group_id: ['', Validators.required],
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      start_hour: ['', Validators.required],
-      end_hour: ['', Validators.required],
-      user_id: [''], // Optionnel, donc pas de Validators.required
-      color: [''], // Couleur optionnelle
+      group_uuid: ['', Validators.required],
+      course_name: ['', [Validators.required, Validators.minLength(3)]],
+      course_start_hour: ['', Validators.required],
+      course_end_hour: ['', Validators.required],
+      user_uuid: [''], // Optionnel, donc pas de Validators.required
+      course_color: [''], // Couleur optionnelle
       // Nouveaux champs pour multi-dates
       is_multi_date: [false],
       recurrence_type: ['none'],
       weekly_occurrences: [1, [Validators.min(1), Validators.max(10)]],
-      custom_dates: [[]]
+      custom_dates: [[]],
     });
 
     this.editCourseForm = this.formBuilder.group({
-      group_id: ['', Validators.required],
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      start_hour: ['', Validators.required],
-      end_hour: ['', Validators.required],
-      day: ['', Validators.required],
-      user_id: [''], // Optionnel, donc pas de Validators.required
-      color: [''] // Couleur optionnelle
+      group_uuid: ['', Validators.required],
+      course_name: ['', [Validators.required, Validators.minLength(3)]],
+      course_start_hour: ['', Validators.required],
+      course_end_hour: ['', Validators.required],
+      user_uuid: [''], // 🔧 Fix: ajout du champ manquant
+      course_color: [''],
     });
   }
 
   ngOnInit(): void {
-    console.log('=== INIT COURSE CALENDAR ===');
-    
+    console.log('🌟 === DÉBUT ngOnInit() ===');
+    console.log('🔄 Appel loadSessions()...');
     this.loadSessions();
+    console.log('🔄 Appel loadTeachers()...');
     this.loadTeachers();
+    console.log('🔄 Appel generateWeekView()...');
     this.generateWeekView();
+    console.log('🔄 Appel loadCourses()...');
     this.loadCourses();
-    
-    // Surveiller les changements de group_id
-    this.courseForm.get('group_id')?.valueChanges.subscribe(value => {
-      const group = this.groups.find(g => g.group_id === value || g.id === value);
-      console.log('Groupe sélectionné:', group?.label || 'Aucun');
-    });
+    console.log('🌟 === FIN ngOnInit() ===');
   }
 
   /**
@@ -151,9 +195,9 @@ export class CourseCalendarComponent implements OnInit {
    */
   loadSessions(): void {
     this.sessionService.getSessions().subscribe({
-      next: (sessions) => {
+      next: sessions => {
         this.sessions = sessions;
-        
+
         // Extraire tous les groupes de toutes les sessions
         this.groups = [];
         sessions.forEach(session => {
@@ -161,38 +205,21 @@ export class CourseCalendarComponent implements OnInit {
             session.groups.forEach(group => {
               this.groups.push({
                 ...group,
-                session: session
+                session: session,
               });
             });
           }
         });
-        
-        console.log('=== GROUPES CHARGÉS ===');
-        console.log('Nombre de sessions:', sessions.length);
-        console.log('Nombre total de groupes:', this.groups.length);
-        console.log('Groupes:', this.groups);
-        
-        // Debug détaillé de chaque groupe
-        this.groups.forEach((group, index) => {
-          console.log(`Groupe ${index}:`, {
-            id: group.id,
-            group_id: group.group_id,
-            label: group.label,
-            session: group.session?.label,
-            allProperties: Object.keys(group)
-          });
-        });
-        
+
         // Sélectionner automatiquement la première session pour le filtrage
         if (sessions.length > 0) {
-          this.selectedSessionId = sessions[0].session_id;
+          this.selectedSessionId = sessions[0].session_uuid || sessions[0].id || null;
           this.loadCourses();
         }
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des sessions:', error);
-        this.alertService.error('Impossible de charger les sessions');
-      }
+      error: error => {
+        this.error = 'Impossible de charger les sessions';
+      },
     });
   }
 
@@ -200,16 +227,12 @@ export class CourseCalendarComponent implements OnInit {
    * Charge les professeurs disponibles
    */
   loadTeachers(): void {
-    console.log('=== CHARGEMENT DES PROFESSEURS ===');
-    
     this.userService.getTeachers().subscribe({
-      next: (teachers) => {
-        this.teachers = this.userService.getUsersDisplayInfo(teachers);
-        console.log('Professeurs chargés:', this.teachers.length);
+      next: teachers => {
+        this.teachers = teachers;
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des professeurs:', error);
-        this.teachers = [];
+      error: error => {
+        this.error = 'Impossible de charger les professeurs';
       }
     });
   }
@@ -220,109 +243,150 @@ export class CourseCalendarComponent implements OnInit {
   generateWeekView(): void {
     const startOfWeek = this.getStartOfWeek(this.currentWeek);
     this.weekDays = [];
-    
+
     const today = new Date();
     const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-    
-    console.log('=== GÉNÉRATION VUE HEBDOMADAIRE ===');
-    console.log('Date de départ (currentWeek):', this.currentWeek);
-    console.log('Début de semaine calculé:', startOfWeek);
-    console.log('Noms des jours:', dayNames);
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
-      
-      console.log(`Jour ${i}:`, {
-        index: i,
-        dayName: dayNames[i],
-        date: date,
-        dateString: date.toString(),
-        dayNumber: date.getDate(),
-        formattedForApi: this.formatDateForApi(date)
-      });
-      
+
       this.weekDays.push({
         date: new Date(date),
         dayName: dayNames[i],
         dayNumber: date.getDate(),
-        isToday: this.isSameDay(date, today)
+        isToday: this.isSameDay(date, today),
       });
     }
-    
-    console.log('Jours générés:', this.weekDays);
   }
 
   /**
    * Retourne le début de la semaine (lundi)
    */
   getStartOfWeek(date: Date): Date {
-    console.log('=== CALCUL DÉBUT SEMAINE ===');
-    console.log('Date d\'entrée:', date);
-    
     const start = new Date(date);
     const day = start.getDay(); // 0 = dimanche, 1 = lundi, ..., 6 = samedi
-    
-    console.log('Jour de la semaine (0=dim, 1=lun...):', day);
-    
+
     // Convertir dimanche (0) en 7 pour le calcul
     const dayOfWeek = day === 0 ? 7 : day;
-    console.log('Jour normalisé (1=lun, 7=dim):', dayOfWeek);
-    
+
     // Calculer le nombre de jours à soustraire pour arriver au lundi (1)
     const daysToSubtract = dayOfWeek - 1;
-    console.log('Jours à soustraire:', daysToSubtract);
-    
+
     start.setDate(start.getDate() - daysToSubtract);
     start.setHours(0, 0, 0, 0);
-    
-    console.log('Début de semaine calculé:', start);
+
     return start;
-  }
-
-  /**
-   * Charge les cours pour la session sélectionnée et la semaine affichée
-   */
-  loadCourses(): void {
-    if (!this.selectedSessionId) return;
-
-    const startOfWeek = this.getStartOfWeek(this.currentWeek);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
-    const startDate = this.formatDateForApi(startOfWeek);
-    const endDate = this.formatDateForApi(endOfWeek);
-
-    this.courseService.getCoursesByDateRange(startDate, endDate, this.selectedSessionId).subscribe({
-      next: (courses) => {
-        this.courses = courses;
-        this.updateScheduleWithCourses();
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des cours:', error);
-        // Continuer même en cas d'erreur
-        this.courses = [];
-        this.updateScheduleWithCourses();
-      }
-    });
-  }
-
-  /**
-   * Met à jour le planning avec les cours chargés
-   */
-  updateScheduleWithCourses(): void {
-    console.log('=== MISE À JOUR PLANNING ===');
-    console.log('Cours chargés:', this.courses);
-    // Plus besoin de logique complexe avec le nouveau design par colonnes
   }
 
   /**
    * Vérifie si deux dates sont le même jour
    */
   isSameDay(date1: Date, date2: Date): boolean {
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
+
+  /**
+   * Charge TOUS les cours puis filtre côté frontend
+   */
+  loadCourses(): void {
+    console.log('🚀 === DÉBUT loadCourses() ===');
+    console.log('🔍 Chargement de TOUS les cours (pas de filtrage API)');
+    console.log('🎯 Session sélectionnée:', this.selectedSessionId);
+
+    // 🔧 DEBUG: Vérifier le token d'authentification
+    const token = this.authService.getToken();
+    console.log('🔑 Token présent:', !!token);
+    console.log('🔑 Token (10 premiers chars):', token ? token.substring(0, 10) + '...' : 'null');
+
+    console.log('🌐 Appel API courseService.getCourses()...');
+
+    // 🔧 FIX: Récupérer TOUS les cours, puis filtrer côté frontend
+    this.courseService.getCourses().subscribe({
+      next: allCourses => {
+        console.log('✅ === RÉPONSE REÇUE ===');
+        console.log('📚 TOUS les cours reçus de l\'API:', allCourses);
+        console.log('📊 Nombre total de cours:', allCourses.length);
+        
+        // Log détaillé des premiers cours
+        if (allCourses.length > 0) {
+          console.log('📖 Exemple de cours reçu:', allCourses[0]);
+          allCourses.slice(0, 3).forEach((course, index) => {
+            console.log(`📝 Cours ${index + 1}:`, {
+              nom: course.course_name || course.title,
+              date: course.course_day || course.day,
+              session: course.session?.session_uuid || course.session_id
+            });
+          });
+        }
+
+        // Filtrer côté frontend par session si nécessaire
+        let filteredCourses = allCourses;
+        
+        if (this.selectedSessionId) {
+          console.log(`🔍 Filtrage pour session: ${this.selectedSessionId}`);
+          
+          filteredCourses = allCourses.filter(course => {
+            // ✅ Utiliser seulement course.session (course.group.session n'existe pas dans le modèle)
+            const courseSessionId = course.session?.session_uuid || 
+                                  course.session?.session_id ||
+                                  course.session_id; // Fallback pour anciens champs
+            
+            const match = courseSessionId?.toString() === this.selectedSessionId?.toString();
+            
+            if (course.course_name || course.title) {
+              console.log(`📋 Cours "${course.course_name || course.title}": session=${courseSessionId}, match=${match}`);
+            }
+            
+            return match;
+          });
+          
+          console.log(`🎯 Cours filtrés pour la session ${this.selectedSessionId}:`, filteredCourses.length);
+        } else {
+          console.log('ℹ️ Aucune session sélectionnée, on garde tous les cours');
+        }
+
+        // Assigner tous les cours (on filtrera par date dans getCoursesForDay)
+        this.courses = filteredCourses;
+        
+        // Vider le cache et mettre à jour le timestamp
+        this.clearCoursesCache();
+        
+        if (filteredCourses.length > 0) {
+          console.log('📖 Premier cours filtré:', filteredCourses[0]);
+        } else {
+          console.log('⚠️ Aucun cours après filtrage !');
+        }
+        
+        console.log('🔄 Appel updateScheduleWithCourses()...');
+        this.updateScheduleWithCourses();
+        console.log('🏁 === FIN loadCourses() SUCCESS ===');
+      },
+      error: error => {
+        console.error('❌ === ERREUR loadCourses() ===');
+        console.error('❌ Erreur lors du chargement des cours:', error);
+        console.error('❌ Status code:', error.status);
+        console.error('❌ Message:', error.message);
+        this.error = 'Impossible de charger les cours';
+        this.courses = [];
+        this.clearCoursesCache();
+        this.updateScheduleWithCourses();
+        console.log('🏁 === FIN loadCourses() ERROR ===');
+      },
+    });
+
+    console.log('📡 Appel API lancé, en attente de réponse...');
+  }
+
+  /**
+   * Met à jour le planning avec les cours chargés
+   */
+  updateScheduleWithCourses(): void {
+    // Plus besoin de logique complexe avec le nouveau design par colonnes
   }
 
   /**
@@ -366,37 +430,10 @@ export class CourseCalendarComponent implements OnInit {
    * Gestion du clic sur un jour (remplace onTimeSlotClick)
    */
   onDayClick(day: WeekDay): void {
-    console.log('=== CLIC SUR JOUR ===');
-    console.log('Jour cliqué:', day);
-    
     this.selectedDate = this.formatDateForApi(day.date);
-    
-    // Réinitialiser les propriétés multi-dates
-    this.isMultiDateMode = false;
     this.selectedDates = [this.selectedDate];
-    this.recurrenceType = 'none';
-    this.weeklyOccurrences = 1;
-    
-    this.courseForm.patchValue({
-      group_id: '',
-      start_hour: '09:00', // Heure par défaut
-      end_hour: '10:00',   // Heure par défaut
-      title: '',
-      is_multi_date: false,
-      recurrence_type: 'none',
-      weekly_occurrences: 1,
-      custom_dates: [this.selectedDate]
-    });
-    
-    console.log('=== OUVERTURE MODAL ===');
-    console.log('Date sélectionnée:', this.selectedDate);
-    
-    // Ouvrir la modal
-    const modalElement = document.getElementById('createCourseModal');
-    if (modalElement) {
-      this.modal = new bootstrap.Modal(modalElement);
-      this.modal.show();
-    }
+    this.isMultiDateMode = false;
+    this.openCreateCourseModal();
   }
 
   /**
@@ -404,41 +441,60 @@ export class CourseCalendarComponent implements OnInit {
    */
   getCoursesForDay(day: WeekDay): Course[] {
     const dateKey = this.formatDateForApi(day.date);
-    const daysCourses = this.courses.filter(course => course.day === dateKey);
     
+    // Vérifier le cache si les données n'ont pas changé
+    const cacheKey = `${dateKey}-${this.courses.length}-${this.lastCoursesUpdate}`;
+    if (this.coursesCache.has(cacheKey)) {
+      return this.coursesCache.get(cacheKey)!;
+    }
+
+    console.log(`🗓️ Recherche cours pour ${dateKey}`);
+    
+    const daysCourses = this.courses.filter(course => {
+      const courseDate = course.course_day || course.day;
+      
+      // Log pour debug seulement sur la première recherche
+      if (!this.coursesCache.has(cacheKey) && course) {
+        console.log(`📝 Cours "${course.course_name || course.title}": date=${courseDate}, match=${courseDate === dateKey}`);
+      }
+      
+      return courseDate === dateKey;
+    });
+
+    console.log(`📅 Cours trouvés pour ${dateKey}:`, daysCourses.length);
+
     // Enrichir chaque cours avec les données complètes
     const enrichedCourses = daysCourses.map(course => this.enrichCourseData(course));
-    
+
     // Trier les cours par heure de début, puis par date de création
     const sortedCourses = enrichedCourses.sort((a, b) => {
       // Première priorité : trier par heure de début (plus tôt en premier)
-      if (a.start_hour && b.start_hour) {
-        const timeComparison = a.start_hour.localeCompare(b.start_hour);
+      const startHourA = a.course_start_hour || a.start_hour;
+      const startHourB = b.course_start_hour || b.start_hour;
+      
+      if (startHourA && startHourB) {
+        const timeComparison = startHourA.localeCompare(startHourB);
         if (timeComparison !== 0) {
           return timeComparison;
         }
       }
-      
+
       // Deuxième priorité : trier par date de création (plus ancien en premier)
       if (a.created_at && b.created_at) {
         const dateA = new Date(a.created_at);
         const dateB = new Date(b.created_at);
         return dateA.getTime() - dateB.getTime();
       }
-      
+
       // Si pas de date de création, utiliser l'ID comme fallback
-      const idA = a.course_id || a.id || 0;
-      const idB = b.course_id || b.id || 0;
+      const idA = a.course_uuid || a.course_id || 0;
+      const idB = b.course_uuid || b.course_id || 0;
       return idA.toString().localeCompare(idB.toString());
     });
-    
-    console.log(`Cours enrichis pour ${dateKey}:`, sortedCourses.map(c => ({
-      title: c.title,
-      start_hour: c.start_hour,
-      teacher: c.user ? `${c.user.firstname} ${c.user.lastname}` : 'Aucun',
-      group: c.group?.label || 'Aucun'
-    })));
-    
+
+    // Mettre en cache
+    this.coursesCache.set(cacheKey, sortedCourses);
+
     return sortedCourses;
   }
 
@@ -447,29 +503,29 @@ export class CourseCalendarComponent implements OnInit {
    */
   getCourseColor(course: Course): string {
     // Priorité 1: Couleur personnalisée du cours
-    if (course.color) {
-      return course.color;
+    if (course.course_color) {
+      return course.course_color;
     }
 
     // Priorité 2: Couleur basée sur le groupe (fallback)
-    if (!course.group_id) {
+    if (!course.group_uuid) {
       return this.courseColors[0];
     }
-    
+
     // S'assurer qu'on travaille avec une string
-    const groupIdStr = course.group_id.toString();
-    
-    // Utiliser le hash du group_id pour avoir une couleur consistante
+    const groupIdStr = course.group_uuid.toString();
+
+    // Utiliser le hash du group_uuid pour avoir une couleur consistante
     let hash = 0;
     for (let i = 0; i < groupIdStr.length; i++) {
       const char = groupIdStr.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convertit en entier 32-bit
     }
-    
+
     // S'assurer que le hash est positif
     const positiveHash = Math.abs(hash);
-    
+
     // Sélectionner une couleur basée sur le hash
     const colorIndex = positiveHash % this.courseColors.length;
     return this.courseColors[colorIndex];
@@ -489,12 +545,12 @@ export class CourseCalendarComponent implements OnInit {
   private hexToRgba(hex: string, opacity: number): string {
     // Enlever le # si présent
     hex = hex.replace('#', '');
-    
+
     // Convertir en RGB
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
-    
+
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
 
@@ -502,7 +558,7 @@ export class CourseCalendarComponent implements OnInit {
    * TrackBy function pour optimiser le rendu des options
    */
   trackByGroupId(index: number, group: Group): string {
-    return group.group_id?.toString() || group.id?.toString() || index.toString();
+    return (group.group_uuid || group.group_id || group.id || index.toString()).toString();
   }
 
   /**
@@ -510,24 +566,21 @@ export class CourseCalendarComponent implements OnInit {
    */
   toggleMultiDateMode(): void {
     this.isMultiDateMode = !this.isMultiDateMode;
-    
+
     if (this.isMultiDateMode) {
       this.courseForm.patchValue({
         is_multi_date: true,
         recurrence_type: this.recurrenceType,
-        custom_dates: this.selectedDates
+        custom_dates: this.selectedDates,
       });
     } else {
       this.courseForm.patchValue({
         is_multi_date: false,
         recurrence_type: 'none',
-        custom_dates: [this.selectedDate]
+        custom_dates: [this.selectedDate],
       });
       this.selectedDates = [this.selectedDate];
-      this.recurrenceType = 'none';
     }
-    
-    console.log('Mode multi-dates:', this.isMultiDateMode);
   }
 
   /**
@@ -535,7 +588,7 @@ export class CourseCalendarComponent implements OnInit {
    */
   onRecurrenceTypeChange(type: 'none' | 'weekly' | 'custom'): void {
     this.recurrenceType = type;
-    
+
     if (type === 'weekly') {
       this.generateWeeklyDates();
     } else if (type === 'custom') {
@@ -543,13 +596,11 @@ export class CourseCalendarComponent implements OnInit {
     } else {
       this.selectedDates = [this.selectedDate];
     }
-    
+
     this.courseForm.patchValue({
       recurrence_type: type,
-      custom_dates: this.selectedDates
+      custom_dates: this.selectedDates,
     });
-    
-    console.log('Type de récurrence changé:', type, 'Dates:', this.selectedDates);
   }
 
   /**
@@ -558,18 +609,16 @@ export class CourseCalendarComponent implements OnInit {
   generateWeeklyDates(): void {
     this.selectedDates = [];
     const startDate = new Date(this.selectedDate);
-    
+
     for (let i = 0; i < this.weeklyOccurrences; i++) {
       const newDate = new Date(startDate);
-      newDate.setDate(startDate.getDate() + (i * 7));
+      newDate.setDate(startDate.getDate() + i * 7);
       this.selectedDates.push(this.formatDateForApi(newDate));
     }
-    
+
     this.courseForm.patchValue({
-      custom_dates: this.selectedDates
+      custom_dates: this.selectedDates,
     });
-    
-    console.log(`${this.weeklyOccurrences} occurrences hebdomadaires générées:`, this.selectedDates);
   }
 
   /**
@@ -577,13 +626,13 @@ export class CourseCalendarComponent implements OnInit {
    */
   onWeeklyOccurrencesChange(occurrences: number): void {
     this.weeklyOccurrences = Math.max(1, Math.min(occurrences, this.maxWeeklyOccurrences));
-    
+
     if (this.recurrenceType === 'weekly') {
       this.generateWeeklyDates();
     }
-    
+
     this.courseForm.patchValue({
-      weekly_occurrences: this.weeklyOccurrences
+      weekly_occurrences: this.weeklyOccurrences,
     });
   }
 
@@ -594,12 +643,10 @@ export class CourseCalendarComponent implements OnInit {
     if (dateString && !this.selectedDates.includes(dateString)) {
       this.selectedDates.push(dateString);
       this.selectedDates.sort(); // Trier les dates
-      
+
       this.courseForm.patchValue({
-        custom_dates: this.selectedDates
+        custom_dates: this.selectedDates,
       });
-      
-      console.log('Date ajoutée:', dateString, 'Total:', this.selectedDates.length);
     }
   }
 
@@ -610,12 +657,10 @@ export class CourseCalendarComponent implements OnInit {
     const index = this.selectedDates.indexOf(dateString);
     if (index > -1) {
       this.selectedDates.splice(index, 1);
-      
+
       this.courseForm.patchValue({
-        custom_dates: this.selectedDates
+        custom_dates: this.selectedDates,
       });
-      
-      console.log('Date supprimée:', dateString, 'Restantes:', this.selectedDates.length);
     }
   }
 
@@ -628,7 +673,7 @@ export class CourseCalendarComponent implements OnInit {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -636,28 +681,38 @@ export class CourseCalendarComponent implements OnInit {
    * Soumet le formulaire de création de cours
    */
   onSubmitCourse(): void {
-    if (this.courseForm.invalid) return;
-    
+    if (this.courseForm.invalid) {
+      console.log('❌ Formulaire invalide:', this.courseForm.errors);
+      console.log('État des champs:', {
+        group_uuid: this.courseForm.get('group_uuid')?.value,
+        course_name: this.courseForm.get('course_name')?.value,
+        course_start_hour: this.courseForm.get('course_start_hour')?.value,
+        course_end_hour: this.courseForm.get('course_end_hour')?.value,
+        user_uuid: this.courseForm.get('user_uuid')?.value,
+      });
+      return;
+    }
+
     this.loading = true;
     this.error = '';
-    
-    console.log('=== CREATION DE COURS ===');
-    
+
     const baseCourseData = {
-      title: this.courseForm.value.title,
-      start_hour: this.courseForm.value.start_hour,
-      end_hour: this.courseForm.value.end_hour,
-      group_id: this.courseForm.value.group_id,
-      user_id: this.courseForm.value.user_id,
-      color: this.courseForm.value.color
+      course_name: this.courseForm.value.course_name,
+      course_start_hour: this.courseForm.value.course_start_hour,
+      course_end_hour: this.courseForm.value.course_end_hour,
+      group_uuid: this.courseForm.value.group_uuid,
+      user_uuid: this.courseForm.value.user_uuid,
+      course_color: this.courseForm.value.course_color,
     };
-    
+
+    console.log('📊 Données du cours à créer:', baseCourseData);
+    console.log('📅 Date sélectionnée:', this.selectedDate);
+
     // Déterminer les dates à créer
     const datesToCreate = this.isMultiDateMode ? this.selectedDates : [this.selectedDate];
-    
-    console.log('Données de cours de base:', baseCourseData);
-    console.log('Dates à créer:', datesToCreate);
-    
+
+    console.log('📅 Dates à créer:', datesToCreate);
+
     // Créer les cours pour chaque date
     this.createCoursesForDates(baseCourseData, datesToCreate);
   }
@@ -667,59 +722,89 @@ export class CourseCalendarComponent implements OnInit {
    */
   private createCoursesForDates(baseCourseData: any, dates: string[]): void {
     const courseCreationPromises: Promise<any>[] = [];
-    
+
     dates.forEach(date => {
       const courseData = {
         ...baseCourseData,
-        day: date
+        course_day: date,
+        course_start_hour: this.convertTimeToDate(baseCourseData.course_start_hour),
+        course_end_hour: this.convertTimeToDate(baseCourseData.course_end_hour),
       };
-      
+
+      console.log('🔧 Données finales envoyées à l\'API:', courseData);
+
       const promise = new Promise((resolve, reject) => {
         this.courseService.createCourse(courseData).subscribe({
-          next: (course) => resolve(course),
-          error: (error) => reject(error)
+          next: course => {
+            console.log('✅ Cours créé avec succès:', course);
+            resolve(course);
+          },
+          error: error => {
+            console.error('❌ Erreur API lors de la création:', error);
+            console.error('❌ Détails de l\'erreur:', {
+              status: error.status,
+              message: error.message,
+              error: error.error
+            });
+            reject(error);
+          },
         });
       });
-      
+
       courseCreationPromises.push(promise);
     });
-    
+
     // Attendre que tous les cours soient créés
-    Promise.allSettled(courseCreationPromises).then(results => {
-      this.loading = false;
-      
-      const successful = results.filter(result => result.status === 'fulfilled');
-      const failed = results.filter(result => result.status === 'rejected');
-      
-      if (successful.length > 0) {
-        const message = dates.length === 1 
-          ? 'Cours créé avec succès !'
-          : `${successful.length} cours créés avec succès${failed.length > 0 ? `, ${failed.length} échecs` : ''} !`;
-        
-        this.alertService.success(message);
-        this.modal.hide();
-        
-        // Recharger le planning pour afficher les nouveaux cours
-        this.loadCourses();
-        
-        // Réinitialiser le formulaire
-        this.resetCourseForm();
-      }
-      
-      if (failed.length > 0) {
-        console.error('Erreurs lors de la création:', failed);
-        
-        if (successful.length === 0) {
-          this.error = 'Erreur lors de la création des cours';
-        } else {
-          this.alertService.error(`${failed.length} cours n'ont pas pu être créés`);
+    Promise.allSettled(courseCreationPromises)
+      .then(results => {
+        this.loading = false;
+
+        const successful = results.filter(result => result.status === 'fulfilled');
+        const failed = results.filter(result => result.status === 'rejected');
+
+        console.log('📊 Résultats:', { successful: successful.length, failed: failed.length });
+
+        if (failed.length > 0) {
+          console.log('❌ Erreurs détaillées:', failed.map(f => (f as any).reason));
         }
-      }
-    }).catch(error => {
-      this.loading = false;
-      console.error('Erreur générale lors de la création des cours:', error);
-      this.error = 'Une erreur est survenue lors de la création des cours';
-    });
+
+        if (successful.length > 0) {
+          const message =
+            dates.length === 1
+              ? 'Cours créé avec succès !'
+              : `${successful.length} cours créés avec succès${failed.length > 0 ? `, ${failed.length} échecs` : ''} !`;
+
+          this.alertService.success(message);
+          this.modal.hide();
+
+          // Recharger le planning pour afficher les nouveaux cours
+          this.loadCourses();
+
+          // Réinitialiser le formulaire
+          this.resetCourseForm();
+        }
+
+        if (failed.length > 0) {
+          this.error = 'Erreur lors de la création des cours';
+        }
+      })
+      .catch(error => {
+        this.loading = false;
+        console.error('💥 Erreur globale:', error);
+        this.error = 'Une erreur est survenue lors de la création des cours';
+      });
+  }
+
+  /**
+   * 🔧 FIX: Convertit une heure string "HH:MM" en objet Date
+   */
+  private convertTimeToDate(timeString: string): Date {
+    if (!timeString) return new Date();
+    
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
   }
 
   /**
@@ -727,22 +812,24 @@ export class CourseCalendarComponent implements OnInit {
    */
   private resetCourseForm(): void {
     this.courseForm.reset({
-      group_id: '',
-      title: '',
-      start_hour: '',
-      end_hour: '',
-      user_id: null,
-      color: '',
+      group_uuid: '',
+      course_name: '',
+      course_start_hour: '09:00', // Heure par défaut
+      course_end_hour: '10:00', // Heure par défaut
+      user_uuid: '',
+      course_color: '',
       is_multi_date: false,
       recurrence_type: 'none',
       weekly_occurrences: 1,
-      custom_dates: []
+      custom_dates: [this.selectedDate],
     });
-    
+
+    // Réinitialiser les états
     this.isMultiDateMode = false;
-    this.selectedDates = [];
+    this.selectedDates = [this.selectedDate];
     this.recurrenceType = 'none';
     this.weeklyOccurrences = 1;
+    this.error = '';
   }
 
   /**
@@ -769,7 +856,7 @@ export class CourseCalendarComponent implements OnInit {
     const startOfWeek = this.getStartOfWeek(this.currentWeek);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
+
     return `${startOfWeek.toLocaleDateString('fr-FR')} - ${endOfWeek.toLocaleDateString('fr-FR')}`;
   }
 
@@ -781,23 +868,10 @@ export class CourseCalendarComponent implements OnInit {
   onCourseClick(event: Event, course: Course): void {
     // Empêcher la propagation vers le clic sur le jour
     event.stopPropagation();
-    
-    console.log('=== CLIC SUR COURS - DIAGNOSTIC DÉTAILLÉ ===');
-    console.log('Cours cliqué (brut):', course);
-    console.log('group_id du cours:', course.group_id);
-    console.log('Tous les groupes disponibles:', this.groups.map(g => ({
-      id: g.group_id || g.id,
-      label: g.label,
-      studentsCount: g.students ? g.students.length : 'undefined'
-    })));
-    
-    // Enrichir les données du cours avec les informations complètes
-    const enrichedCourse = this.enrichCourseData(course);
-    console.log('Cours enrichi:', enrichedCourse);
-    
-    this.selectedCourse = enrichedCourse;
+
+    this.selectedCourse = this.enrichCourseData(course);
     this.loadCourseStudents();
-    
+
     // Ouvrir le modal de détail
     const modalElement = document.getElementById('courseDetailsModal');
     if (modalElement) {
@@ -811,77 +885,78 @@ export class CourseCalendarComponent implements OnInit {
    */
   private enrichCourseData(course: Course): Course {
     // Trouver le groupe complet correspondant
-    const fullGroup = this.groups.find(g => 
-      g.group_id === course.group_id || 
-      g.id === course.group_id
+    const fullGroup = this.groups.find(
+      g => g.group_uuid === course.group_uuid || g.group_id === course.group_id
     );
-    
-    console.log('Recherche groupe pour course.group_id:', course.group_id);
-    console.log('Groupe trouvé:', fullGroup);
-    
+
     // Récupérer la session à partir du groupe (relation: Cours → Groupe → Session)
     let fullSession = null;
     if (fullGroup) {
-      // La session peut être directement dans le groupe ou il faut la chercher par ID
       if (fullGroup.session) {
         fullSession = fullGroup.session;
-        console.log('Session trouvée via group.session:', fullSession);
-      } else if (fullGroup.session_id) {
+      } else if (fullGroup.session_uuid || fullGroup.session_id) {
         // Chercher la session complète par son ID
-        fullSession = this.sessions.find(s => 
-          s.session_id === fullGroup.session_id || 
-          s.id === fullGroup.session_id
+        fullSession = this.sessions.find(
+          s => s.session_uuid === fullGroup.session_uuid || s.id === fullGroup.session_id
         );
-        console.log('Session trouvée via group.session_id:', fullSession);
       }
-    } else {
-      console.warn('Aucun groupe trouvé pour ce cours, impossible de déterminer la session');
     }
 
-    // Extraire l'user_id depuis l'array users de l'API
-    let assignedUserId = course.user_id; // Valeur par défaut
+    // Extraire l'user_uuid depuis l'array users de l'API
+    let assignedUserUuid = course.user?.user_uuid || course.user_uuid; // Valeur par défaut
 
     // Si le cours a un array users (structure API), extraire le premier professeur
-    if ((course as any).users && Array.isArray((course as any).users) && (course as any).users.length > 0) {
+    if (
+      (course as any).users &&
+      Array.isArray((course as any).users) &&
+      (course as any).users.length > 0
+    ) {
       const firstUser = (course as any).users[0];
-      if (firstUser && firstUser.user_id) {
-        assignedUserId = firstUser.user_id;
-        console.log('User ID extrait depuis API users array:', assignedUserId);
-      } else if (firstUser && firstUser.user && firstUser.user.id) {
-        assignedUserId = firstUser.user.id;
-        console.log('User ID extrait depuis API users[].user.id:', assignedUserId);
+      if (firstUser && firstUser.user_uuid) {
+        assignedUserUuid = firstUser.user_uuid;
+      } else if (firstUser && firstUser.user && firstUser.user.user_uuid) {
+        assignedUserUuid = firstUser.user.user_uuid;
       }
     }
 
     // Enrichir avec les données complètes du professeur
-    let fullUser: { user_id?: string | number; firstname?: string; lastname?: string; email?: string } | undefined = undefined;
-    if (assignedUserId) {
-      const teacher = this.getTeacherById(assignedUserId);
+    let fullUser = undefined;
+    if (assignedUserUuid) {
+      const teacher = this.getTeacherById(assignedUserUuid);
       if (teacher) {
         fullUser = {
-          user_id: teacher.id,
-          firstname: teacher.fullName.split(' ')[0] || '',
-          lastname: teacher.fullName.split(' ').slice(1).join(' ') || '',
-          email: teacher.email
+          user_uuid: teacher.user_uuid,
+          user_firstname: teacher.user_firstname,
+          user_lastname: teacher.user_lastname,
+          user_mail: teacher.user_mail,
+          user_id: teacher.user_uuid || teacher.id,
+          firstname: teacher.firstname,
+          lastname: teacher.lastname,
+          email: teacher.email,
         };
-        console.log('Professeur enrichi:', fullUser);
-      } else {
-        console.warn('Professeur non trouvé dans la liste pour user_id:', assignedUserId);
       }
     }
-    
+
     return {
       ...course,
-      user_id: assignedUserId, // Assigner l'user_id extrait
+      user_uuid: assignedUserUuid, // Assigner l'user_uuid extrait
       user: fullUser, // Ajouter les données complètes du professeur
-      group: fullGroup ? {
-        group_id: fullGroup.group_id,
-        label: fullGroup.label
-      } : course.group,
-      session: fullSession ? {
-        session_id: fullSession.session_id,
-        label: fullSession.label
-      } : course.session
+      group: fullGroup
+        ? {
+            group_uuid: fullGroup.group_uuid,
+            group_id: fullGroup.group_id,
+            group_label: fullGroup.group_label || fullGroup.label,
+            label: fullGroup.group_label || fullGroup.label,
+          }
+        : course.group,
+      session: fullSession
+        ? {
+            session_uuid: fullSession.session_uuid || fullSession.id,
+            session_label: fullSession.session_label || fullSession.label,
+            session_id: fullSession.session_uuid || fullSession.id,
+            label: fullSession.session_label || fullSession.label,
+          }
+        : course.session,
     };
   }
 
@@ -889,229 +964,47 @@ export class CourseCalendarComponent implements OnInit {
    * Charge les élèves du groupe associé au cours
    */
   loadCourseStudents(): void {
-    if (!this.selectedCourse?.group_id) {
-      console.warn('Aucun groupe associé au cours');
+    if (!this.selectedCourse?.group_uuid && !this.selectedCourse?.group_id) {
       this.courseStudents = [];
       return;
     }
 
-    this.loadingCourseDetails = true;
-    console.log('=== CHARGEMENT DÉTAILLÉ DES ÉLÈVES ===');
-    console.log('Group ID du cours:', this.selectedCourse.group_id);
-    console.log('URL API qui sera appelée:', `/groups/${this.selectedCourse.group_id}`);
+    const groupId = this.selectedCourse.group_uuid || this.selectedCourse.group_id;
+    
+    if (!groupId) {
+      this.courseStudents = [];
+      return;
+    }
 
-    this.groupService.getGroupById(this.selectedCourse.group_id).subscribe({
-      next: (group) => {
-        console.log('=== DIAGNOSTIC COMPLET DU GROUPE ===');
-        console.log('Réponse complète de l\'API:', group);
-        console.log('Groupe label:', group.label);
-        console.log('Groupe ID:', group.group_id || group.id);
-        console.log('Array students brut:', group.students);
-        console.log('Type de group.students:', typeof group.students);
-        console.log('Est-ce un array ?', Array.isArray(group.students));
-        
-        if (group.students) {
-          console.log('Nombre d\'étudiants dans le groupe:', group.students.length);
-          console.log('Premier étudiant (si existe):', group.students[0]);
+    this.groupService.getGroupById(groupId).subscribe({
+      next: group => {
+        if (group.students && Array.isArray(group.students)) {
+          this.courseStudents = group.students.map((student: any) => ({
+            student_uuid: student.student_uuid,
+            student_firstname: student.student_firstname,
+            student_lastname: student.student_lastname,
+            student_mail: student.student_mail,
+            student_phone: student.student_phone || '',
+            student_birthdate: student.student_birthdate || new Date(),
+            student_created_at: student.student_created_at || new Date(),
+            nationality_uuid: student.nationality_uuid || '',
+            gender_uuid: student.gender_uuid || '',
+            status_uuid: student.status_uuid || '',
+            french_level_uuid: student.french_level_uuid || '',
+            financing_uuid: student.financing_uuid || '',
+            // Fallback pour compatibilité
+            id: student.student_uuid,
+            firstname: student.student_firstname,
+            lastname: student.student_lastname,
+            email: student.student_mail,
+          }));
         } else {
-          console.warn('❌ Propriété students manquante ou undefined');
+          this.courseStudents = [];
         }
-        
-        // Vérifier toutes les propriétés du groupe
-        console.log('Toutes les propriétés du groupe:', Object.keys(group));
-        
-        this.courseStudents = group.students || [];
-        
-        // Debug détaillé de chaque élève
-        this.courseStudents.forEach((student, index) => {
-          console.log(`=== ÉLÈVE ${index + 1} ===`);
-          console.log('Données complètes:', student);
-          console.log('Propriétés disponibles:', Object.keys(student));
-          console.log('firstname:', student.firstname);
-          console.log('lastname:', student.lastname);
-          console.log('email:', student.email);
-          console.log('student_id:', student.student_id);
-          console.log('id:', student.id);
-        });
-        
-        // Vérifier aussi si on peut charger le groupe par d'autres moyens
-        console.log('=== VÉRIFICATION DANS LA LISTE DES GROUPES CHARGÉS ===');
-        const groupFromList = this.selectedCourse ? this.groups.find(g => g.group_id === this.selectedCourse!.group_id) : null;
-        if (groupFromList) {
-          console.log('Groupe trouvé dans la liste locale:', groupFromList);
-          console.log('Students du groupe local:', groupFromList.students);
-        } else {
-          console.warn('❌ Groupe pas trouvé dans la liste locale');
-        }
-        
-        // Initialiser les statuts de présence (par défaut : inconnu)
-        this.courseStudents.forEach(student => {
-          const studentKey = this.getStudentKey(student);
-          if (studentKey && !this.studentAttendanceMap.has(studentKey)) {
-            this.studentAttendanceMap.set(studentKey, 'unknown');
-          }
-        });
-        
-        // Charger les absences existantes pour ce cours
-        this.loadExistingAttendance();
-        
-        console.log('✅ Élèves du cours final assignés:', this.courseStudents.length);
       },
-      error: (error) => {
-        console.error('❌ ERREUR lors du chargement du groupe:', error);
-        console.log('Code d\'erreur:', error.status);
-        console.log('Message d\'erreur:', error.message);
-        console.log('URL qui a échoué:', error.url);
+      error: error => {
+        this.error = 'Impossible de charger les étudiants du groupe';
         this.courseStudents = [];
-        this.loadingCourseDetails = false;
-        this.alertService.error('Impossible de charger les élèves du groupe');
-      }
-    });
-  }
-
-  /**
-   * Charge les absences existantes pour le cours sélectionné
-   */
-  loadExistingAttendance(): void {
-    if (!this.selectedCourse?.course_id && !this.selectedCourse?.id) {
-      this.loadingCourseDetails = false;
-      return;
-    }
-
-    const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
-    
-    if (!courseId) {
-      this.loadingCourseDetails = false;
-      return;
-    }
-    
-    console.log('=== CHARGEMENT DES ABSENCES EXISTANTES ===');
-    console.log('Course ID:', courseId);
-    
-    this.attendanceService.getCourseAbsences(courseId.toString()).subscribe({
-      next: (response: any) => {
-        console.log('Réponse brute de l\'API absences:', response);
-        console.log('Type de la réponse:', typeof response);
-        console.log('Est-ce un tableau ?', Array.isArray(response));
-        
-        // Gérer différents formats de réponse
-        let absences: any[] = [];
-        
-        if (Array.isArray(response)) {
-          // Si la réponse est directement un tableau
-          absences = response;
-        } else if (response && Array.isArray(response.data)) {
-          // Si la réponse a une propriété data qui contient le tableau
-          absences = response.data;
-        } else if (response && Array.isArray(response.absences)) {
-          // Si la réponse a une propriété absences qui contient le tableau
-          absences = response.absences;
-        } else if (response && typeof response === 'object') {
-          // Si c'est un objet, essayer de trouver une propriété qui contient un tableau
-          console.log('Propriétés de l\'objet réponse:', Object.keys(response));
-          // Chercher la première propriété qui est un tableau
-          for (const key in response) {
-            if (Array.isArray(response[key])) {
-              absences = response[key];
-              console.log(`Tableau d'absences trouvé dans la propriété: ${key}`);
-              break;
-            }
-          }
-        }
-        
-        console.log('Absences extraites:', absences);
-        console.log('Nombre d\'absences:', absences.length);
-        
-        // Réinitialiser tous les étudiants comme présents par défaut
-        this.courseStudents.forEach(student => {
-          const studentKey = this.getStudentKey(student);
-          this.studentAttendanceMap.set(studentKey, 'present');
-          console.log(`Étudiant ${student.firstname} ${student.lastname} initialisé présent (clé: ${studentKey})`);
-        });
-        
-        // Marquer comme absent/retard/excusé selon les absences trouvées
-        if (absences.length > 0) {
-          absences.forEach(absence => {
-            console.log('=== TRAITEMENT D\'UNE ABSENCE ===');
-            console.log('Absence brute:', absence);
-            console.log('Student ID de l\'absence:', absence.student_id, 'type:', typeof absence.student_id);
-            console.log('Raison:', absence.reason);
-            
-            // Trouver l'étudiant correspondant dans la liste
-            const matchingStudent = this.courseStudents.find(student => {
-              const studentKey = this.getStudentKey(student);
-              const absenceStudentId = absence.student_id;
-              
-              // Comparer en tant que strings pour éviter les problèmes de type
-              const studentKeyStr = studentKey.toString();
-              const absenceIdStr = absenceStudentId.toString();
-              
-              console.log(`Comparaison: étudiant ${student.firstname} ${student.lastname} (clé: ${studentKeyStr}) vs absence (${absenceIdStr})`);
-              
-              return studentKeyStr === absenceIdStr;
-            });
-            
-            if (matchingStudent) {
-              const studentKey = this.getStudentKey(matchingStudent);
-              
-              // Déterminer le statut basé sur la raison de l'absence
-              let status: 'absent' | 'late' | 'excused' = 'absent';
-              if (absence.reason) {
-                const reason = absence.reason.toLowerCase();
-                if (reason.includes('retard')) {
-                  status = 'late';
-                } else if (reason.includes('excus')) {
-                  status = 'excused';
-                } else if (reason === 'absence enregistrée') {
-                  status = 'absent';
-                }
-              }
-              
-              this.studentAttendanceMap.set(studentKey, status);
-              console.log(`✅ Étudiant ${matchingStudent.firstname} ${matchingStudent.lastname} marqué comme ${status} (raison: ${absence.reason})`);
-            } else {
-              console.warn(`❌ Aucun étudiant trouvé pour l'absence avec student_id: ${absence.student_id}`);
-              console.log('Étudiants disponibles:', this.courseStudents.map(s => ({
-                name: `${s.firstname} ${s.lastname}`,
-                key: this.getStudentKey(s),
-                student_id: s.student_id,
-                id: s.id
-              })));
-            }
-          });
-        } else {
-          console.log('Aucune absence trouvée, tous les étudiants restent marqués présents');
-        }
-        
-        this.loadingCourseDetails = false;
-        console.log('=== ÉTAT FINAL DES PRÉSENCES ===');
-        console.log('Map complète:', Array.from(this.studentAttendanceMap.entries()));
-        console.log('Répartition:', {
-          présents: this.getPresentStudentsCount(),
-          absents: this.getAbsentStudentsCount(),
-          retards: this.getLateStudentsCount(),
-          excusés: this.getExcusedStudentsCount()
-        });
-      },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des absences:', error);
-        console.log('Status de l\'erreur:', error.status);
-        console.log('Message de l\'erreur:', error.message);
-        console.log('Réponse complète de l\'erreur:', error);
-        
-        // Marquer tous les étudiants comme présents par défaut si pas d'absences trouvées
-        this.courseStudents.forEach(student => {
-          const studentKey = this.getStudentKey(student);
-          this.studentAttendanceMap.set(studentKey, 'present');
-        });
-        
-        this.loadingCourseDetails = false;
-        // Ne pas afficher d'erreur si l'API retourne 404 (pas d'absences)
-        if (error.status !== 404) {
-          console.warn('Erreur lors du chargement des absences, tous les étudiants seront marqués présents par défaut');
-        } else {
-          console.log('Aucune absence trouvée pour ce cours (404), tous les étudiants marqués présents');
-        }
       }
     });
   }
@@ -1131,39 +1024,16 @@ export class CourseCalendarComponent implements OnInit {
    */
   onEditCourse(): void {
     if (!this.selectedCourse) return;
-    
-    console.log('=== EDITION DU COURS ===');
-    console.log('Cours sélectionné:', this.selectedCourse.title, '| User ID:', this.selectedCourse.user_id, '| Couleur:', this.selectedCourse.color);
-    
-    // Si pas de professeurs, essayer de les recharger
-    if (this.teachers.length === 0) {
-      console.log('Rechargement des professeurs...');
-      this.loadTeachers();
-    }
-    
-    // Normaliser user_id pour correspondre aux IDs des professeurs
-    let selectedUserId = this.selectedCourse.user_id;
 
-    // Pré-remplir le formulaire d'édition avec les données actuelles du cours
     this.editCourseForm.patchValue({
-      group_id: this.selectedCourse.group_id || '',
-      title: this.selectedCourse.title || '',
-      start_hour: this.selectedCourse.start_hour || '',
-      end_hour: this.selectedCourse.end_hour || '',
-      day: this.selectedCourse.day || '',
-      user_id: selectedUserId || null,
-      color: this.selectedCourse.color || ''
+      course_name: this.selectedCourse.course_name || this.selectedCourse.title || this.selectedCourse.intitule,
+      course_start_hour: this.selectedCourse.course_start_hour || this.selectedCourse.course_start_hour || this.selectedCourse.start_hour,
+      course_end_hour: this.selectedCourse.course_end_hour || this.selectedCourse.course_end_hour || this.selectedCourse.end_hour,
+      course_color: this.selectedCourse.course_color || this.selectedCourse.course_color || this.selectedCourse.color,
     });
 
-    console.log('Professeur pré-sélectionné dans le formulaire:', this.editCourseForm.get('user_id')?.value);
-    console.log('Couleur pré-sélectionnée dans le formulaire:', this.editCourseForm.get('color')?.value);
-
-    // Réinitialiser les erreurs
-    this.editError = '';
-    
-    // Fermer le modal de détail
     this.detailsModal?.hide();
-    
+
     // Ouvrir le modal d'édition
     setTimeout(() => {
       const modalElement = document.getElementById('editCourseModal');
@@ -1179,70 +1049,55 @@ export class CourseCalendarComponent implements OnInit {
    */
   onDeleteCourse(): void {
     if (!this.selectedCourse) return;
-    
-    const courseTitle = this.selectedCourse.title;
-    const courseDate = this.selectedCourse.day;
-    const courseTime = `${this.selectedCourse.start_hour} - ${this.selectedCourse.end_hour}`;
-    
-    console.log('=== DEMANDE DE SUPPRESSION DE COURS ===');
-    console.log('Cours à supprimer:', this.selectedCourse);
-    
-    // Demander confirmation à l'utilisateur
-    const confirmMessage = `Êtes-vous sûr de vouloir supprimer ce cours ?\n\n` +
-                          `📚 ${courseTitle}\n` +
-                          `📅 ${courseDate}\n` +
-                          `🕐 ${courseTime}\n\n` +
-                          `Cette action est irréversible et ne supprimera que le cours, ` +
-                          `pas le groupe, les élèves ou le professeur.`;
-    
-    if (confirm(confirmMessage)) {
-      const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
-      
-      if (!courseId) {
-        this.alertService.error('Impossible de déterminer l\'ID du cours à supprimer');
+
+    const courseTitle = this.selectedCourse.course_name || this.selectedCourse.title || this.selectedCourse.intitule;
+    const courseDate = this.selectedCourse.course_day || this.selectedCourse.day;
+    const courseTime = `${this.selectedCourse.course_start_hour || this.selectedCourse.start_hour} - ${this.selectedCourse.course_end_hour || this.selectedCourse.end_hour}`;
+
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ce cours ?\n\n` +
+      `📚 ${courseTitle}\n` +
+      `📅 ${courseDate}\n` +
+      `🕐 ${courseTime}\n\n` +
+      `Cette action est irréversible et ne supprimera que le cours, ` +
+      `pas le groupe, les élèves ou le professeur.`)) {
+      const courseUuid = this.selectedCourse.course_uuid || this.selectedCourse.course_id || this.selectedCourse.id;
+
+      if (!courseUuid) {
+        this.alertService.error("Impossible de déterminer l'ID du cours à supprimer");
         return;
       }
-      
-      console.log('Suppression confirmée, ID du cours:', courseId);
-      
-      this.courseService.deleteCourse(courseId).subscribe({
+
+      this.courseService.deleteCourse(courseUuid).subscribe({
         next: () => {
-          console.log('Cours supprimé avec succès');
-          
-          // Fermer le modal de détail
-          this.onCloseDetailsModal();
-          
-          // Afficher un message de succès
           this.alertService.success('Cours supprimé avec succès !');
-          
-          // Recharger le planning pour refléter la suppression
+          this.onCloseDetailsModal();
           this.loadCourses();
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du cours:', error);
-          this.alertService.error('Erreur lors de la suppression du cours. Veuillez réessayer.');
-        }
+          this.error = 'Erreur lors de la suppression du cours. Veuillez réessayer.';
+        },
       });
     } else {
-      console.log('Suppression annulée par l\'utilisateur');
+      console.log("Suppression annulée par l'utilisateur");
     }
   }
 
   // ========== MÉTHODES POUR LA GESTION DES PRÉSENCES ==========
 
   /**
-   * Obtient l'identifiant de l'étudiant (student_id ou id selon l'API)
+   * Obtient l'identifiant de l'étudiant (student_uuid ou id selon l'API)
    */
   private getStudentKey(student: Student): number | string {
-    return student.student_id || student.id || 0;
+    return student.student_uuid || student.student_uuid || 0;
   }
 
   /**
    * TrackBy function pour optimiser le rendu des étudiants
    */
   trackByStudentId = (index: number, student: Student): number | string => {
-    return student.student_id || student.id || index;
-  }
+    return student.student_uuid || student.student_uuid || index;
+  };
 
   /**
    * Marque un élève comme présent
@@ -1250,7 +1105,6 @@ export class CourseCalendarComponent implements OnInit {
   markStudentPresent(student: Student): void {
     const studentKey = this.getStudentKey(student);
     this.studentAttendanceMap.set(studentKey, 'present');
-    console.log(`Élève ${student.firstname} ${student.lastname} marqué présent`);
   }
 
   /**
@@ -1259,7 +1113,6 @@ export class CourseCalendarComponent implements OnInit {
   markStudentAbsent(student: Student): void {
     const studentKey = this.getStudentKey(student);
     this.studentAttendanceMap.set(studentKey, 'absent');
-    console.log(`Élève ${student.firstname} ${student.lastname} marqué absent`);
   }
 
   /**
@@ -1268,7 +1121,6 @@ export class CourseCalendarComponent implements OnInit {
   markStudentLate(student: Student): void {
     const studentKey = this.getStudentKey(student);
     this.studentAttendanceMap.set(studentKey, 'late');
-    console.log(`Élève ${student.firstname} ${student.lastname} marqué en retard`);
   }
 
   /**
@@ -1277,7 +1129,6 @@ export class CourseCalendarComponent implements OnInit {
   markStudentExcused(student: Student): void {
     const studentKey = this.getStudentKey(student);
     this.studentAttendanceMap.set(studentKey, 'excused');
-    console.log(`Élève ${student.firstname} ${student.lastname} marqué absent excusé`);
   }
 
   /**
@@ -1319,11 +1170,16 @@ export class CourseCalendarComponent implements OnInit {
     const studentKey = this.getStudentKey(student);
     const status = this.studentAttendanceMap.get(studentKey);
     switch (status) {
-      case 'present': return 'Présent';
-      case 'absent': return 'Absent';
-      case 'late': return 'En retard';
-      case 'excused': return 'Absent excusé';
-      default: return 'Non défini';
+      case 'present':
+        return 'Présent';
+      case 'absent':
+        return 'Absent';
+      case 'late':
+        return 'En retard';
+      case 'excused':
+        return 'Absent excusé';
+      default:
+        return 'Non défini';
     }
   }
 
@@ -1334,11 +1190,16 @@ export class CourseCalendarComponent implements OnInit {
     const studentKey = this.getStudentKey(student);
     const status = this.studentAttendanceMap.get(studentKey);
     switch (status) {
-      case 'present': return 'badge bg-success';
-      case 'absent': return 'badge bg-danger';
-      case 'late': return 'badge bg-warning';
-      case 'excused': return 'badge bg-secondary';
-      default: return 'badge bg-secondary';
+      case 'present':
+        return 'badge bg-success';
+      case 'absent':
+        return 'badge bg-danger';
+      case 'late':
+        return 'badge bg-warning';
+      case 'excused':
+        return 'badge bg-secondary';
+      default:
+        return 'badge bg-secondary';
     }
   }
 
@@ -1349,11 +1210,16 @@ export class CourseCalendarComponent implements OnInit {
     const studentKey = this.getStudentKey(student);
     const status = this.studentAttendanceMap.get(studentKey);
     switch (status) {
-      case 'present': return 'fas fa-check';
-      case 'absent': return 'fas fa-times';
-      case 'late': return 'fas fa-clock';
-      case 'excused': return 'fas fa-times-circle';
-      default: return 'fas fa-question';
+      case 'present':
+        return 'fas fa-check';
+      case 'absent':
+        return 'fas fa-times';
+      case 'late':
+        return 'fas fa-clock';
+      case 'excused':
+        return 'fas fa-times-circle';
+      default:
+        return 'fas fa-question';
     }
   }
 
@@ -1404,85 +1270,78 @@ export class CourseCalendarComponent implements OnInit {
    */
   onSubmitEditCourse(): void {
     if (this.editCourseForm.invalid || !this.selectedCourse) return;
-    
+
     this.editLoading = true;
     this.editError = '';
-    
-    console.log('=== DIAGNOSTIC FORMULAIRE D\'ÉDITION ===');
-    console.log('Form value:', this.editCourseForm.value);
-    console.log('Form valid:', this.editCourseForm.valid);
-    console.log('Course à modifier:', this.selectedCourse);
-    
+
     const courseData = {
-      title: this.editCourseForm.value.title,
-      day: this.editCourseForm.value.day,
-      start_hour: this.editCourseForm.value.start_hour,
-      end_hour: this.editCourseForm.value.end_hour,
-      group_id: this.editCourseForm.value.group_id,
-      user_id: this.editCourseForm.value.user_id,
-      color: this.editCourseForm.value.color
+      course_name: this.editCourseForm.value.course_name,
+      course_start_hour: this.editCourseForm.value.course_start_hour,
+      course_end_hour: this.editCourseForm.value.course_end_hour,
+      course_color: this.editCourseForm.value.course_color,
     };
-    
-    console.log('Données de cours à modifier:', courseData);
-    
-    const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
-    
-    if (!courseId) {
+
+    const courseUuid = this.selectedCourse.course_uuid || this.selectedCourse.course_id || this.selectedCourse.id;
+
+    if (!courseUuid) {
       this.editLoading = false;
-      this.editError = 'Impossible de déterminer l\'ID du cours à modifier';
+      this.editError = "Impossible de déterminer l'ID du cours à modifier";
       return;
     }
-    
-    this.courseService.updateCourse(courseId, courseData).subscribe({
-      next: (updatedCourse) => {
+
+    this.courseService.updateCourse(courseUuid, courseData).subscribe({
+      next: updatedCourse => {
         this.editLoading = false;
         this.editModal?.hide();
         this.alertService.success('Cours modifié avec succès !');
         console.log('Cours modifié:', updatedCourse);
-        
+
         // Mettre à jour le cours sélectionné avec les nouvelles données
         this.selectedCourse = { ...this.selectedCourse, ...updatedCourse };
-        
+
         // Recharger le planning pour afficher les modifications
         this.loadCourses();
-        
+
         // Réinitialiser le formulaire
         this.editCourseForm.reset();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la modification du cours:', error);
-        
+
         // Si l'update standard échoue, essayer la méthode alternative
         if (error.status === 405 || (error.message && error.message.includes('Cannot PUT'))) {
           console.log('Tentative de mise à jour alternative...');
-          
-          this.courseService.updateCourseAlternative(courseId, courseData).subscribe({
-            next: (updatedCourse) => {
+
+          this.courseService.updateCourseAlternative(courseUuid, courseData).subscribe({
+            next: updatedCourse => {
               this.editLoading = false;
               this.editModal?.hide();
               this.alertService.success('Cours modifié avec succès (méthode alternative) !');
               console.log('Cours modifié via méthode alternative:', updatedCourse);
-              
+
               // Mettre à jour le cours sélectionné avec les nouvelles données
               this.selectedCourse = { ...this.selectedCourse, ...updatedCourse };
-              
+
               // Recharger le planning pour afficher les modifications
               this.loadCourses();
-              
+
               // Réinitialiser le formulaire
               this.editCourseForm.reset();
             },
-            error: (alternativeError) => {
+            error: alternativeError => {
               this.editLoading = false;
               console.error('Erreur lors de la modification alternative:', alternativeError);
-              this.editError = alternativeError?.message || 'Une erreur est survenue lors de la modification du cours';
-            }
+              this.editError =
+                alternativeError?.message ||
+                'Une erreur est survenue lors de la modification du cours';
+            },
           });
         } else {
           this.editLoading = false;
-          this.editError = error?.message || 'Une erreur est survenue lors de la modification du cours';
+          this.editError =
+            error?.message || 'Une erreur est survenue lors de la modification du cours';
         }
-      }
+      },
     });
   }
 
@@ -1508,10 +1367,8 @@ export class CourseCalendarComponent implements OnInit {
    */
   getTeacherById(teacherId: string | number | null | undefined): UserDisplayInfo | null {
     if (!teacherId) return null;
-    
-    return this.teachers.find(teacher => 
-      teacher.id.toString() === teacherId.toString()
-    ) || null;
+
+    return this.teachers.find(teacher => teacher.id?.toString() === teacherId.toString()) || null;
   }
 
   /**
@@ -1526,36 +1383,35 @@ export class CourseCalendarComponent implements OnInit {
    * Sauvegarde toutes les présences du cours en utilisant l'API d'absences
    */
   saveAllAttendances(): void {
-    if (!this.selectedCourse?.course_id && !this.selectedCourse?.id) {
+    if (!this.selectedCourse?.course_uuid && !this.selectedCourse?.course_id) {
       this.alertService.error('Aucun cours sélectionné');
       return;
     }
 
-    const courseId = this.selectedCourse.course_id || this.selectedCourse.id;
-    
-    if (!courseId) {
+    const courseUuid = this.selectedCourse.course_uuid || this.selectedCourse.course_id;
+
+    if (!courseUuid) {
       this.alertService.error('ID de cours invalide');
       return;
     }
 
     console.log('=== SAUVEGARDE DES PRÉSENCES (VERSION SIMPLIFIÉE) ===');
-    console.log('Course ID:', courseId, 'type:', typeof courseId);
-    console.log('Nombre d\'étudiants dans le cours:', this.courseStudents.length);
+    console.log('Course ID:', courseUuid, 'type:', typeof courseUuid);
+    console.log("Nombre d'étudiants dans le cours:", this.courseStudents.length);
     console.log('Map des présences actuelle:', Array.from(this.studentAttendanceMap.entries()));
 
     // Analyser les statuts des étudiants avec logs détaillés
-    const studentsDetails: Array<{ student: any, key: any, status: any }> = [];
+    const studentsDetails: Array<{ student: any; key: any; status: any }> = [];
     this.courseStudents.forEach((student, index) => {
       const studentKey = this.getStudentKey(student);
       const status = this.studentAttendanceMap.get(studentKey);
-      
-      console.log(`=== ÉLÈVE ${index + 1}: ${student.firstname} ${student.lastname} ===`);
+
+      console.log(`=== ÉLÈVE ${index + 1}: ${student.student_firstname} ${student.student_lastname} ===`);
       console.log('  - Student object:', student);
-      console.log('  - student.student_id:', student.student_id);
-      console.log('  - student.id:', student.id);
+      console.log('  - student.student_uuid:', student.student_uuid);
       console.log('  - studentKey (calculé):', studentKey, 'type:', typeof studentKey);
       console.log('  - status dans la Map:', status);
-      
+
       studentsDetails.push({ student, key: studentKey, status });
     });
 
@@ -1564,34 +1420,31 @@ export class CourseCalendarComponent implements OnInit {
     studentsDetails.forEach(({ student, key, status }) => {
       if (status === 'absent') {
         absencesToCreate.push({
-          student_id: key.toString(),
-          course_id: courseId.toString(),
-          reason: 'Absence enregistrée'
+          student_uuid: key.toString(),
+          course_uuid: courseUuid.toString(),
+          reason: 'Absence enregistrée',
         });
-        console.log(`➤ ABSENCE À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
       } else if (status === 'late') {
         absencesToCreate.push({
-          student_id: key.toString(),
-          course_id: courseId.toString(),
-          reason: 'Retard'
+          student_uuid: key.toString(),
+          course_uuid: courseUuid.toString(),
+          reason: 'Retard',
         });
-        console.log(`➤ RETARD À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
       } else if (status === 'excused') {
         absencesToCreate.push({
-          student_id: key.toString(),
-          course_id: courseId.toString(),
-          reason: 'Absence excusée'
+          student_uuid: key.toString(),
+          course_uuid: courseUuid.toString(),
+          reason: 'Absence excusée',
         });
-        console.log(`➤ ABSENCE EXCUSÉE À CRÉER: ${student.firstname} ${student.lastname} (student_id: ${key})`);
       } else if (status === 'present') {
-        console.log(`✓ PRÉSENT: ${student.firstname} ${student.lastname} (pas d'absence)`);
+        console.log(`✓ PRÉSENT: ${student.student_firstname} ${student.student_lastname} (pas d'absence)`);
       }
     });
 
     console.log('=== RÉSUMÉ FINAL ===');
     console.log('Total étudiants:', studentsDetails.length);
     console.log('Absences à créer:', absencesToCreate.length);
-    console.log('Données d\'absences:', absencesToCreate);
+    console.log("Données d'absences:", absencesToCreate);
 
     if (absencesToCreate.length === 0) {
       this.alertService.success('Tous les étudiants sont présents ! Aucune absence à enregistrer.');
@@ -1607,42 +1460,43 @@ export class CourseCalendarComponent implements OnInit {
       return this.attendanceService.createAbsence(absenceData).toPromise();
     });
 
-    Promise.allSettled(createPromises).then(results => {
-      this.savingAttendance = false;
-      
-      const successful = results.filter(result => result.status === 'fulfilled');
-      const failed = results.filter(result => result.status === 'rejected');
-      
-      console.log('=== RÉSULTATS DE LA SAUVEGARDE ===');
-      console.log('✅ Absences créées avec succès:', successful.length);
-      console.log('❌ Échecs:', failed.length);
-      
-      if (failed.length > 0) {
-        console.error('Détail des échecs:', failed.map(f => (f as any).reason));
-      }
-      
-      if (successful.length > 0) {
-        const presentCount = studentsDetails.length - successful.length;
-        const message = `Présences enregistrées ! ${presentCount} présent(s), ${successful.length} absence(s)`;
-        this.alertService.success(message);
-        
-        console.log('🔄 Rechargement des absences pour vérification...');
-        // Recharger après un petit délai pour laisser le temps à l'API
-        setTimeout(() => {
-          this.loadExistingAttendance();
-        }, 500);
-      }
-      
-      if (failed.length > 0 && successful.length === 0) {
-        this.alertService.error('Erreur lors de l\'enregistrement des absences');
-      } else if (failed.length > 0) {
-        this.alertService.error(`${failed.length} absence(s) n'ont pas pu être enregistrées`);
-      }
-    }).catch(error => {
-      this.savingAttendance = false;
-      console.error('❌ ERREUR GLOBALE lors de la sauvegarde:', error);
-      this.alertService.error('Erreur lors de l\'enregistrement des présences');
-    });
+    Promise.allSettled(createPromises)
+      .then(results => {
+        this.savingAttendance = false;
+
+        const successful = results.filter(result => result.status === 'fulfilled');
+        const failed = results.filter(result => result.status === 'rejected');
+
+        console.log('=== RÉSULTATS DE LA SAUVEGARDE ===');
+        console.log('✅ Absences créées avec succès:', successful.length);
+        console.log('❌ Échecs:', failed.length);
+
+        if (failed.length > 0) {
+          console.error(
+            'Détail des échecs:',
+            failed.map(f => (f as any).reason)
+          );
+        }
+
+        if (successful.length > 0) {
+          const presentCount = studentsDetails.length - successful.length;
+          const message = `Présences enregistrées ! ${presentCount} présent(s), ${successful.length} absence(s)`;
+          this.alertService.success(message);
+
+          // Présences sauvegardées avec succès
+        }
+
+        if (failed.length > 0 && successful.length === 0) {
+          this.alertService.error("Erreur lors de l'enregistrement des absences");
+        } else if (failed.length > 0) {
+          this.alertService.error(`${failed.length} absence(s) n'ont pas pu être enregistrées`);
+        }
+      })
+      .catch(error => {
+        this.savingAttendance = false;
+        console.error('❌ ERREUR GLOBALE lors de la sauvegarde:', error);
+        this.alertService.error("Erreur lors de l'enregistrement des présences");
+      });
   }
 
   /**
@@ -1652,7 +1506,6 @@ export class CourseCalendarComponent implements OnInit {
     this.courseStudents.forEach(student => {
       this.studentAttendanceMap.set(this.getStudentKey(student), 'present');
     });
-    console.log('Tous les élèves marqués présents');
   }
 
   /**
@@ -1662,6 +1515,19 @@ export class CourseCalendarComponent implements OnInit {
     this.courseStudents.forEach(student => {
       this.studentAttendanceMap.set(this.getStudentKey(student), 'absent');
     });
-    console.log('Tous les élèves marqués absents');
   }
-} 
+
+  openCreateCourseModal(): void {
+    this.resetCourseForm();
+    const modalElement = document.getElementById('createCourseModal');
+    if (modalElement) {
+      this.modal = new bootstrap.Modal(modalElement);
+      this.modal.show();
+    }
+  }
+
+  private clearCoursesCache(): void {
+    this.coursesCache.clear();
+    this.lastCoursesUpdate = Date.now();
+  }
+}

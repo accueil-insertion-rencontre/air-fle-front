@@ -74,28 +74,29 @@
       gap: 1rem;
     }
   }
-  
+
   .fc-toolbar-chunk {
     @media (max-width: 767px) {
       display: flex;
       justify-content: center;
     }
   }
-  
-  .fc-daygrid-day-number, .fc-col-header-cell-cushion {
+
+  .fc-daygrid-day-number,
+  .fc-col-header-cell-cushion {
     text-decoration: none !important;
     color: inherit;
   }
-  
+
   .fc-event {
     cursor: pointer;
-    
+
     &:hover {
       filter: brightness(0.9);
     }
   }
-  
+
   .fc-day-today {
     background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
   }
-} 
+}

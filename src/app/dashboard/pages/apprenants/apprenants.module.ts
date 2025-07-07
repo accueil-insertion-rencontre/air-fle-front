@@ -5,10 +5,6 @@ import { ApprenantsComponent } from './apprenants.component';
 
 @NgModule({
   declarations: [],
-  imports: [
-    CommonModule,
-    ApprenantsRoutingModule,
-    ApprenantsComponent
-  ]
+  imports: [CommonModule, ApprenantsRoutingModule, ApprenantsComponent],
 })
-export class ApprenantsModule { } 
+export class ApprenantsModule {}

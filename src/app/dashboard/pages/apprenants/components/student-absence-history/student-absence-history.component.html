@@ -25,7 +25,9 @@
             </div>
             <div class="col-md-6">
               <div class="stat-item">
-                <div class="stat-number text-info">{{ absenceStats.absence_rate || 0 | number:'1.1-1' }}%</div>
+                <div class="stat-number text-info">
+                  {{ absenceStats.absence_rate || 0 | number: '1.1-1' }}%
+                </div>
                 <div class="stat-label">Taux d'absence</div>
               </div>
             </div>
@@ -102,7 +104,10 @@
                 </div>
               </td>
               <td>
-                <div class="course-hours" *ngIf="absence.course?.start_hour && absence.course?.end_hour">
+                <div
+                  class="course-hours"
+                  *ngIf="absence.course?.start_hour && absence.course?.end_hour"
+                >
                   {{ absence.course?.start_hour }} - {{ absence.course?.end_hour }}
                 </div>
                 <span class="text-muted" *ngIf="!absence.course?.start_hour">
@@ -112,21 +117,27 @@
               <td>
                 <div class="absence-reason">
                   <span *ngIf="absence.reason" class="text-dark">{{ absence.reason }}</span>
-                  <span *ngIf="!absence.reason" class="text-muted fst-italic">Aucune raison spécifiée</span>
+                  <span *ngIf="!absence.reason" class="text-muted fst-italic"
+                    >Aucune raison spécifiée</span
+                  >
                 </div>
               </td>
               <td class="text-center">
                 <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" 
-                          class="btn btn-outline-primary btn-sm" 
-                          (click)="editAbsenceReason(absence)"
-                          title="Modifier la raison">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="editAbsenceReason(absence)"
+                    title="Modifier la raison"
+                  >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button type="button" 
-                          class="btn btn-outline-danger btn-sm" 
-                          (click)="deleteAbsence(absence)"
-                          title="Supprimer l'absence">
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="deleteAbsence(absence)"
+                    title="Supprimer l'absence"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -137,4 +148,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

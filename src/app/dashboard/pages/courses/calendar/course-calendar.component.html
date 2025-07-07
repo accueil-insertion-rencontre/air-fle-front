@@ -9,14 +9,15 @@
         <!-- Sélecteur de session -->
         <div class="form-group mb-0">
           <label for="sessionSelect" class="form-label me-2">Session :</label>
-          <select 
-            id="sessionSelect" 
-            class="form-select form-select-sm" 
-            [(ngModel)]="selectedSessionId" 
+          <select
+            id="sessionSelect"
+            class="form-select form-select-sm"
+            [(ngModel)]="selectedSessionId"
             (change)="onSessionChange(selectedSessionId)"
-            style="width: auto; display: inline-block;">
+            style="width: auto; display: inline-block"
+          >
             <option value="">Toutes les sessions</option>
-            <option *ngFor="let session of sessions" [value]="session.session_id">
+            <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">
               {{ session.label }}
             </option>
           </select>
@@ -32,9 +33,9 @@
         <button class="btn btn-outline-primary" (click)="previousWeek()">
           <i class="fas fa-chevron-left"></i> Semaine précédente
         </button>
-        
+
         <h4 class="mb-0 text-center">{{ getWeekDisplay() }}</h4>
-        
+
         <button class="btn btn-outline-primary" (click)="nextWeek()">
           Semaine suivante <i class="fas fa-chevron-right"></i>
         </button>
@@ -48,47 +49,50 @@
       <div class="calendar-grid">
         <!-- En-tête avec les jours -->
         <div class="calendar-header">
-          <div *ngFor="let day of weekDays" 
-               class="day-column-header"
-               [class.today]="day.isToday">
+          <div *ngFor="let day of weekDays" class="day-column-header" [class.today]="day.isToday">
             <div class="day-name">{{ day.dayName }}</div>
             <div class="day-number">{{ day.dayNumber }}</div>
           </div>
         </div>
-        
+
         <!-- Colonnes des jours avec les cours -->
         <div class="calendar-body">
-          <div *ngFor="let day of weekDays" 
-               class="day-column"
-               [class.today]="day.isToday"
-               (click)="onDayClick(day)">
-            
+          <div
+            *ngFor="let day of weekDays"
+            class="day-column"
+            [class.today]="day.isToday"
+            (click)="onDayClick(day)"
+          >
             <!-- Cours pour ce jour -->
-            <div *ngFor="let course of getCoursesForDay(day)" 
-                 class="course-card"
-                 [style.background-color]="getCourseColorWithOpacity(course)"
-                 [style.--course-color]="getCourseColor(course)"
-                 (click)="onCourseClick($event, course)">
-              
+            <div
+              *ngFor="let course of getCoursesForDay(day)"
+              class="course-card"
+              [style.background-color]="getCourseColorWithOpacity(course)"
+              [style.--course-color]="getCourseColor(course)"
+              (click)="onCourseClick($event, course)"
+            >
               <!-- Horaires du cours -->
-              <div class="course-time">{{ course.start_hour }} - {{ course.end_hour }}</div>
-              
+              <div class="course-time">{{ course.course_start_hour || course.start_hour }} - {{ course.course_end_hour || course.end_hour }}</div>
+
               <!-- Titre du cours -->
-              <div class="course-title" 
-                   [style.color]="getCourseColor(course)"
-                   *ngIf="course.title">{{ course.title }}</div>
-              
-              <!-- Nom du professeur -->
-              <div class="course-teacher" *ngIf="course.user && (course.user.firstname || course.user.lastname)">
-                {{ course.user.firstname }} {{ course.user.lastname }}
+              <div class="course-title" [style.color]="getCourseColor(course)" *ngIf="course.course_name || course.title">
+                {{ course.course_name || course.title }}
               </div>
-              
+
+              <!-- Nom du professeur -->
+              <div
+                class="course-teacher"
+                *ngIf="course.user && (course.user.user_firstname || course.user.firstname || course.user.user_lastname || course.user.lastname)"
+              >
+                {{ course.user.user_firstname || course.user.firstname }} {{ course.user.user_lastname || course.user.lastname }}
+              </div>
+
               <!-- Nom du groupe -->
-              <div class="course-group" *ngIf="course.group && course.group.label">
-                {{ course.group.label }}
+              <div class="course-group" *ngIf="course.group && (course.group.group_label || course.group.label)">
+                {{ course.group.group_label || course.group.label }}
               </div>
             </div>
-            
+
             <!-- Zone d'ajout si pas de cours -->
             <div *ngIf="getCoursesForDay(day).length === 0" class="add-course-zone">
               <i class="fas fa-plus text-muted"></i>
@@ -102,32 +106,50 @@
 </div>
 
 <!-- Modal de création de cours -->
-<div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="createCourseModal"
+  tabindex="-1"
+  aria-labelledby="createCourseModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="createCourseModalLabel">
           <i class="fas fa-plus-circle me-2"></i>Nouveau cours
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCancelCourse()"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fermer"
+          (click)="onCancelCourse()"
+        ></button>
       </div>
-      
+
       <form [formGroup]="courseForm" (ngSubmit)="onSubmitCourse()">
         <div class="modal-body">
           <!-- Date sélectionnée ou mode multi-dates -->
           <div class="alert" [ngClass]="isMultiDateMode ? 'alert-warning' : 'alert-info'">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-            <i class="fas fa-calendar me-2"></i>
+                <i class="fas fa-calendar me-2"></i>
                 <strong *ngIf="!isMultiDateMode">Date sélectionnée :</strong>
                 <strong *ngIf="isMultiDateMode">Mode multi-dates activé :</strong>
-                <span *ngIf="!isMultiDateMode">{{ selectedDate | date:'fullDate':'':'fr-FR' }}</span>
-                <span *ngIf="isMultiDateMode">{{ selectedDates.length }} date(s) sélectionnée(s)</span>
+                <span *ngIf="!isMultiDateMode">{{
+                  selectedDate | date: 'fullDate' : '' : 'fr-FR'
+                }}</span>
+                <span *ngIf="isMultiDateMode"
+                  >{{ selectedDates.length }} date(s) sélectionnée(s)</span
+                >
               </div>
-              <button type="button" 
-                      class="btn btn-sm"
-                      [ngClass]="isMultiDateMode ? 'btn-warning' : 'btn-outline-secondary'"
-                      (click)="toggleMultiDateMode()">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [ngClass]="isMultiDateMode ? 'btn-warning' : 'btn-outline-secondary'"
+                (click)="toggleMultiDateMode()"
+              >
                 <i class="fas fa-calendar-plus me-1"></i>
                 {{ isMultiDateMode ? 'Mode simple' : 'Multi-dates' }}
               </button>
@@ -148,9 +170,14 @@
                 <div class="row g-2">
                   <div class="col-md-4">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceNone" 
-                             [checked]="recurrenceType === 'none'"
-                             (change)="onRecurrenceTypeChange('none')">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceNone"
+                        [checked]="recurrenceType === 'none'"
+                        (change)="onRecurrenceTypeChange('none')"
+                      />
                       <label class="form-check-label" for="recurrenceNone">
                         Aucune récurrence
                       </label>
@@ -158,9 +185,14 @@
                   </div>
                   <div class="col-md-4">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceWeekly"
-                             [checked]="recurrenceType === 'weekly'"
-                             (change)="onRecurrenceTypeChange('weekly')">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceWeekly"
+                        [checked]="recurrenceType === 'weekly'"
+                        (change)="onRecurrenceTypeChange('weekly')"
+                      />
                       <label class="form-check-label" for="recurrenceWeekly">
                         Récurrence hebdomadaire
                       </label>
@@ -168,9 +200,14 @@
                   </div>
                   <div class="col-md-4">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="recurrenceType" id="recurrenceCustom"
-                             [checked]="recurrenceType === 'custom'"
-                             (change)="onRecurrenceTypeChange('custom')">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceCustom"
+                        [checked]="recurrenceType === 'custom'"
+                        (change)="onRecurrenceTypeChange('custom')"
+                      />
                       <label class="form-check-label" for="recurrenceCustom">
                         Dates personnalisées
                       </label>
@@ -182,40 +219,49 @@
               <!-- Configuration récurrence hebdomadaire -->
               <div *ngIf="recurrenceType === 'weekly'" class="mb-3">
                 <label for="weeklyOccurrences" class="form-label">Nombre d'occurrences</label>
-                <div class="input-group" style="max-width: 200px;">
-                  <button class="btn btn-outline-secondary" type="button" 
-                          (click)="onWeeklyOccurrencesChange(weeklyOccurrences - 1)"
-                          [disabled]="weeklyOccurrences <= 1">
+                <div class="input-group" style="max-width: 200px">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="onWeeklyOccurrencesChange(weeklyOccurrences - 1)"
+                    [disabled]="weeklyOccurrences <= 1"
+                  >
                     <i class="fas fa-minus"></i>
                   </button>
-                  <input type="number" 
-                         class="form-control text-center" 
-                         id="weeklyOccurrences"
-                         [value]="weeklyOccurrences"
-                         (input)="onWeeklyOccurrencesChange($any($event.target).value)"
-                         min="1" 
-                         [max]="maxWeeklyOccurrences">
-                  <button class="btn btn-outline-secondary" type="button"
-                          (click)="onWeeklyOccurrencesChange(weeklyOccurrences + 1)"
-                          [disabled]="weeklyOccurrences >= maxWeeklyOccurrences">
+                  <input
+                    type="number"
+                    class="form-control text-center"
+                    id="weeklyOccurrences"
+                    [value]="weeklyOccurrences"
+                    (input)="onWeeklyOccurrencesChange($any($event.target).value)"
+                    min="1"
+                    [max]="maxWeeklyOccurrences"
+                  />
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="onWeeklyOccurrencesChange(weeklyOccurrences + 1)"
+                    [disabled]="weeklyOccurrences >= maxWeeklyOccurrences"
+                  >
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
                 <small class="form-text text-muted">
-                  Créer ce cours {{ weeklyOccurrences }} fois, chaque semaine à partir du {{ selectedDate | date:'shortDate':'':'fr-FR' }}
+                  Créer ce cours {{ weeklyOccurrences }} fois, chaque semaine à partir du
+                  {{ selectedDate | date: 'shortDate' : '' : 'fr-FR' }}
                 </small>
               </div>
 
               <!-- Configuration dates personnalisées -->
               <div *ngIf="recurrenceType === 'custom'" class="mb-3">
                 <label class="form-label">Ajouter une date</label>
-                <div class="input-group mb-2" style="max-width: 300px;">
-                  <input type="date" 
-                         class="form-control" 
-                         #customDateInput
-                         [min]="selectedDate">
-                  <button class="btn btn-outline-primary" type="button"
-                          (click)="addCustomDate(customDateInput.value); customDateInput.value = ''">
+                <div class="input-group mb-2" style="max-width: 300px">
+                  <input type="date" class="form-control" #customDateInput [min]="selectedDate" />
+                  <button
+                    class="btn btn-outline-primary"
+                    type="button"
+                    (click)="addCustomDate(customDateInput.value); customDateInput.value = ''"
+                  >
                     <i class="fas fa-plus"></i> Ajouter
                   </button>
                 </div>
@@ -226,13 +272,17 @@
                 <label class="form-label">Dates sélectionnées ({{ selectedDates.length }})</label>
                 <div class="row g-2">
                   <div class="col-md-6" *ngFor="let date of selectedDates; let i = index">
-                    <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded">
+                    <div
+                      class="d-flex align-items-center justify-content-between bg-light p-2 rounded"
+                    >
                       <small class="text-muted me-2">{{ i + 1 }}.</small>
                       <span class="flex-grow-1">{{ formatDateForDisplay(date) }}</span>
-                      <button type="button" 
-                              class="btn btn-sm btn-outline-danger"
-                              (click)="removeCustomDate(date)"
-                              [disabled]="selectedDates.length === 1">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="removeCustomDate(date)"
+                        [disabled]="selectedDates.length === 1"
+                      >
                         <i class="fas fa-times"></i>
                       </button>
                     </div>
@@ -245,20 +295,26 @@
             </div>
           </div>
 
-          <!-- Sélection de groupe -->
+          <!-- Groupe -->
           <div class="mb-3">
-            <label for="courseGroup" class="form-label">Groupe <span class="text-danger">*</span></label>
-            <select 
+            <label for="courseGroup" class="form-label"
+              >Groupe <span class="text-danger">*</span></label
+            >
+            <select
               id="courseGroup"
               class="form-select"
-              formControlName="group_id"
-              [class.is-invalid]="isFieldInvalid('group_id')">
+              formControlName="group_uuid"
+              [class.is-invalid]="isFieldInvalid('group_uuid')"
+            >
               <option value="">Sélectionner un groupe</option>
-              <option *ngFor="let group of groups; trackBy: trackByGroupId" [value]="group.group_id">
-                {{ group.label }} ({{ group.session?.label || 'Session' }})
+              <option
+                *ngFor="let group of groups; trackBy: trackByGroupId"
+                [value]="group.group_uuid || group.group_id"
+              >
+                {{ group.group_label || group.label }} ({{ group.session?.session_label || group.session?.label || 'Session' }})
               </option>
             </select>
-            <div *ngIf="isFieldInvalid('group_id')" class="invalid-feedback">
+            <div *ngIf="isFieldInvalid('group_uuid')" class="invalid-feedback">
               Le groupe est obligatoire
             </div>
           </div>
@@ -266,13 +322,10 @@
           <!-- Professeur assigné -->
           <div class="mb-3">
             <label for="courseTeacher" class="form-label">Professeur assigné</label>
-            <select 
-              id="courseTeacher"
-              class="form-select"
-              formControlName="user_id">
+            <select id="courseTeacher" class="form-select" formControlName="user_uuid">
               <option value="">Aucun professeur assigné</option>
-              <option *ngFor="let teacher of teachers" [value]="teacher.id">
-                {{ teacher.fullName }} ({{ teacher.email }})
+              <option *ngFor="let teacher of teachers" [value]="teacher.user_uuid">
+                {{ teacher.fullName }} ({{ teacher.user_mail }})
               </option>
             </select>
             <small class="form-text text-muted">
@@ -285,10 +338,7 @@
             <label for="courseColor" class="form-label">Couleur du cours</label>
             <div class="row g-2">
               <div class="col-md-6">
-                <select 
-                  class="form-select" 
-                  id="courseColor" 
-                  formControlName="color">
+                <select class="form-select" id="courseColor" formControlName="course_color">
                   <option value="">Couleur par défaut (basée sur le groupe)</option>
                   <option *ngFor="let color of predefinedColors" [value]="color.value">
                     {{ color.name }}
@@ -296,31 +346,36 @@
                 </select>
               </div>
               <div class="col-md-6">
-            <input 
-                  type="color" 
-                  class="form-control form-control-color" 
+                <input
+                  type="color"
+                  class="form-control form-control-color"
                   id="customColor"
-                  formControlName="color"
-                  style="height: 38px;"
-                  title="Choisir une couleur personnalisée">
+                  formControlName="course_color"
+                  style="height: 38px"
+                  title="Choisir une couleur personnalisée"
+                />
               </div>
             </div>
             <small class="form-text text-muted">
-              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur personnalisée
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur
+              personnalisée
             </small>
           </div>
 
           <!-- Intitulé du cours -->
           <div class="mb-3">
-            <label for="courseTitle" class="form-label">Intitulé du cours <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
+            <label for="courseTitle" class="form-label"
+              >Intitulé du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
               id="courseTitle"
-              formControlName="title"
-              [class.is-invalid]="isFieldInvalid('title')"
-              placeholder="Ex: Grammaire française A1">
-            <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
+              formControlName="course_name"
+              [class.is-invalid]="isFieldInvalid('course_name')"
+              placeholder="Ex: Grammaire française A1"
+            />
+            <div *ngIf="isFieldInvalid('course_name')" class="invalid-feedback">
               L'intitulé du cours est obligatoire (minimum 3 caractères)
             </div>
           </div>
@@ -328,32 +383,38 @@
           <div class="row">
             <!-- Heure de début -->
             <div class="col-md-6 mb-3">
-              <label for="courseStartHour" class="form-label">Heure de début <span class="text-danger">*</span></label>
-              <select 
+              <label for="courseStartHour" class="form-label"
+                >Heure de début <span class="text-danger">*</span></label
+              >
+              <select
                 id="courseStartHour"
                 class="form-select"
-                formControlName="start_hour"
-                [class.is-invalid]="isFieldInvalid('start_hour')">
+                formControlName="course_start_hour"
+                [class.is-invalid]="isFieldInvalid('course_start_hour')"
+              >
                 <option value="">Sélectionner une heure</option>
                 <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
               </select>
-              <div *ngIf="isFieldInvalid('start_hour')" class="invalid-feedback">
+              <div *ngIf="isFieldInvalid('course_start_hour')" class="invalid-feedback">
                 L'heure de début est obligatoire
               </div>
             </div>
 
             <!-- Heure de fin -->
             <div class="col-md-6 mb-3">
-              <label for="courseEndHour" class="form-label">Heure de fin <span class="text-danger">*</span></label>
-              <select 
+              <label for="courseEndHour" class="form-label"
+                >Heure de fin <span class="text-danger">*</span></label
+              >
+              <select
                 id="courseEndHour"
                 class="form-select"
-                formControlName="end_hour"
-                [class.is-invalid]="isFieldInvalid('end_hour')">
+                formControlName="course_end_hour"
+                [class.is-invalid]="isFieldInvalid('course_end_hour')"
+              >
                 <option value="">Sélectionner une heure</option>
                 <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
               </select>
-              <div *ngIf="isFieldInvalid('end_hour')" class="invalid-feedback">
+              <div *ngIf="isFieldInvalid('course_end_hour')" class="invalid-feedback">
                 L'heure de fin est obligatoire
               </div>
             </div>
@@ -370,7 +431,11 @@
             <i class="fas fa-times me-2"></i>Annuler
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="loading || courseForm.invalid">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+            ></span>
             <i *ngIf="!loading" class="fas fa-save me-2"></i>
             <span *ngIf="!isMultiDateMode">Créer le cours</span>
             <span *ngIf="isMultiDateMode">Créer {{ selectedDates.length }} cours</span>
@@ -382,7 +447,13 @@
 </div>
 
 <!-- Modal de détail/modification de cours -->
-<div class="modal fade" id="courseDetailsModal" tabindex="-1" aria-labelledby="courseDetailsModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="courseDetailsModal"
+  tabindex="-1"
+  aria-labelledby="courseDetailsModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -392,7 +463,8 @@
               <i class="fas fa-info-circle me-2"></i>Détails du cours
             </h5>
             <small class="text-muted" *ngIf="selectedCourse">
-              {{ selectedCourse.day | date:'fullDate':'':'fr-FR' }} • {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}
+              {{ selectedCourse.day | date: 'fullDate' : '' : 'fr-FR' }} •
+              {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}
             </small>
           </div>
           <div class="d-flex gap-2" *ngIf="selectedCourse">
@@ -404,9 +476,15 @@
             </button>
           </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCloseDetailsModal()"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fermer"
+          (click)="onCloseDetailsModal()"
+        ></button>
       </div>
-      
+
       <div class="modal-body">
         <div *ngIf="loadingCourseDetails" class="text-center my-4">
           <div class="spinner-border text-primary" role="status">
@@ -428,40 +506,55 @@
                   <div class="row">
                     <div class="col-md-6">
                       <p><strong>Titre :</strong> {{ selectedCourse.title }}</p>
-                      <p><strong>Date :</strong> {{ selectedCourse.day | date:'fullDate':'':'fr-FR' }}</p>
-                      <p><strong>Horaires :</strong> {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}</p>
+                      <p>
+                        <strong>Date :</strong>
+                        {{ selectedCourse.day | date: 'fullDate' : '' : 'fr-FR' }}
+                      </p>
+                      <p>
+                        <strong>Horaires :</strong> {{ selectedCourse.start_hour }} -
+                        {{ selectedCourse.end_hour }}
+                      </p>
                     </div>
                     <div class="col-md-6">
-                      <p><strong>Groupe :</strong> {{ selectedCourse.group?.label || 'Non défini' }}</p>
-                      <p><strong>Session :</strong> {{ selectedCourse.session?.label || 'Non définie' }}</p>
+                      <p>
+                        <strong>Groupe :</strong> {{ selectedCourse.group?.label || 'Non défini' }}
+                      </p>
+                      <p>
+                        <strong>Session :</strong>
+                        {{ selectedCourse.session?.label || 'Non définie' }}
+                      </p>
                       <div class="d-flex align-items-center">
                         <strong class="me-2">Couleur :</strong>
-                        <div 
-                          class="rounded me-2" 
+                        <div
+                          class="rounded me-2"
                           [style.background-color]="getCourseColor(selectedCourse)"
-                          style="width: 30px; height: 20px; border: 1px solid #ddd;">
-                        </div>
+                          style="width: 30px; height: 20px; border: 1px solid #ddd"
+                        ></div>
                         <span class="text-muted small">
-                          {{ selectedCourse.color ? selectedCourse.color : 'Par défaut (basée sur le groupe)' }}
+                          {{
+                            selectedCourse.color
+                              ? selectedCourse.color
+                              : 'Par défaut (basée sur le groupe)'
+                          }}
                         </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Professeur assigné -->
                   <div class="row mt-3" *ngIf="selectedCourse.user">
                     <div class="col-12">
                       <div class="alert alert-info">
                         <i class="fas fa-chalkboard-teacher me-2"></i>
-                        <strong>Professeur assigné :</strong> 
+                        <strong>Professeur assigné :</strong>
                         {{ selectedCourse.user.firstname }} {{ selectedCourse.user.lastname }}
                         <span class="text-muted" *ngIf="selectedCourse.user.email">
                           ({{ selectedCourse.user.email }})
-                      </span>
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Aucun professeur -->
                   <div class="row mt-3" *ngIf="!selectedCourse.user">
                     <div class="col-12">
@@ -478,9 +571,7 @@
             <div class="col-md-4">
               <div class="card">
                 <div class="card-header">
-                  <h6 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>Statistiques
-                  </h6>
+                  <h6 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques</h6>
                 </div>
                 <div class="card-body">
                   <div class="d-flex justify-content-between mb-2">
@@ -516,10 +607,18 @@
                   <i class="fas fa-users me-2"></i>Liste des élèves ({{ courseStudents.length }})
                 </h6>
                 <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" class="btn btn-outline-success" (click)="markAllStudentsPresent()">
+                  <button
+                    type="button"
+                    class="btn btn-outline-success"
+                    (click)="markAllStudentsPresent()"
+                  >
                     <i class="fas fa-check me-1"></i>Marquer tous présents
                   </button>
-                  <button type="button" class="btn btn-outline-danger" (click)="markAllStudentsAbsent()">
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger"
+                    (click)="markAllStudentsAbsent()"
+                  >
                     <i class="fas fa-times me-1"></i>Marquer tous absents
                   </button>
                 </div>
@@ -544,44 +643,51 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let student of courseStudents; trackBy: trackByStudentId">
-                      <td>{{ student.lastname }}</td>
-                      <td>{{ student.firstname }}</td>
-                      <td>{{ student.email || '-' }}</td>
+                      <td>{{ student.student_lastname }}</td>
+                      <td>{{ student.student_firstname }}</td>
+                      <td>{{ student.student_mail || '-' }}</td>
                       <td class="text-center">
-                        <span class="badge" 
-                              [class]="getStudentStatusBadgeClass(student)">
+                        <span class="badge" [class]="getStudentStatusBadgeClass(student)">
                           <i [class]="getStudentStatusIcon(student)" class="me-1"></i>
                           {{ getStudentStatusLabel(student) }}
                         </span>
                       </td>
                       <td class="text-center">
                         <div class="btn-group btn-group-sm" role="group">
-                          <button type="button" 
-                                  class="btn btn-outline-success" 
-                                  [class.active]="isStudentPresent(student)"
-                                  (click)="markStudentPresent(student)"
-                                  title="Présent">
+                          <button
+                            type="button"
+                            class="btn btn-outline-success"
+                            [class.active]="isStudentPresent(student)"
+                            (click)="markStudentPresent(student)"
+                            title="Présent"
+                          >
                             <i class="fas fa-check"></i>
                           </button>
-                          <button type="button" 
-                                  class="btn btn-outline-danger" 
-                                  [class.active]="isStudentAbsent(student)"
-                                  (click)="markStudentAbsent(student)"
-                                  title="Absent">
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger"
+                            [class.active]="isStudentAbsent(student)"
+                            (click)="markStudentAbsent(student)"
+                            title="Absent"
+                          >
                             <i class="fas fa-times"></i>
                           </button>
-                          <button type="button" 
-                                  class="btn btn-outline-warning" 
-                                  [class.active]="isStudentLate(student)"
-                                  (click)="markStudentLate(student)"
-                                  title="En retard">
+                          <button
+                            type="button"
+                            class="btn btn-outline-warning"
+                            [class.active]="isStudentLate(student)"
+                            (click)="markStudentLate(student)"
+                            title="En retard"
+                          >
                             <i class="fas fa-clock"></i>
                           </button>
-                          <button type="button" 
-                                  class="btn btn-outline-secondary" 
-                                  [class.active]="isStudentExcused(student)"
-                                  (click)="markStudentExcused(student)"
-                                  title="Absent excusé">
+                          <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            [class.active]="isStudentExcused(student)"
+                            (click)="markStudentExcused(student)"
+                            title="Absent excusé"
+                          >
                             <i class="fas fa-times-circle"></i>
                           </button>
                         </div>
@@ -596,14 +702,26 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="onCloseDetailsModal()">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          (click)="onCloseDetailsModal()"
+        >
           <i class="fas fa-times me-2"></i>Fermer
         </button>
-        <button type="button" class="btn btn-primary" 
-                *ngIf="selectedCourse" 
-                [disabled]="savingAttendance"
-                (click)="saveAllAttendances()">
-          <span *ngIf="savingAttendance" class="spinner-border spinner-border-sm me-2" role="status"></span>
+        <button
+          type="button"
+          class="btn btn-primary"
+          *ngIf="selectedCourse"
+          [disabled]="savingAttendance"
+          (click)="saveAllAttendances()"
+        >
+          <span
+            *ngIf="savingAttendance"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
           <i *ngIf="!savingAttendance" class="fas fa-save me-2"></i>
           {{ savingAttendance ? 'Enregistrement...' : 'Enregistrer les présences' }}
         </button>
@@ -613,38 +731,56 @@
 </div>
 
 <!-- Modal d'édition de cours -->
-<div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="editCourseModal"
+  tabindex="-1"
+  aria-labelledby="editCourseModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="editCourseModalLabel">
           <i class="fas fa-edit me-2"></i>Modifier le cours
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCancelEditCourse()"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fermer"
+          (click)="onCancelEditCourse()"
+        ></button>
       </div>
-      
+
       <form [formGroup]="editCourseForm" (ngSubmit)="onSubmitEditCourse()">
         <div class="modal-body">
           <!-- Date sélectionnée -->
           <div class="alert alert-info">
             <i class="fas fa-calendar me-2"></i>
-            <strong>Date :</strong> {{ selectedCourse?.day | date:'fullDate':'':'fr-FR' }}
+            <strong>Date :</strong> {{ selectedCourse?.day | date: 'fullDate' : '' : 'fr-FR' }}
           </div>
 
-          <!-- Sélection de groupe -->
+          <!-- Groupe -->
           <div class="mb-3">
-            <label for="editCourseGroup" class="form-label">Groupe <span class="text-danger">*</span></label>
-            <select 
+            <label for="editCourseGroup" class="form-label"
+              >Groupe <span class="text-danger">*</span></label
+            >
+            <select
               id="editCourseGroup"
               class="form-select"
-              formControlName="group_id"
-              [class.is-invalid]="isEditFieldInvalid('group_id')">
+              formControlName="group_uuid"
+              [class.is-invalid]="isEditFieldInvalid('group_uuid')"
+            >
               <option value="">Sélectionner un groupe</option>
-              <option *ngFor="let group of groups; trackBy: trackByGroupId" [value]="group.group_id">
-                {{ group.label }} ({{ group.session?.label || 'Session' }})
+              <option
+                *ngFor="let group of groups; trackBy: trackByGroupId"
+                [value]="group.group_uuid || group.group_id"
+              >
+                {{ group.group_label || group.label }} ({{ group.session?.session_label || group.session?.label || 'Session' }})
               </option>
             </select>
-            <div *ngIf="isEditFieldInvalid('group_id')" class="invalid-feedback">
+            <div *ngIf="isEditFieldInvalid('group_uuid')" class="invalid-feedback">
               Le groupe est obligatoire
             </div>
           </div>
@@ -652,13 +788,10 @@
           <!-- Professeur assigné -->
           <div class="mb-3">
             <label for="editUser_id" class="form-label">Professeur assigné</label>
-            <select 
-              class="form-select" 
-              id="editUser_id" 
-              formControlName="user_id">
+            <select class="form-select" id="editUser_id" formControlName="user_uuid">
               <option value="">Aucun professeur assigné</option>
-              <option *ngFor="let teacher of teachers" [value]="teacher.id">
-                {{ teacher.fullName }} ({{ teacher.email }})
+              <option *ngFor="let teacher of teachers" [value]="teacher.user_uuid">
+                {{ teacher.fullName }} ({{ teacher.user_mail }})
               </option>
             </select>
             <small class="form-text text-muted">
@@ -671,10 +804,7 @@
             <label for="editCourseColor" class="form-label">Couleur du cours</label>
             <div class="row g-2">
               <div class="col-md-6">
-                <select 
-                  class="form-select" 
-                  id="editCourseColor" 
-                  formControlName="color">
+                <select class="form-select" id="editCourseColor" formControlName="course_color">
                   <option value="">Couleur par défaut (basée sur le groupe)</option>
                   <option *ngFor="let color of predefinedColors" [value]="color.value">
                     {{ color.name }}
@@ -682,31 +812,36 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input 
-                  type="color" 
-                  class="form-control form-control-color" 
+                <input
+                  type="color"
+                  class="form-control form-control-color"
                   id="editCustomColor"
-                  formControlName="color"
-                  style="height: 38px;"
-                  title="Choisir une couleur personnalisée">
+                  formControlName="course_color"
+                  style="height: 38px"
+                  title="Choisir une couleur personnalisée"
+                />
               </div>
             </div>
             <small class="form-text text-muted">
-              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur personnalisée
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur
+              personnalisée
             </small>
           </div>
 
           <!-- Intitulé du cours -->
           <div class="mb-3">
-            <label for="editCourseTitle" class="form-label">Intitulé du cours <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
+            <label for="editCourseTitle" class="form-label"
+              >Intitulé du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
               id="editCourseTitle"
-              formControlName="title"
-              [class.is-invalid]="isEditFieldInvalid('title')"
-              placeholder="Ex: Grammaire française A1">
-            <div *ngIf="isEditFieldInvalid('title')" class="invalid-feedback">
+              formControlName="course_name"
+              [class.is-invalid]="isEditFieldInvalid('course_name')"
+              placeholder="Ex: Grammaire française A1"
+            />
+            <div *ngIf="isEditFieldInvalid('course_name')" class="invalid-feedback">
               L'intitulé du cours est obligatoire (minimum 3 caractères)
             </div>
           </div>
@@ -714,32 +849,38 @@
           <div class="row">
             <!-- Heure de début -->
             <div class="col-md-6 mb-3">
-              <label for="editCourseStartHour" class="form-label">Heure de début <span class="text-danger">*</span></label>
-              <select 
+              <label for="editCourseStartHour" class="form-label"
+                >Heure de début <span class="text-danger">*</span></label
+              >
+              <select
                 id="editCourseStartHour"
                 class="form-select"
-                formControlName="start_hour"
-                [class.is-invalid]="isEditFieldInvalid('start_hour')">
+                formControlName="course_start_hour"
+                [class.is-invalid]="isEditFieldInvalid('course_start_hour')"
+              >
                 <option value="">Sélectionner une heure</option>
                 <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
               </select>
-              <div *ngIf="isEditFieldInvalid('start_hour')" class="invalid-feedback">
+              <div *ngIf="isEditFieldInvalid('course_start_hour')" class="invalid-feedback">
                 L'heure de début est obligatoire
               </div>
             </div>
 
             <!-- Heure de fin -->
             <div class="col-md-6 mb-3">
-              <label for="editCourseEndHour" class="form-label">Heure de fin <span class="text-danger">*</span></label>
-              <select 
+              <label for="editCourseEndHour" class="form-label"
+                >Heure de fin <span class="text-danger">*</span></label
+              >
+              <select
                 id="editCourseEndHour"
                 class="form-select"
-                formControlName="end_hour"
-                [class.is-invalid]="isEditFieldInvalid('end_hour')">
+                formControlName="course_end_hour"
+                [class.is-invalid]="isEditFieldInvalid('course_end_hour')"
+              >
                 <option value="">Sélectionner une heure</option>
                 <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
               </select>
-              <div *ngIf="isEditFieldInvalid('end_hour')" class="invalid-feedback">
+              <div *ngIf="isEditFieldInvalid('course_end_hour')" class="invalid-feedback">
                 L'heure de fin est obligatoire
               </div>
             </div>
@@ -747,13 +888,16 @@
 
           <!-- Date du cours (modification) -->
           <div class="mb-3">
-            <label for="editCourseDay" class="form-label">Date du cours <span class="text-danger">*</span></label>
-            <input 
-              type="date" 
-              class="form-control" 
+            <label for="editCourseDay" class="form-label"
+              >Date du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="date"
+              class="form-control"
               id="editCourseDay"
               formControlName="day"
-              [class.is-invalid]="isEditFieldInvalid('day')">
+              [class.is-invalid]="isEditFieldInvalid('day')"
+            />
             <div *ngIf="isEditFieldInvalid('day')" class="invalid-feedback">
               La date est obligatoire
             </div>
@@ -769,8 +913,16 @@
           <button type="button" class="btn btn-secondary" (click)="onCancelEditCourse()">
             <i class="fas fa-times me-2"></i>Annuler
           </button>
-          <button type="submit" class="btn btn-primary" [disabled]="editLoading || editCourseForm.invalid">
-            <span *ngIf="editLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="editLoading || editCourseForm.invalid"
+          >
+            <span
+              *ngIf="editLoading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+            ></span>
             <i *ngIf="!editLoading" class="fas fa-save me-2"></i>Enregistrer les modifications
           </button>
         </div>
@@ -783,53 +935,53 @@
   .calendar-grid {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
-  
+
   .calendar-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background: #f8f9fa;
     border-bottom: 2px solid #dee2e6;
   }
-  
+
   .day-column-header {
     padding: 15px 10px;
     text-align: center;
     border-right: 1px solid #dee2e6;
     background: #f8f9fa;
   }
-  
+
   .day-column-header:last-child {
     border-right: none;
   }
-  
+
   .day-column-header.today {
     background: rgba(0, 123, 255, 0.1);
     color: #007bff;
     font-weight: bold;
   }
-  
+
   .day-name {
     font-size: 0.9rem;
     font-weight: 600;
     color: #6c757d;
     margin-bottom: 4px;
   }
-  
+
   .day-number {
     font-size: 1.2rem;
     font-weight: bold;
     color: #495057;
   }
-  
+
   .calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     min-height: 500px;
   }
-  
+
   .day-column {
     border-right: 1px solid #dee2e6;
     padding: 10px 8px;
@@ -838,26 +990,26 @@
     position: relative;
     transition: background-color 0.2s;
   }
-  
+
   .day-column:last-child {
     border-right: none;
   }
-  
+
   .day-column:hover {
     background-color: #f8f9fa;
   }
-  
+
   .day-column.today {
     background-color: rgba(0, 123, 255, 0.02);
   }
-  
+
   .course-card {
     margin-bottom: 8px;
     padding: 12px 14px;
     border-radius: 16px;
     font-size: 0.85rem;
     line-height: 1.3;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
@@ -869,7 +1021,7 @@
     flex-direction: column;
     justify-content: center;
   }
-  
+
   .course-card::before {
     content: '';
     position: absolute;
@@ -880,13 +1032,13 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
   }
-  
+
   .course-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
     background-color: #cbd5e0 !important;
   }
-  
+
   .course-time {
     font-weight: 700;
     font-size: 0.75rem;
@@ -899,7 +1051,7 @@
     display: inline-block;
     text-shadow: none;
   }
-  
+
   .course-title {
     font-weight: 700;
     font-size: 0.9rem;
@@ -913,7 +1065,7 @@
     max-height: 2.4em;
     opacity: 1;
   }
-  
+
   .course-teacher {
     font-size: 0.75rem;
     opacity: 0.95;
@@ -923,7 +1075,7 @@
     color: #000;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
   }
-  
+
   .course-group {
     font-size: 0.7rem;
     opacity: 0.85;
@@ -939,7 +1091,7 @@
     max-width: 100%;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
   }
-  
+
   .add-course-zone {
     display: flex;
     flex-direction: column;
@@ -950,35 +1102,35 @@
     border-radius: 6px;
     transition: all 0.2s;
   }
-  
+
   .add-course-zone:hover {
     border-color: #007bff;
     background-color: rgba(0, 123, 255, 0.05);
   }
-  
+
   .add-course-zone i {
     font-size: 1.5rem;
     margin-bottom: 5px;
   }
-  
+
   .add-course-zone span {
     font-size: 0.8rem;
   }
-  
+
   /* Responsive */
   @media (max-width: 768px) {
     .calendar-header,
     .calendar-body {
       grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .day-column {
       min-height: 200px;
     }
-    
+
     .course-card {
       font-size: 0.8rem;
       padding: 6px;
     }
   }
-</style> 
+</style>

@@ -6,11 +6,11 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-    canActivate: [loggedInGuard]
+    canActivate: [loggedInGuard],
   },
   {
     path: '',
     redirectTo: 'login',
-    pathMatch: 'full'
-  }
-]; 
+    pathMatch: 'full',
+  },
+];

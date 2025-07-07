@@ -1,200 +1,23 @@
 <div class="import-container">
-  <!-- En-tête -->
   <div class="import-header">
-    <button class="back-btn" (click)="goBack()">
-      ← Retour à la liste
-    </button>
-    <h1>Importer des étudiants depuis Excel</h1>
-    
-    <!-- Indicateur d'étapes -->
-    <div class="steps-indicator">
-      <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
-        <span class="step-number">1</span>
-        <span class="step-label">Upload</span>
-      </div>
-      <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
-        <span class="step-number">2</span>
-        <span class="step-label">Mapping</span>
-      </div>
-      <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
-        <span class="step-number">3</span>
-        <span class="step-label">Aperçu</span>
-      </div>
-      <div class="step" [class.active]="currentStep === 4">
-        <span class="step-number">4</span>
-        <span class="step-label">Résultats</span>
-      </div>
-    </div>
+    <button class="back-btn" (click)="goBack()">← Retour à la liste</button>
+    <h1>Import d'étudiants</h1>
   </div>
 
-  <!-- Étape 1: Upload du fichier -->
-  <div class="step-content" *ngIf="currentStep === 1">
-    <div class="upload-section">
-      <h2>Sélectionnez votre fichier Excel</h2>
-      <p>Choisissez le fichier Excel contenant les données des étudiants à importer.</p>
-      
-      <div 
-        class="upload-zone"
-        [class.drag-over]="isDragOver"
-        [class.has-file]="selectedFile"
-        (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave($event)"
-        (drop)="onDrop($event)">
-        
-        <div *ngIf="!selectedFile && !isLoading" class="upload-content">
-          <div class="upload-icon">📊</div>
-          <h3>Glissez-déposez votre fichier Excel ici</h3>
-          <p>ou cliquez pour sélectionner</p>
-          <input 
-            type="file" 
-            #fileInput
-            accept=".xlsx,.xls,.xltx,.csv"
-            (change)="onFileSelected($event)"
-            class="file-input">
-          <button class="select-btn" (click)="fileInput.click()">
-            Sélectionner un fichier
-          </button>
-          <div class="supported-formats">
-            Formats supportés: .xlsx, .xls, .xltx, .csv
-          </div>
-        </div>
-
-        <div *ngIf="isLoading" class="loading-content">
-          <div class="spinner"></div>
-          <p>Lecture du fichier en cours...</p>
-        </div>
-      </div>
-
-      <div *ngIf="error" class="error-message">
-        <span class="error-icon">⚠️</span>
-        {{ error }}
-        <button *ngIf="selectedFile" (click)="resetImport()" class="retry-btn">Réessayer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Étape 2: Mapping des colonnes -->
-  <div class="step-content" *ngIf="currentStep === 2">
-    <div class="mapping-section">
-      <h2>Correspondance des colonnes</h2>
-      <p>Indiquez à quoi correspond chaque colonne de votre fichier Excel. Les champs avec une * sont obligatoires.</p>
-      
-      <div class="mapping-table-container">
-        <table class="mapping-table">
-          <thead>
-            <tr>
-              <th>Colonne Excel</th>
-              <th>Exemple de données</th>
-              <th>Correspond à</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let column of excelColumns" class="mapping-row">
-              <td class="excel-column">{{ column }}</td>
-              <td class="example-data">{{ (excelData[0] && excelData[0][column]) || '-' }}</td>
-              <td class="field-select">
-                <select [(ngModel)]="columnMapping[column]" class="field-dropdown">
-                  <option *ngFor="let field of availableFields" [value]="field.key">
-                    {{ field.label }}{{ field.required ? ' *' : '' }}
-                  </option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="import-content">
+    <div class="info-message">
+      <div class="info-icon">ℹ️</div>
+      <h2>{{ message }}</h2>
+      <p>Cette fonctionnalité sera bientôt disponible.</p>
       
       <div *ngIf="error" class="error-message">
         <span class="error-icon">⚠️</span>
         {{ error }}
       </div>
-      
-      <div class="mapping-actions">
-        <button class="secondary-btn" (click)="resetImport()">Recommencer</button>
-        <button class="primary-btn" (click)="goToPreview()">Aperçu des données</button>
-      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary-btn" (click)="goBack()">Retour à la liste des étudiants</button>
     </div>
   </div>
-
-  <!-- Étape 3: Aperçu des données -->
-  <div class="step-content" *ngIf="currentStep === 3">
-    <div class="preview-section">
-      <h2>Aperçu des données à importer</h2>
-      <p>Vérifiez que les données sont correctement formatées avant l'import final.</p>
-      
-      <div class="preview-info">
-        <strong>{{ excelData.length }}</strong> étudiants seront importés
-      </div>
-      
-      <div class="preview-table-container">
-        <table class="preview-table">
-          <thead>
-            <tr>
-              <th *ngFor="let field of availableFields" 
-                  [hidden]="!getObjectValues(columnMapping).includes(field.key) || field.key === ''">
-                {{ field.label }}{{ field.required ? ' *' : '' }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of getPreviewData()">
-              <td *ngFor="let field of availableFields" 
-                  [hidden]="!getObjectValues(columnMapping).includes(field.key) || field.key === ''"
-                  [class.error]="field.required && !row[getExcelColumnForField(field.key)]">
-                {{ row[getExcelColumnForField(field.key)] || '-' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="preview-actions">
-        <button class="secondary-btn" (click)="goBackToMapping()">Modifier le mapping</button>
-        <button class="success-btn" (click)="importStudents()" [disabled]="isLoading">
-          <span *ngIf="isLoading" class="spinner"></span>
-          {{ isLoading ? 'Import en cours...' : 'Importer les étudiants' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Étape 4: Résultats -->
-  <div class="step-content" *ngIf="currentStep === 4">
-    <div class="results-section">
-      <h2>Résultats de l'import</h2>
-      
-      <div class="results-summary">
-        <div class="result-card success">
-          <div class="result-number">{{ importResult?.success || 0 }}</div>
-          <div class="result-label">Étudiants importés</div>
-        </div>
-        <div class="result-card error" *ngIf="(importResult?.errors?.length || 0) > 0">
-          <div class="result-number">{{ importResult?.errors?.length || 0 }}</div>
-          <div class="result-label">Erreurs</div>
-        </div>
-        <div class="result-card total">
-          <div class="result-number">{{ importResult?.total || 0 }}</div>
-          <div class="result-label">Total traité</div>
-        </div>
-      </div>
-
-      <div *ngIf="(importResult?.errors?.length || 0) > 0" class="errors-section">
-        <h4>Détail des erreurs :</h4>
-        <div class="error-list">
-          <div *ngFor="let error of importResult?.errors" class="error-item">
-            {{ error }}
-          </div>
-        </div>
-      </div>
-
-      <div class="final-actions">
-        <button class="secondary-btn" (click)="resetImport()">
-          Importer un autre fichier
-        </button>
-        <button class="primary-btn" (click)="goBack()">
-          Retour à la liste des étudiants
-        </button>
-      </div>
-    </div>
-  </div>
-</div> 
+</div>

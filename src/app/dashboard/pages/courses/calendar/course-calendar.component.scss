@@ -20,8 +20,9 @@ $dark-color: #343a40;
 .schedule-table {
   margin-bottom: 0;
   font-size: 0.875rem;
-  
-  th, td {
+
+  th,
+  td {
     vertical-align: middle;
     border: 1px solid #dee2e6;
     padding: 0;
@@ -45,19 +46,19 @@ $dark-color: #343a40;
   text-align: center;
   padding: 0.75rem 0.5rem;
   min-width: 120px;
-  
+
   &.today {
     background-color: rgba($primary-color, 0.1);
     color: $primary-color;
     font-weight: 600;
   }
-  
+
   .day-name {
     font-weight: 600;
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .day-number {
     font-size: 1.1rem;
     font-weight: 500;
@@ -85,7 +86,7 @@ $dark-color: #343a40;
   position: relative;
   background-color: white;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: rgba($primary-color, 0.05);
   }
@@ -98,13 +99,13 @@ $dark-color: #343a40;
   align-items: center;
   justify-content: center;
   min-height: 70px;
-  
+
   i {
     font-size: 1.2rem;
     opacity: 0.3;
     transition: opacity 0.2s ease;
   }
-  
+
   &:hover i {
     opacity: 0.7;
   }
@@ -118,14 +119,16 @@ $dark-color: #343a40;
   padding: 0.375rem;
   margin-bottom: 0.25rem;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   cursor: pointer;
-  
+
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
   }
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -165,49 +168,49 @@ $dark-color: #343a40;
   .schedule-table {
     font-size: 0.75rem;
   }
-  
+
   .time-header,
   .time-cell {
     width: 60px;
     min-width: 60px;
     padding: 0.5rem 0.25rem;
   }
-  
+
   .day-header {
     min-width: 100px;
     padding: 0.5rem 0.25rem;
-    
+
     .day-name {
       font-size: 0.75rem;
     }
-    
+
     .day-number {
       font-size: 1rem;
     }
   }
-  
+
   .schedule-cell {
     height: 60px;
     min-height: 60px;
     padding: 0.125rem;
   }
-  
+
   .empty-slot {
     min-height: 50px;
-    
+
     i {
       font-size: 1rem;
     }
   }
-  
+
   .course-block {
     padding: 0.25rem;
   }
-  
+
   .course-title {
     font-size: 0.7rem;
   }
-  
+
   .course-time,
   .course-teacher {
     font-size: 0.6rem;
@@ -217,17 +220,17 @@ $dark-color: #343a40;
 @media (max-width: 576px) {
   .day-header {
     min-width: 80px;
-    
+
     .day-name {
       display: none; // Masquer le nom du jour sur très petits écrans
     }
   }
-  
+
   .schedule-cell {
     height: 50px;
     min-height: 50px;
   }
-  
+
   .empty-slot {
     min-height: 40px;
   }
@@ -237,7 +240,7 @@ $dark-color: #343a40;
 .modal-header {
   background-color: $primary-color;
   color: white;
-  
+
   .btn-close {
     filter: invert(1);
   }
@@ -271,13 +274,13 @@ $dark-color: #343a40;
   background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   padding: 1rem;
-  
+
   .week-navigation {
     .btn {
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.3);
         color: white;
@@ -289,27 +292,27 @@ $dark-color: #343a40;
 .calendar-days-header {
   background: #f8f9fa;
   border-bottom: 2px solid #e9ecef;
-  
+
   .day-header-new {
     padding: 1rem;
     text-align: center;
     font-weight: 600;
     border-right: 1px solid #e9ecef;
-    
+
     &:last-child {
       border-right: none;
     }
-    
+
     &.today {
       background: rgba(0, 123, 255, 0.1);
       color: #007bff;
     }
-    
+
     .day-name {
       font-size: 0.875rem;
       margin-bottom: 0.25rem;
     }
-    
+
     .day-number {
       font-size: 1.25rem;
       font-weight: 700;
@@ -320,7 +323,7 @@ $dark-color: #343a40;
 .calendar-body {
   display: flex;
   min-height: 500px;
-  
+
   .day-column {
     flex: 1;
     border-right: 1px solid #e9ecef;
@@ -328,15 +331,15 @@ $dark-color: #343a40;
     cursor: pointer;
     position: relative;
     min-height: 500px;
-    
+
     &:last-child {
       border-right: none;
     }
-    
+
     &:hover {
       background-color: rgba(0, 123, 255, 0.02);
     }
-    
+
     &.today {
       background-color: rgba(0, 123, 255, 0.05);
     }
@@ -356,7 +359,7 @@ $dark-color: #343a40;
   border: none;
   position: relative;
   overflow: hidden;
-  
+
   // Effet de brillance subtile
   &::before {
     content: '';
@@ -368,13 +371,13 @@ $dark-color: #343a40;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
   }
-  
+
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
     filter: brightness(1.05);
   }
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -406,7 +409,7 @@ $dark-color: #343a40;
   opacity: 0.9;
   font-weight: 500;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-  
+
   &.text-muted {
     opacity: 0.7;
     font-style: italic;
@@ -421,7 +424,7 @@ $dark-color: #343a40;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-  
+
   &.text-muted {
     opacity: 0.6;
     font-style: italic;
@@ -438,21 +441,22 @@ $dark-color: #343a40;
   border: 2px dashed #dee2e6;
   border-radius: 8px;
   transition: all 0.3s ease;
-  
+
   &:hover {
     border-color: #007bff;
     background-color: rgba(0, 123, 255, 0.05);
-    
-    i, span {
+
+    i,
+    span {
       color: #007bff !important;
     }
   }
-  
+
   i {
     font-size: 2rem;
     margin-bottom: 0.5rem;
   }
-  
+
   span {
     font-size: 0.875rem;
     font-weight: 500;

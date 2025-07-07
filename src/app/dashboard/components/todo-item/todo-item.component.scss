@@ -48,7 +48,7 @@ $pending-color: #718096;
 
   &.completed {
     opacity: 0.7;
-    
+
     .task-title {
       text-decoration: line-through;
       color: $light-text;
@@ -84,7 +84,7 @@ $pending-color: #718096;
 
     &.clickable {
       cursor: pointer;
-      
+
       &:hover {
         border-color: $primary-color;
         transform: scale(1.1);
@@ -94,7 +94,7 @@ $pending-color: #718096;
     &.completed {
       background: $success-color;
       border-color: $success-color;
-      
+
       .inner-circle svg {
         color: white;
       }
@@ -120,7 +120,9 @@ $pending-color: #718096;
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   // Contenu de la tâche
@@ -171,7 +173,7 @@ $pending-color: #718096;
     padding: 2px 8px;
     border-radius: 4px;
     text-transform: uppercase;
-    
+
     &.pending {
       background: #edf2f7;
       color: $pending-color;
@@ -344,10 +346,10 @@ $pending-color: #718096;
 
     &.subtask {
       margin-left: 16px;
-      
+
       .task-content {
         padding: 12px;
       }
     }
   }
-} 
+}

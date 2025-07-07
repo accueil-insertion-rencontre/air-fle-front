@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { Disability, CreateDisabilityDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { Disability, CreateDisabilityDto } from '@core/models';
 
 @Component({
   selector: 'app-disabilities',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './disabilities.component.html',
-  styleUrls: ['./disabilities.component.scss']
+  styleUrls: ['./disabilities.component.scss'],
 })
 export class DisabilitiesComponent implements OnInit {
   disabilities: Disability[] = [];
@@ -29,11 +29,11 @@ export class DisabilitiesComponent implements OnInit {
   ) {
     this.createForm = this.formBuilder.group({
       label: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['']
+      description: [''],
     });
     this.editForm = this.formBuilder.group({
       label: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['']
+      description: [''],
     });
   }
 
@@ -49,18 +49,26 @@ export class DisabilitiesComponent implements OnInit {
         this.disabilities = disabilities;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des handicaps:', error);
         this.error = 'Erreur lors du chargement des handicaps';
         this.isLoading = false;
-      }
+      },
     });
   }
 
-  get createLabel() { return this.createForm.get('label'); }
-  get createDescription() { return this.createForm.get('description'); }
-  get editLabel() { return this.editForm.get('label'); }
-  get editDescription() { return this.editForm.get('description'); }
+  get createLabel() {
+    return this.createForm.get('label');
+  }
+  get createDescription() {
+    return this.createForm.get('description');
+  }
+  get editLabel() {
+    return this.editForm.get('label');
+  }
+  get editDescription() {
+    return this.editForm.get('description');
+  }
 
   goBack(): void {
     this.router.navigate(['/dashboard/reference-data']);
@@ -78,9 +86,9 @@ export class DisabilitiesComponent implements OnInit {
 
   openEditModal(disability: Disability): void {
     this.selectedDisability = disability;
-    this.editForm.patchValue({ 
+    this.editForm.patchValue({
       label: disability.label,
-      description: disability.description || ''
+      description: disability.description || '',
     });
     this.isEditModalOpen = true;
   }
@@ -93,41 +101,43 @@ export class DisabilitiesComponent implements OnInit {
 
   createDisability(): void {
     if (this.createForm.invalid) return;
-    const disabilityData: CreateDisabilityDto = { 
+    const disabilityData: CreateDisabilityDto = {
       label: this.createForm.value.label,
-      description: this.createForm.value.description || undefined
+      description: this.createForm.value.description || undefined,
     };
     this.referenceDataService.createDisability(disabilityData).subscribe({
       next: (newDisability: Disability) => {
         this.disabilities.push(newDisability);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création du handicap:', error);
         this.error = 'Erreur lors de la création du handicap';
-      }
+      },
     });
   }
 
   updateDisability(): void {
     if (this.editForm.invalid || !this.selectedDisability) return;
-    const disabilityData: CreateDisabilityDto = { 
+    const disabilityData: CreateDisabilityDto = {
       label: this.editForm.value.label,
-      description: this.editForm.value.description || undefined
+      description: this.editForm.value.description || undefined,
     };
-    this.referenceDataService.updateDisability(this.selectedDisability.id, disabilityData).subscribe({
-      next: (updatedDisability: Disability) => {
-        const index = this.disabilities.findIndex(d => d.id === updatedDisability.id);
-        if (index !== -1) {
-          this.disabilities[index] = updatedDisability;
-        }
-        this.closeEditModal();
-      },
-      error: (error) => {
-        console.error('Erreur lors de la mise à jour du handicap:', error);
-        this.error = 'Erreur lors de la mise à jour du handicap';
-      }
-    });
+    this.referenceDataService
+      .updateDisability(this.selectedDisability.id, disabilityData)
+      .subscribe({
+        next: (updatedDisability: Disability) => {
+          const index = this.disabilities.findIndex(d => d.id === updatedDisability.id);
+          if (index !== -1) {
+            this.disabilities[index] = updatedDisability;
+          }
+          this.closeEditModal();
+        },
+        error: error => {
+          console.error('Erreur lors de la mise à jour du handicap:', error);
+          this.error = 'Erreur lors de la mise à jour du handicap';
+        },
+      });
   }
 
   deleteDisability(disability: Disability): void {
@@ -136,10 +146,10 @@ export class DisabilitiesComponent implements OnInit {
         next: () => {
           this.disabilities = this.disabilities.filter(d => d.id !== disability.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du handicap:', error);
           this.error = 'Erreur lors de la suppression du handicap';
-        }
+        },
       });
     }
   }
@@ -147,4 +157,4 @@ export class DisabilitiesComponent implements OnInit {
   trackByDisabilityId(index: number, disability: Disability): string {
     return disability.id;
   }
-} 
+}

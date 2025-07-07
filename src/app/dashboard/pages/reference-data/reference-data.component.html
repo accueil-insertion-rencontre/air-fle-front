@@ -12,32 +12,25 @@
       <div class="column description">DESCRIPTION</div>
       <div class="column actions">ACTIONS</div>
     </div>
-    
-    <div 
-      *ngFor="let config of referenceDataConfigs" 
-      class="section-item"
-    >
+
+    <div *ngFor="let config of referenceDataConfigs" class="section-item">
       <div class="column name">
         <div class="section-name">
           <span class="section-icon">{{ config.icon }}</span>
           {{ config.displayName }}
         </div>
       </div>
-      
+
       <div class="column description">
-        <div class="section-description">
-          Gérer les {{ config.displayName.toLowerCase() }}
-        </div>
+        <div class="section-description">Gérer les {{ config.displayName.toLowerCase() }}</div>
       </div>
-      
+
       <div class="column actions">
-        <button class="manage-btn" (click)="navigateToSection(config)">
-          Gérer
-        </button>
+        <button class="manage-btn" (click)="navigateToSection(config)">Gérer</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Zone de contenu pour les routes enfants -->
-<router-outlet></router-outlet> 
+<router-outlet></router-outlet>

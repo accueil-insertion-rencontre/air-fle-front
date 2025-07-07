@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { Financing, CreateFinancingDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { Financing, CreateFinancingDto } from '@core/models';
 
 @Component({
   selector: 'app-financings',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './financings.component.html',
-  styleUrls: ['./financings.component.scss']
+  styleUrls: ['./financings.component.scss'],
 })
 export class FinancingsComponent implements OnInit {
   financings: Financing[] = [];
@@ -28,10 +28,10 @@ export class FinancingsComponent implements OnInit {
     private router: Router
   ) {
     this.createForm = this.formBuilder.group({
-      type: ['', [Validators.required, Validators.minLength(2)]]
+      type: ['', [Validators.required, Validators.minLength(2)]],
     });
     this.editForm = this.formBuilder.group({
-      type: ['', [Validators.required, Validators.minLength(2)]]
+      type: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -47,16 +47,20 @@ export class FinancingsComponent implements OnInit {
         this.financings = financings;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des financements:', error);
         this.error = 'Erreur lors du chargement des financements';
         this.isLoading = false;
-      }
+      },
     });
   }
 
-  get createType() { return this.createForm.get('type'); }
-  get editType() { return this.editForm.get('type'); }
+  get createType() {
+    return this.createForm.get('type');
+  }
+  get editType() {
+    return this.editForm.get('type');
+  }
 
   goBack(): void {
     this.router.navigate(['/dashboard/reference-data']);
@@ -92,10 +96,10 @@ export class FinancingsComponent implements OnInit {
         this.financings.push(newFinancing);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création du financement:', error);
         this.error = 'Erreur lors de la création du financement';
-      }
+      },
     });
   }
 
@@ -110,10 +114,10 @@ export class FinancingsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la mise à jour du financement:', error);
         this.error = 'Erreur lors de la mise à jour du financement';
-      }
+      },
     });
   }
 
@@ -123,10 +127,10 @@ export class FinancingsComponent implements OnInit {
         next: () => {
           this.financings = this.financings.filter(f => f.id !== financing.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du financement:', error);
           this.error = 'Erreur lors de la suppression du financement';
-        }
+        },
       });
     }
   }
@@ -134,4 +138,4 @@ export class FinancingsComponent implements OnInit {
   trackByFinancingId(index: number, financing: Financing): string {
     return financing.id;
   }
-} 
+}

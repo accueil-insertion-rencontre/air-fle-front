@@ -1,19 +1,18 @@
 <div class="dashboard-container" [class.sidebar-collapsed]="!isSidebarOpen">
   <!-- Sidebar -->
-  <app-sidebar 
-    [(isOpen)]="isSidebarOpen">
-  </app-sidebar>
+  <app-sidebar [(isOpen)]="isSidebarOpen"> </app-sidebar>
 
   <!-- Main Content -->
   <div class="main-content">
     <!-- Navbar -->
-    <app-navbar 
+    <app-navbar
       [userName]="userName"
       [pageTitle]="pageTitle"
       [breadcrumbs]="breadcrumbs"
       (toggleSidebar)="toggleSidebar()"
       (openTicket)="handleOpenTicket()"
-      (openReleaseNotes)="handleOpenReleaseNotes()">
+      (openReleaseNotes)="handleOpenReleaseNotes()"
+    >
     </app-navbar>
 
     <!-- Page Content -->
@@ -21,4 +20,4 @@
       <router-outlet></router-outlet>
     </div>
   </div>
-</div> 
+</div>

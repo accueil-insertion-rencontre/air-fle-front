@@ -23,7 +23,7 @@
 .btn-group {
   .btn {
     padding: 0.25rem 0.5rem;
-    
+
     &:not(:last-child) {
       margin-right: 0.25rem;
     }
@@ -32,7 +32,7 @@
 
 .table {
   margin-bottom: 0;
-  
+
   th {
     font-weight: 600;
     text-transform: uppercase;
@@ -48,11 +48,11 @@ strong {
   border-left: none;
   border-right: none;
   padding: 0.75rem 1.25rem;
-  
+
   &:first-child {
     border-top: none;
   }
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -71,4 +71,4 @@ strong {
 .btn-sm .icon {
   width: 14px;
   height: 14px;
-} 
+}

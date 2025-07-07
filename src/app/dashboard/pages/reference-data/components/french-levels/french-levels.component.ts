@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { FrenchLevel, CreateFrenchLevelDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { FrenchLevel, CreateFrenchLevelDto } from '@core/models';
 
 @Component({
   selector: 'app-french-levels',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './french-levels.component.html',
-  styleUrls: ['./french-levels.component.scss']
+  styleUrls: ['./french-levels.component.scss'],
 })
 export class FrenchLevelsComponent implements OnInit {
   frenchLevels: FrenchLevel[] = [];
@@ -33,12 +33,12 @@ export class FrenchLevelsComponent implements OnInit {
   ) {
     this.createForm = this.formBuilder.group({
       code: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['', [Validators.required, Validators.minLength(3)]]
+      description: ['', [Validators.required, Validators.minLength(3)]],
     });
 
     this.editForm = this.formBuilder.group({
       code: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['', [Validators.required, Validators.minLength(3)]]
+      description: ['', [Validators.required, Validators.minLength(3)]],
     });
   }
 
@@ -52,22 +52,31 @@ export class FrenchLevelsComponent implements OnInit {
 
     this.referenceDataService.getFrenchLevels().subscribe({
       next: (levels: FrenchLevel[]) => {
+        console.log('Données reçues du service:', levels);
         this.frenchLevels = levels;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des niveaux:', error);
         this.error = 'Erreur lors du chargement des niveaux de français';
         this.isLoading = false;
-      }
+      },
     });
   }
 
   // Getters pour les contrôles de formulaire
-  get createCode() { return this.createForm.get('code'); }
-  get createDescription() { return this.createForm.get('description'); }
-  get editCode() { return this.editForm.get('code'); }
-  get editDescription() { return this.editForm.get('description'); }
+  get createCode() {
+    return this.createForm.get('code');
+  }
+  get createDescription() {
+    return this.createForm.get('description');
+  }
+  get editCode() {
+    return this.editForm.get('code');
+  }
+  get editDescription() {
+    return this.editForm.get('description');
+  }
 
   // Navigation
   goBack(): void {
@@ -89,7 +98,7 @@ export class FrenchLevelsComponent implements OnInit {
     this.selectedLevel = level;
     this.editForm.patchValue({
       code: level.code,
-      description: level.description
+      description: level.description,
     });
     this.isEditModalOpen = true;
   }
@@ -106,7 +115,7 @@ export class FrenchLevelsComponent implements OnInit {
 
     const levelData: CreateFrenchLevelDto = {
       code: this.createForm.value.code,
-      description: this.createForm.value.description
+      description: this.createForm.value.description,
     };
 
     this.referenceDataService.createFrenchLevel(levelData).subscribe({
@@ -114,10 +123,10 @@ export class FrenchLevelsComponent implements OnInit {
         this.frenchLevels.push(newLevel);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création du niveau:', error);
         this.error = 'Erreur lors de la création du niveau de français';
-      }
+      },
     });
   }
 
@@ -126,7 +135,7 @@ export class FrenchLevelsComponent implements OnInit {
 
     const levelData: CreateFrenchLevelDto = {
       code: this.editForm.value.code,
-      description: this.editForm.value.description
+      description: this.editForm.value.description,
     };
 
     this.referenceDataService.updateFrenchLevel(this.selectedLevel.id, levelData).subscribe({
@@ -137,10 +146,10 @@ export class FrenchLevelsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la mise à jour du niveau:', error);
         this.error = 'Erreur lors de la mise à jour du niveau de français';
-      }
+      },
     });
   }
 
@@ -150,10 +159,10 @@ export class FrenchLevelsComponent implements OnInit {
         next: () => {
           this.frenchLevels = this.frenchLevels.filter(l => l.id !== level.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du niveau:', error);
           this.error = 'Erreur lors de la suppression du niveau de français';
-        }
+        },
       });
     }
   }
@@ -162,4 +171,4 @@ export class FrenchLevelsComponent implements OnInit {
   trackByLevelId(index: number, level: FrenchLevel): string {
     return level.id;
   }
-} 
+}

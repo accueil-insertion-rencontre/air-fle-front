@@ -19,28 +19,31 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="label" class="form-label">Nom du groupe</label>
-            <input 
-              type="text" 
-              id="label" 
-              formControlName="label" 
-              class="form-control" 
+            <input
+              type="text"
+              id="label"
+              formControlName="label"
+              class="form-control"
               [ngClass]="{ 'is-invalid': submitted && groupForm.get('label')?.errors }"
-              placeholder="Entrez le nom du groupe">
+              placeholder="Entrez le nom du groupe"
+            />
             <div class="invalid-feedback" *ngIf="submitted && groupForm.get('label')?.errors">
               Le nom du groupe est requis.
             </div>
           </div>
-          
+
           <div class="col-md-6">
             <label for="session_id" class="form-label">Session</label>
-            <select 
-              id="session_id" 
-              formControlName="session_id" 
+            <select
+              id="session_id"
+              formControlName="session_id"
               class="form-select"
-              [ngClass]="{ 'is-invalid': submitted && groupForm.get('session_id')?.errors }">
+              [ngClass]="{ 'is-invalid': submitted && groupForm.get('session_id')?.errors }"
+            >
               <option value="">Sélectionnez une session</option>
-              <option *ngFor="let session of sessions" [value]="session.session_id">
-                {{ session.label }} ({{ session.started_at | date: 'dd/MM/yyyy' }} - {{ session.finished_at | date: 'dd/MM/yyyy' }})
+              <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">
+                {{ session.label }} ({{ session.started_at | date: 'dd/MM/yyyy' }} -
+                {{ session.finished_at | date: 'dd/MM/yyyy' }})
               </option>
             </select>
             <div class="invalid-feedback" *ngIf="submitted && groupForm.get('session_id')?.errors">
@@ -48,10 +51,15 @@
             </div>
           </div>
         </div>
-        
+
         <div class="d-grid d-md-flex justify-content-md-end mt-4">
           <button type="submit" class="btn btn-primary" [disabled]="loading">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
             {{ isEditMode ? 'Enregistrer les modifications' : 'Créer le groupe' }}
           </button>
         </div>
@@ -69,8 +77,11 @@
         <div class="col-md-6">
           <h6>Étudiants disponibles</h6>
           <div class="list-group">
-            <div *ngFor="let student of availableStudents" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              {{ student.firstname }} {{ student.lastname }}
+            <div
+              *ngFor="let student of availableStudents"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            >
+              {{ student.student_firstname }} {{ student.student_lastname }}
               <button class="btn btn-sm btn-success" (click)="addStudentToGroup(student)">
                 <i class="icon" data-feather="plus"></i>
               </button>
@@ -80,12 +91,15 @@
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-6">
           <h6>Membres du groupe</h6>
           <div class="list-group">
-            <div *ngFor="let student of selectedStudents" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              {{ student.firstname }} {{ student.lastname }}
+            <div
+              *ngFor="let student of selectedStudents"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            >
+              {{ student.student_firstname }} {{ student.student_lastname }}
               <button class="btn btn-sm btn-danger" (click)="removeStudentFromGroup(student)">
                 <i class="icon" data-feather="trash-2"></i>
               </button>
@@ -98,4 +112,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

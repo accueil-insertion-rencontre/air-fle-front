@@ -1,13 +1,26 @@
 <!-- Modal de confirmation -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" *ngIf="config">
+<div
+  class="modal fade"
+  id="confirmationModal"
+  tabindex="-1"
+  aria-labelledby="confirmationModalLabel"
+  aria-hidden="true"
+  *ngIf="config"
+>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header border-0 pb-0">
         <div class="d-flex align-items-center">
-          <i [class]="getIconClass()" style="font-size: 1.5rem; margin-right: 0.75rem;"></i>
+          <i [class]="getIconClass()" style="font-size: 1.5rem; margin-right: 0.75rem"></i>
           <h5 class="modal-title mb-0" id="confirmationModalLabel">{{ config.title }}</h5>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer" (click)="onCancel()"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fermer"
+          (click)="onCancel()"
+        ></button>
       </div>
       <div class="modal-body pt-2">
         <p class="mb-0">{{ config.message }}</p>
@@ -22,4 +35,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

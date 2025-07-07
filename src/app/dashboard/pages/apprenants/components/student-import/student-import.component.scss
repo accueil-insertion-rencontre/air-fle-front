@@ -14,7 +14,7 @@ $gray-200: #edf2f7;
 $gray-300: #e2e8f0;
 $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-@use "sass:color";
+@use 'sass:color';
 
 .import-container {
   max-width: 1200px;
@@ -539,7 +539,9 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   // Boutons
-  .secondary-btn, .primary-btn, .success-btn {
+  .secondary-btn,
+  .primary-btn,
+  .success-btn {
     padding: 12px 24px;
     border-radius: 8px;
     font-size: 14px;
@@ -598,8 +600,12 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 // Responsive
@@ -637,18 +643,22 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
     .mapping-section .mapping-table-container,
     .preview-section .preview-table-container {
-      .mapping-table, .preview-table {
+      .mapping-table,
+      .preview-table {
         font-size: 12px;
 
-        th, td {
+        th,
+        td {
           padding: 8px;
         }
       }
     }
 
-    .mapping-actions, .preview-actions, .final-actions {
+    .mapping-actions,
+    .preview-actions,
+    .final-actions {
       flex-direction: column;
       align-items: stretch;
     }
   }
-} 
+}

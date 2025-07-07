@@ -3,11 +3,10 @@ import { Injectable } from '@angular/core';
 declare var bootstrap: any;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AlertService {
-
-  constructor() { }
+  constructor() {}
 
   /**
    * Affiche une confirmation stylée
@@ -16,7 +15,7 @@ export class AlertService {
    * @returns Promise<boolean> - true si confirmé, false sinon
    */
   confirm(message: string, title: string = 'Confirmation'): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.createConfirmModal(message, title, resolve);
     });
   }
@@ -28,7 +27,7 @@ export class AlertService {
    * @returns Promise<void>
    */
   success(message: string, title: string = 'Succès'): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.createAlertModal(message, title, 'success', resolve);
     });
   }
@@ -40,7 +39,7 @@ export class AlertService {
    * @returns Promise<void>
    */
   error(message: string, title: string = 'Erreur'): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.createAlertModal(message, title, 'danger', resolve);
     });
   }
@@ -52,7 +51,7 @@ export class AlertService {
    * @returns Promise<void>
    */
   info(message: string, title: string = 'Information'): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.createAlertModal(message, title, 'info', resolve);
     });
   }
@@ -60,9 +59,13 @@ export class AlertService {
   /**
    * Crée une modal de confirmation
    */
-  private createConfirmModal(message: string, title: string, resolve: (value: boolean) => void): void {
+  private createConfirmModal(
+    message: string,
+    title: string,
+    resolve: (value: boolean) => void
+  ): void {
     const modalId = 'confirmModal_' + Date.now();
-    
+
     const modalHtml = `
       <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -90,16 +93,16 @@ export class AlertService {
 
     // Ajouter la modal au DOM
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
+
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
       const modal = new bootstrap.Modal(modalElement);
-      
+
       // Gestion des clics sur les boutons
       modalElement.addEventListener('click', (e: Event) => {
         const target = e.target as HTMLElement;
         const action = target.getAttribute('data-action');
-        
+
         if (action === 'confirm') {
           resolve(true);
           modal.hide();
@@ -108,12 +111,12 @@ export class AlertService {
           modal.hide();
         }
       });
-      
+
       // Cleanup après fermeture
       modalElement.addEventListener('hidden.bs.modal', () => {
         modalElement.remove();
       });
-      
+
       modal.show();
     }
   }
@@ -121,17 +124,22 @@ export class AlertService {
   /**
    * Crée une modal d'alerte
    */
-  private createAlertModal(message: string, title: string, type: string, resolve: () => void): void {
+  private createAlertModal(
+    message: string,
+    title: string,
+    type: string,
+    resolve: () => void
+  ): void {
     const modalId = 'alertModal_' + Date.now();
-    
+
     const typeConfig = {
       success: { icon: 'fa-check-circle', bgClass: 'bg-success' },
       danger: { icon: 'fa-exclamation-circle', bgClass: 'bg-danger' },
-      info: { icon: 'fa-info-circle', bgClass: 'bg-info' }
+      info: { icon: 'fa-info-circle', bgClass: 'bg-info' },
     };
-    
+
     const config = typeConfig[type as keyof typeof typeConfig] || typeConfig.info;
-    
+
     const modalHtml = `
       <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -156,28 +164,28 @@ export class AlertService {
 
     // Ajouter la modal au DOM
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
+
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
       const modal = new bootstrap.Modal(modalElement);
-      
+
       // Gestion du clic sur OK
       modalElement.addEventListener('click', (e: Event) => {
         const target = e.target as HTMLElement;
         const action = target.getAttribute('data-action');
-        
+
         if (action === 'ok') {
           resolve();
           modal.hide();
         }
       });
-      
+
       // Cleanup après fermeture
       modalElement.addEventListener('hidden.bs.modal', () => {
         modalElement.remove();
       });
-      
+
       modal.show();
     }
   }
-} 
+}

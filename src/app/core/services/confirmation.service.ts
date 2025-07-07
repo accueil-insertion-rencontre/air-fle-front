@@ -11,21 +11,21 @@ export interface ConfirmationConfig {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ConfirmationService {
   private confirmationSubject = new BehaviorSubject<ConfirmationConfig | null>(null);
   private resultSubject = new BehaviorSubject<boolean | null>(null);
 
-  constructor() { }
+  constructor() {}
 
   confirm(config: Partial<ConfirmationConfig>): Observable<boolean> {
     const defaultConfig: ConfirmationConfig = {
-      title: 'Confirmer l\'action',
+      title: "Confirmer l'action",
       message: 'Êtes-vous sûr de vouloir continuer ?',
       confirmText: 'Confirmer',
       cancelText: 'Annuler',
-      type: 'danger'
+      type: 'danger',
     };
 
     const finalConfig = { ...defaultConfig, ...config };
@@ -45,4 +45,4 @@ export class ConfirmationService {
     this.resultSubject.next(result);
     this.confirmationSubject.next(null);
   }
-} 
+}

@@ -1,24 +1,25 @@
+import { adminGuard } from '@core/guards';
+
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { UserListComponent } from './user-list/user-list.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
-import { adminGuard } from '../../../core/guards/admin.guard';
 
 const routes: Routes = [
   {
     path: '',
     component: UserListComponent,
-    canActivate: [adminGuard]
+    canActivate: [adminGuard],
   },
   {
     path: 'profile/:id',
     component: UserProfileComponent,
-    canActivate: [adminGuard]
-  }
+    canActivate: [adminGuard],
+  },
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class UsersRoutingModule { } 
+export class UsersRoutingModule {}

@@ -3,53 +3,67 @@
     <div class="task-main">
       <!-- Flèche d'expansion pour les tâches avec sous-tâches -->
       <div class="expand-btn" *ngIf="hasSubtasks()" (click)="toggleExpand()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [class.rotated]="isExpanded">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          [class.rotated]="isExpanded"
+        >
           <polyline points="9,18 15,12 9,6"></polyline>
         </svg>
       </div>
-      
+
       <div class="task-status">
-        <span 
-          class="status-indicator" 
+        <span
+          class="status-indicator"
           [class.completed]="task.status === 'completed'"
           [class.clickable]="isSubTask"
-          (click)="isSubTask ? toggleSubtaskStatus() : null">
+          (click)="isSubTask ? toggleSubtaskStatus() : null"
+        >
         </span>
       </div>
-      
+
       <div class="task-details">
         <div class="task-header">
-          <h4 class="task-title" [class.completed]="task.status === 'completed'">{{ task.title }}</h4>
-          
+          <h4 class="task-title" [class.completed]="task.status === 'completed'">
+            {{ task.title }}
+          </h4>
+
           <!-- Badge de statut pour les tâches parentes -->
-          <span 
-            class="status-badge" 
-            *ngIf="!isSubTask"
-            [style.background-color]="getStatusColor()">
+          <span class="status-badge" *ngIf="!isSubTask" [style.background-color]="getStatusColor()">
             {{ getStatusLabel() }}
           </span>
         </div>
-        
+
         <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
-        
+
         <!-- Barre de progression pour les tâches parentes -->
-        <div class="progress-section" *ngIf="!isSubTask && isMainTask() && getMainTask().subtasks && getMainTask().subtasks!.length > 0">
+        <div
+          class="progress-section"
+          *ngIf="
+            !isSubTask &&
+            isMainTask() &&
+            getMainTask().subtasks &&
+            getMainTask().subtasks!.length > 0
+          "
+        >
           <div class="progress-bar">
-            <div 
-              class="progress-fill" 
-              [style.width.%]="getCompletionPercentage()">
-            </div>
+            <div class="progress-fill" [style.width.%]="getCompletionPercentage()"></div>
           </div>
           <span class="progress-text">{{ getCompletionPercentage() }}% complété</span>
         </div>
-        
+
         <!-- Statistiques pour les tâches parentes -->
         <div class="task-stats" *ngIf="!isSubTask && isMainTask() && getMainTask().statistics">
           <span class="stat-item">
-            <strong>{{ getMainTask().statistics!.completed }}</strong>/{{ getMainTask().statistics!.total }} sous-tâches
+            <strong>{{ getMainTask().statistics!.completed }}</strong
+            >/{{ getMainTask().statistics!.total }} sous-tâches
           </span>
         </div>
-        
+
         <div class="task-meta" *ngIf="isMainTask() && getMainTask().dueAt">
           <span class="due-date" [class.overdue]="isOverdue(getMainTask().dueAt)">
             {{ formatDueDate(getMainTask().dueAt) }}
@@ -60,12 +74,18 @@
   </div>
 
   <!-- Sous-tâches (affichées seulement si expanded) -->
-  <div class="subtasks" *ngIf="isExpanded && isMainTask() && getMainTask().subtasks && getMainTask().subtasks!.length > 0">
-    <app-todo-item 
-      *ngFor="let subTask of getMainTask().subtasks" 
-      [task]="subTask" 
+  <div
+    class="subtasks"
+    *ngIf="
+      isExpanded && isMainTask() && getMainTask().subtasks && getMainTask().subtasks!.length > 0
+    "
+  >
+    <app-todo-item
+      *ngFor="let subTask of getMainTask().subtasks"
+      [task]="subTask"
       [isSubTask]="true"
-      (taskUpdated)="taskUpdated.emit($event)">
+      (taskUpdated)="taskUpdated.emit($event)"
+    >
     </app-todo-item>
   </div>
-</div> 
+</div>

@@ -18,7 +18,7 @@ import { UserListComponent } from './user-list/user-list.component';
     RouterModule,
     HttpClientModule,
     UsersRoutingModule,
-    UserListComponent
-  ]
+    UserListComponent,
+  ],
 })
-export class UsersModule { } 
+export class UsersModule {}

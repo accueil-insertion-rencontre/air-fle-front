@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { ExitReason, CreateExitReasonDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { ExitReason, CreateExitReasonDto } from '@core/models';
 
 @Component({
   selector: 'app-exit-reasons',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './exit-reasons.component.html',
-  styleUrls: ['./exit-reasons.component.scss']
+  styleUrls: ['./exit-reasons.component.scss'],
 })
 export class ExitReasonsComponent implements OnInit {
   exitReasons: ExitReason[] = [];
@@ -32,11 +32,11 @@ export class ExitReasonsComponent implements OnInit {
     private router: Router
   ) {
     this.createForm = this.formBuilder.group({
-      reason: ['', [Validators.required, Validators.minLength(2)]]
+      reason: ['', [Validators.required, Validators.minLength(2)]],
     });
 
     this.editForm = this.formBuilder.group({
-      reason: ['', [Validators.required, Validators.minLength(2)]]
+      reason: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -53,17 +53,21 @@ export class ExitReasonsComponent implements OnInit {
         this.exitReasons = reasons;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des raisons de sortie:', error);
         this.error = 'Erreur lors du chargement des raisons de sortie';
         this.isLoading = false;
-      }
+      },
     });
   }
 
   // Getters pour les contrôles de formulaire
-  get createReason() { return this.createForm.get('reason'); }
-  get editReason() { return this.editForm.get('reason'); }
+  get createReason() {
+    return this.createForm.get('reason');
+  }
+  get editReason() {
+    return this.editForm.get('reason');
+  }
 
   // Navigation
   goBack(): void {
@@ -84,7 +88,7 @@ export class ExitReasonsComponent implements OnInit {
   openEditModal(reason: ExitReason): void {
     this.selectedReason = reason;
     this.editForm.patchValue({
-      reason: reason.reason
+      reason: reason.reason,
     });
     this.isEditModalOpen = true;
   }
@@ -100,7 +104,7 @@ export class ExitReasonsComponent implements OnInit {
     if (this.createForm.invalid) return;
 
     const reasonData: CreateExitReasonDto = {
-      reason: this.createForm.value.reason
+      reason: this.createForm.value.reason,
     };
 
     this.referenceDataService.createExitReason(reasonData).subscribe({
@@ -108,10 +112,10 @@ export class ExitReasonsComponent implements OnInit {
         this.exitReasons.push(newReason);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création de la raison de sortie:', error);
         this.error = 'Erreur lors de la création de la raison de sortie';
-      }
+      },
     });
   }
 
@@ -119,7 +123,7 @@ export class ExitReasonsComponent implements OnInit {
     if (this.editForm.invalid || !this.selectedReason) return;
 
     const reasonData: CreateExitReasonDto = {
-      reason: this.editForm.value.reason
+      reason: this.editForm.value.reason,
     };
 
     this.referenceDataService.updateExitReason(this.selectedReason.id, reasonData).subscribe({
@@ -130,10 +134,10 @@ export class ExitReasonsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la mise à jour de la raison de sortie:', error);
         this.error = 'Erreur lors de la mise à jour de la raison de sortie';
-      }
+      },
     });
   }
 
@@ -143,10 +147,10 @@ export class ExitReasonsComponent implements OnInit {
         next: () => {
           this.exitReasons = this.exitReasons.filter(r => r.id !== reason.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression de la raison de sortie:', error);
           this.error = 'Erreur lors de la suppression de la raison de sortie';
-        }
+        },
       });
     }
   }
@@ -155,4 +159,4 @@ export class ExitReasonsComponent implements OnInit {
   trackByReasonId(index: number, reason: ExitReason): string {
     return reason.id;
   }
-} 
+}

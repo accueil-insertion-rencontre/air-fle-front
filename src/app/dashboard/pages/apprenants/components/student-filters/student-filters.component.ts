@@ -1,17 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { StudentFilters } from '../../models/student.model';
-import { Level } from '../../models/level.model';
-import { Status } from '../../models/status.model';
-import { Nationality } from '../../models/nationality.model';
+import { StudentFilters } from '@core/models';
+import { Level, Status, Nationality } from '@core/models';
 
 @Component({
   selector: 'app-student-filters',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './student-filters.component.html',
-  styleUrls: ['./student-filters.component.scss']
+  styleUrls: ['./student-filters.component.scss'],
 })
 export class StudentFiltersComponent {
   @Input() levels: Level[] = [];
@@ -25,7 +23,7 @@ export class StudentFiltersComponent {
     email: '',
     level: '',
     status: '',
-    nationality: ''
+    nationality: '',
   };
 
   onFiltersChange(): void {
@@ -39,8 +37,8 @@ export class StudentFiltersComponent {
       email: '',
       level: '',
       status: '',
-      nationality: ''
+      nationality: '',
     };
     this.filtersChange.emit(this.filters);
   }
-} 
+}

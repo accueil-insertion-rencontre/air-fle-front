@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { Gender, CreateGenderDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { Gender, CreateGenderDto } from '@core/models';
 
 @Component({
   selector: 'app-genders',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './genders.component.html',
-  styleUrls: ['./genders.component.scss']
+  styleUrls: ['./genders.component.scss'],
 })
 export class GendersComponent implements OnInit {
   genders: Gender[] = [];
@@ -32,11 +32,11 @@ export class GendersComponent implements OnInit {
     private router: Router
   ) {
     this.createForm = this.formBuilder.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
 
     this.editForm = this.formBuilder.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -53,17 +53,21 @@ export class GendersComponent implements OnInit {
         this.genders = genders;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des genres:', error);
         this.error = 'Erreur lors du chargement des genres';
         this.isLoading = false;
-      }
+      },
     });
   }
 
   // Getters pour les contrôles de formulaire
-  get createLabel() { return this.createForm.get('label'); }
-  get editLabel() { return this.editForm.get('label'); }
+  get createLabel() {
+    return this.createForm.get('label');
+  }
+  get editLabel() {
+    return this.editForm.get('label');
+  }
 
   // Navigation
   goBack(): void {
@@ -84,7 +88,7 @@ export class GendersComponent implements OnInit {
   openEditModal(gender: Gender): void {
     this.selectedGender = gender;
     this.editForm.patchValue({
-      label: gender.label
+      label: gender.label,
     });
     this.isEditModalOpen = true;
   }
@@ -100,7 +104,7 @@ export class GendersComponent implements OnInit {
     if (this.createForm.invalid) return;
 
     const genderData: CreateGenderDto = {
-      label: this.createForm.value.label
+      label: this.createForm.value.label,
     };
 
     this.referenceDataService.createGender(genderData).subscribe({
@@ -108,10 +112,10 @@ export class GendersComponent implements OnInit {
         this.genders.push(newGender);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création du genre:', error);
         this.error = 'Erreur lors de la création du genre';
-      }
+      },
     });
   }
 
@@ -119,7 +123,7 @@ export class GendersComponent implements OnInit {
     if (this.editForm.invalid || !this.selectedGender) return;
 
     const genderData: CreateGenderDto = {
-      label: this.editForm.value.label
+      label: this.editForm.value.label,
     };
 
     this.referenceDataService.updateGender(this.selectedGender.id, genderData).subscribe({
@@ -130,10 +134,10 @@ export class GendersComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la mise à jour du genre:', error);
         this.error = 'Erreur lors de la mise à jour du genre';
-      }
+      },
     });
   }
 
@@ -143,10 +147,10 @@ export class GendersComponent implements OnInit {
         next: () => {
           this.genders = this.genders.filter(g => g.id !== gender.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du genre:', error);
           this.error = 'Erreur lors de la suppression du genre';
-        }
+        },
       });
     }
   }
@@ -155,4 +159,4 @@ export class GendersComponent implements OnInit {
   trackByGenderId(index: number, gender: Gender): string {
     return gender.id;
   }
-} 
+}

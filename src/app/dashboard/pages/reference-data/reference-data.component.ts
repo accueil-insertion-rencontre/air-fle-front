@@ -3,17 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { ReferenceDataType, ReferenceDataConfig } from './models/reference-data.model';
+import { ReferenceDataType, ReferenceDataConfig } from '@core/models';
 
 @Component({
   selector: 'app-reference-data',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './reference-data.component.html',
-  styleUrls: ['./reference-data.component.scss']
+  styleUrls: ['./reference-data.component.scss'],
 })
 export class ReferenceDataComponent implements OnInit, OnDestroy {
-  
   isChildRouteActive = false;
   private routerSubscription: Subscription | null = null;
 
@@ -24,9 +23,7 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
       endpoint: 'nationalities',
       displayName: 'Nationalités',
       icon: '🌍',
-      columns: [
-        { key: 'label', label: 'Libellé', sortable: true }
-      ]
+      columns: [{ key: 'label', label: 'Libellé', sortable: true }],
     },
     {
       type: ReferenceDataType.FRENCH_LEVELS,
@@ -35,26 +32,22 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
       icon: '📚',
       columns: [
         { key: 'code', label: 'Code', sortable: true },
-        { key: 'description', label: 'Description', sortable: true }
-      ]
+        { key: 'description', label: 'Description', sortable: true },
+      ],
     },
     {
       type: ReferenceDataType.GENDERS,
       endpoint: 'genders',
       displayName: 'Genres',
       icon: '👥',
-      columns: [
-        { key: 'label', label: 'Libellé', sortable: true }
-      ]
+      columns: [{ key: 'label', label: 'Libellé', sortable: true }],
     },
     {
       type: ReferenceDataType.EXIT_REASONS,
       endpoint: 'exit-reasons',
       displayName: 'Raisons de Sortie',
       icon: '📤',
-      columns: [
-        { key: 'reason', label: 'Raison', sortable: true }
-      ]
+      columns: [{ key: 'reason', label: 'Raison', sortable: true }],
     },
     {
       type: ReferenceDataType.ORIENTATIONS,
@@ -63,26 +56,22 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
       icon: '🎯',
       columns: [
         { key: 'type', label: 'Type', sortable: true },
-        { key: 'description', label: 'Description', sortable: false }
-      ]
+        { key: 'description', label: 'Description', sortable: false },
+      ],
     },
     {
       type: ReferenceDataType.STATUSES,
       endpoint: 'statuses',
       displayName: 'Statuts',
       icon: '📊',
-      columns: [
-        { key: 'label', label: 'Libellé', sortable: true }
-      ]
+      columns: [{ key: 'label', label: 'Libellé', sortable: true }],
     },
     {
       type: ReferenceDataType.FINANCINGS,
       endpoint: 'financings',
       displayName: 'Types de Financement',
       icon: '💰',
-      columns: [
-        { key: 'type', label: 'Type', sortable: true }
-      ]
+      columns: [{ key: 'type', label: 'Type', sortable: true }],
     },
     {
       type: ReferenceDataType.DISABILITIES,
@@ -91,9 +80,9 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
       icon: '♿',
       columns: [
         { key: 'label', label: 'Libellé', sortable: true },
-        { key: 'description', label: 'Description', sortable: false }
-      ]
-    }
+        { key: 'description', label: 'Description', sortable: false },
+      ],
+    },
   ];
 
   constructor(private router: Router) {}
@@ -101,13 +90,13 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Vérifier l'état initial
     this.checkChildRouteStatus();
-    
+
     // Écouter les changements de navigation
-    this.routerSubscription = this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.checkChildRouteStatus();
-    });
+    this.routerSubscription = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.checkChildRouteStatus();
+      });
   }
 
   ngOnDestroy(): void {
@@ -117,11 +106,12 @@ export class ReferenceDataComponent implements OnInit, OnDestroy {
   // Vérifier si on est dans une route enfant
   private checkChildRouteStatus(): void {
     const url = this.router.url;
-    this.isChildRouteActive = url !== '/dashboard/reference-data' && url.startsWith('/dashboard/reference-data/');
+    this.isChildRouteActive =
+      url !== '/dashboard/reference-data' && url.startsWith('/dashboard/reference-data/');
   }
 
   // Navigation vers une section spécifique
   navigateToSection(config: ReferenceDataConfig): void {
     this.router.navigate(['/dashboard/reference-data', config.type]);
   }
-} 
+}

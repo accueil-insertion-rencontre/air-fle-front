@@ -9,19 +9,29 @@ $bg-disabled: #cccccc;
 
 // Mixins pour la réactivité
 @mixin for-phone-only {
-  @media (max-width: 599px) { @content; }
+  @media (max-width: 599px) {
+    @content;
+  }
 }
 @mixin for-tablet-portrait-up {
-  @media (min-width: 600px) { @content; }
+  @media (min-width: 600px) {
+    @content;
+  }
 }
 @mixin for-tablet-landscape-up {
-  @media (min-width: 900px) { @content; }
+  @media (min-width: 900px) {
+    @content;
+  }
 }
 @mixin for-desktop-up {
-  @media (min-width: 1200px) { @content; }
+  @media (min-width: 1200px) {
+    @content;
+  }
 }
 @mixin for-big-desktop-up {
-  @media (min-width: 1800px) { @content; }
+  @media (min-width: 1800px) {
+    @content;
+  }
 }
 
 // Styles du conteneur principal
@@ -63,7 +73,7 @@ $bg-disabled: #cccccc;
   max-width: 400px;
   padding: 30px;
   box-sizing: border-box;
-  
+
   @include for-phone-only {
     padding: 20px;
     max-width: 100%;
@@ -73,23 +83,23 @@ $bg-disabled: #cccccc;
 .login-header {
   text-align: center;
   margin-bottom: 25px;
-  
+
   h2 {
     font-size: 28px;
     font-weight: 600;
     color: $primary-color;
     margin-bottom: 8px;
-    
+
     @include for-phone-only {
       font-size: 24px;
     }
   }
-  
+
   p {
     font-size: 14px;
     color: $text-light;
     margin: 0;
-    
+
     @include for-phone-only {
       font-size: 13px;
     }
@@ -99,7 +109,7 @@ $bg-disabled: #cccccc;
 .form-group {
   margin-bottom: 18px;
   width: 100%;
-  
+
   label {
     display: block;
     font-size: 14px;
@@ -107,7 +117,7 @@ $bg-disabled: #cccccc;
     color: $text-color;
     margin-bottom: 6px;
   }
-  
+
   input {
     width: 100%;
     padding: 10px 12px;
@@ -116,22 +126,22 @@ $bg-disabled: #cccccc;
     font-size: 14px;
     transition: border 0.3s ease;
     box-sizing: border-box;
-    
+
     &:focus {
       border-color: $primary-color;
       outline: none;
       box-shadow: 0 0 0 2px rgba(0, 200, 179, 0.1);
     }
-    
+
     &.is-invalid {
       border-color: $error-color;
     }
-    
+
     @include for-phone-only {
       padding: 8px 10px;
     }
   }
-  
+
   .error-message {
     color: $error-color;
     font-size: 12px;
@@ -149,22 +159,24 @@ $bg-disabled: #cccccc;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  
+  transition:
+    background-color 0.3s ease,
+    transform 0.1s ease;
+
   &:hover {
     background-color: $primary-color-dark;
   }
-  
+
   &:active {
     transform: scale(0.98);
   }
-  
+
   &:disabled {
     background-color: $bg-disabled;
     cursor: not-allowed;
     transform: none;
   }
-  
+
   @include for-phone-only {
     padding: 10px;
     font-size: 15px;
@@ -176,7 +188,7 @@ $bg-disabled: #cccccc;
   align-items: center;
   margin-bottom: 20px;
   user-select: none;
-  
+
   span {
     font-size: 13px;
     color: $text-light;
@@ -193,7 +205,7 @@ $bg-disabled: #cccccc;
   flex-shrink: 0;
 }
 
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -207,18 +219,18 @@ $bg-disabled: #cccccc;
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 14px;
   width: 14px;
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 input:checked + .slider {
@@ -244,17 +256,17 @@ input:checked + .slider:before {
 .login-footer {
   text-align: center;
   margin-top: 20px;
-  
+
   .logo {
     max-width: 50px;
     height: auto;
     opacity: 0.8;
     transition: opacity 0.3s ease;
-    
+
     &:hover {
       opacity: 1;
     }
-    
+
     @include for-phone-only {
       max-width: 40px;
     }
@@ -273,7 +285,7 @@ input:checked + .slider:before {
   .login-card {
     max-width: 450px;
   }
-  
+
   .login-header h2 {
     font-size: 32px;
   }
@@ -286,10 +298,10 @@ input:checked + .slider:before {
   border-radius: 8px;
   margin-bottom: 20px;
   font-size: 13px;
-  
+
   &.alert-danger {
     background-color: rgba(255, 82, 82, 0.1);
     color: #d32f2f;
     border: 1px solid rgba(255, 82, 82, 0.2);
   }
-} 
+}

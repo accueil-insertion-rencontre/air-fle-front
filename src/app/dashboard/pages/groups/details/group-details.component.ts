@@ -1,14 +1,11 @@
+import { AlertService, CourseService, GroupService, StudentService } from '@core/services';
+
+import { Course, Group, Student } from '@core/models';
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { GroupService } from '../../../../core/services/group.service';
-import { StudentService } from '../../../../core/services/student.service';
-import { CourseService } from '../../../../core/services/course.service';
-import { AlertService } from '../../../../core/services/alert.service';
-import { Group } from '../../../../core/models/group.model';
-import { Student } from '../../../../core/models/student.model';
-import { Course } from '../../../../core/models/course.model';
 
 declare var bootstrap: any;
 
@@ -17,14 +14,14 @@ declare var bootstrap: any;
   templateUrl: './group-details.component.html',
   styleUrls: ['./group-details.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule]
+  imports: [CommonModule, RouterModule, FormsModule],
 })
 export class GroupDetailsComponent implements OnInit {
   groupId!: string | number;
   group: Group | null = null;
   students: Student[] = [];
   loading = true;
-  
+
   // Propriétés pour l'ajout d'étudiants
   addStudentModal: any;
   availableStudents: Student[] = [];
@@ -33,7 +30,7 @@ export class GroupDetailsComponent implements OnInit {
   searchTerm: string = '';
   loadingStudents = false;
   studentSearchTimeout: any;
-  
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -42,15 +39,15 @@ export class GroupDetailsComponent implements OnInit {
     private courseService: CourseService,
     private alertService: AlertService
   ) {}
-  
+
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       if (params['id']) {
         console.log('ID reçu dans la route:', params['id'], 'type:', typeof params['id']);
-        
+
         // L'ID peut être soit un number soit un string (UUID)
         const rawId = params['id'];
-        
+
         // Essayer de convertir en number si c'est numérique
         if (!isNaN(+rawId) && rawId !== '') {
           this.groupId = +rawId;
@@ -59,30 +56,30 @@ export class GroupDetailsComponent implements OnInit {
           this.groupId = rawId;
           console.log('ID gardé comme string:', this.groupId);
         }
-        
+
         this.loadGroup();
       }
     });
   }
-  
+
   loadGroup(): void {
     console.log('loadGroup appelée avec groupId:', this.groupId, 'type:', typeof this.groupId);
-    
+
     // Pour l'API, on utilise l'ID tel quel
     const apiId = this.groupId;
     console.log('apiId à envoyer:', apiId);
-    
+
     this.groupService.getGroupById(apiId).subscribe({
-      next: (data) => {
+      next: data => {
         console.log('Données de groupe reçues:', data);
         this.group = data;
         this.loading = false;
-        
+
         // Debug pour voir les étudiants
         console.log('Étudiants dans le groupe:', this.group.students);
         console.log('Type des étudiants:', typeof this.group.students);
         console.log('Longueur des étudiants:', this.group.students?.length);
-        
+
         // Si le groupe a des étudiants, on les récupère
         if (this.group.students && Array.isArray(this.group.students)) {
           // L'API retourne des objets de relation qui contiennent les données d'étudiant dans la propriété "student"
@@ -100,13 +97,13 @@ export class GroupDetailsComponent implements OnInit {
           this.students = [];
         }
       },
-      error: (err) => {
+      error: err => {
         console.error('Erreur lors du chargement du groupe', err);
         this.loading = false;
-      }
+      },
     });
   }
-  
+
   formatDate(date: any): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
@@ -117,19 +114,20 @@ export class GroupDetailsComponent implements OnInit {
    */
   deleteGroup(): void {
     if (!this.group) return;
-    
-    const confirmMessage = this.students.length > 0 
-      ? `Êtes-vous sûr de vouloir supprimer le groupe "${this.group.label}" ?\n\n` +
-        `Ce groupe contient ${this.students.length} étudiant(s). Ils seront retirés du groupe mais ne seront pas supprimés.\n` +
-        `Tous les cours associés à ce groupe seront également supprimés.\n` +
-        `La session ne sera pas affectée.\n\n` +
-        'Cette action est irréversible.'
-      : `Êtes-vous sûr de vouloir supprimer le groupe "${this.group.label}" ?\n\n` +
-        `Tous les cours associés à ce groupe seront également supprimés.\n` +
-        `La session ne sera pas affectée.\n\n` +
-        'Cette action est irréversible.';
-    
-    this.alertService.confirm(confirmMessage, 'Supprimer le groupe').then((confirmed) => {
+
+    const confirmMessage =
+      this.students.length > 0
+        ? `Êtes-vous sûr de vouloir supprimer le groupe "${this.group.label}" ?\n\n` +
+          `Ce groupe contient ${this.students.length} étudiant(s). Ils seront retirés du groupe mais ne seront pas supprimés.\n` +
+          `Tous les cours associés à ce groupe seront également supprimés.\n` +
+          `La session ne sera pas affectée.\n\n` +
+          'Cette action est irréversible.'
+        : `Êtes-vous sûr de vouloir supprimer le groupe "${this.group.label}" ?\n\n` +
+          `Tous les cours associés à ce groupe seront également supprimés.\n` +
+          `La session ne sera pas affectée.\n\n` +
+          'Cette action est irréversible.';
+
+    this.alertService.confirm(confirmMessage, 'Supprimer le groupe').then(confirmed => {
       if (confirmed) {
         this.startGroupDeletion();
       }
@@ -143,21 +141,22 @@ export class GroupDetailsComponent implements OnInit {
     try {
       console.log('=== DÉBUT DU PROCESSUS DE SUPPRESSION DU GROUPE ===');
       console.log('Groupe à supprimer:', this.group?.label);
-      
+
       // Étape 1: Supprimer tous les cours associés au groupe
       await this.deleteAllGroupCourses();
-      
+
       // Étape 2: Retirer tous les étudiants du groupe
       if (this.students.length > 0) {
         await this.removeAllStudentsFromGroup();
       }
-      
+
       // Étape 3: Supprimer le groupe lui-même
       this.performGroupDeletion();
-      
     } catch (error) {
       console.error('Erreur lors du processus de suppression:', error);
-      this.alertService.error('Erreur lors de la suppression. Certaines étapes ont peut-être échoué.');
+      this.alertService.error(
+        'Erreur lors de la suppression. Certaines étapes ont peut-être échoué.'
+      );
     }
   }
 
@@ -166,24 +165,27 @@ export class GroupDetailsComponent implements OnInit {
    */
   private async deleteAllGroupCourses(): Promise<void> {
     console.log('Suppression des cours associés au groupe:', this.groupId);
-    
+
     try {
       // Récupérer tous les cours du groupe
       const courses = await this.courseService.getCoursesByGroupId(this.groupId).toPromise();
-      
+
       if (!courses || courses.length === 0) {
         console.log('Aucun cours trouvé pour ce groupe');
         return;
       }
-      
-      console.log(`${courses.length} cours trouvés à supprimer:`, courses.map(c => c.title));
-      
+
+      console.log(
+        `${courses.length} cours trouvés à supprimer:`,
+        courses.map(c => c.title)
+      );
+
       // Supprimer tous les cours individuellement avec gestion d'erreur par cours
       const deleteResults = await Promise.allSettled(
         courses.map(async course => {
-        const courseId = course.course_id || course.id;
-        if (courseId) {
-          console.log('Suppression du cours:', course.title, 'ID:', courseId);
+          const courseId = course.course_id || course.id;
+          if (courseId) {
+            console.log('Suppression du cours:', course.title, 'ID:', courseId);
             try {
               await this.courseService.deleteCourse(courseId).toPromise();
               console.log('✅ Cours supprimé avec succès:', course.title);
@@ -192,26 +194,31 @@ export class GroupDetailsComponent implements OnInit {
               console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
               return { success: false, course: course.title, error };
             }
-        } else {
-          console.warn('Cours sans ID trouvé:', course);
-            return { success: false, course: course.title || 'Cours sans nom', error: 'Pas d\'ID' };
-        }
+          } else {
+            console.warn('Cours sans ID trouvé:', course);
+            return { success: false, course: course.title || 'Cours sans nom', error: "Pas d'ID" };
+          }
         })
       );
-      
+
       // Analyser les résultats
-      const successful = deleteResults.filter(r => r.status === 'fulfilled' && r.value.success).length;
-      const failed = deleteResults.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
-      
+      const successful = deleteResults.filter(
+        r => r.status === 'fulfilled' && r.value.success
+      ).length;
+      const failed = deleteResults.filter(
+        r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)
+      ).length;
+
       console.log(`Résultats suppression cours: ${successful} réussis, ${failed} échoués`);
-      
+
       if (failed > 0) {
-        console.warn(`${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`);
+        console.warn(
+          `${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`
+        );
         // On continue quand même avec la suppression du groupe
       } else {
-      console.log('Tous les cours ont été supprimés avec succès');
+        console.log('Tous les cours ont été supprimés avec succès');
       }
-      
     } catch (error) {
       console.error('Erreur lors de la récupération des cours du groupe:', error);
       console.warn('Impossible de récupérer les cours, on continue avec la suppression du groupe');
@@ -224,11 +231,13 @@ export class GroupDetailsComponent implements OnInit {
    */
   private async removeAllStudentsFromGroup(): Promise<void> {
     console.log(`Suppression de ${this.students.length} étudiants du groupe avant suppression`);
-    
+
     const removePromises = this.students.map(student => {
       const studentId = (student as any).id || (student as any).student_id;
-      console.log('Retrait de l\'étudiant avec ID:', studentId, 'du groupe:', this.groupId);
-      return this.groupService.removeStudentFromGroup(this.groupId, studentId.toString()).toPromise();
+      console.log("Retrait de l'étudiant avec ID:", studentId, 'du groupe:', this.groupId);
+      return this.groupService
+        .removeStudentFromGroup(this.groupId, studentId.toString())
+        .toPromise();
     });
 
     await Promise.all(removePromises);
@@ -240,44 +249,46 @@ export class GroupDetailsComponent implements OnInit {
    */
   private performGroupDeletion(): void {
     console.log('Tentative de suppression du groupe ID:', this.groupId);
-    
+
     this.groupService.deleteGroup(this.groupId).subscribe({
       next: () => {
         console.log('Groupe supprimé avec succès');
-        const successMessage = `Groupe "${this.group?.label}" supprimé avec succès !\n\n` +
-                              `✅ Cours associés supprimés\n` +
-                              `✅ Étudiants retirés du groupe (mais non supprimés)\n` +
-                              `✅ Groupe supprimé\n` +
-                              `ℹ️ La session reste intacte`;
-        
+        const successMessage =
+          `Groupe "${this.group?.label}" supprimé avec succès !\n\n` +
+          `✅ Cours associés supprimés\n` +
+          `✅ Étudiants retirés du groupe (mais non supprimés)\n` +
+          `✅ Groupe supprimé\n` +
+          `ℹ️ La session reste intacte`;
+
         this.alertService.success(successMessage).then(() => {
           this.router.navigate(['/dashboard/groups']);
         });
       },
-      error: (err) => {
+      error: err => {
         console.error('Erreur lors de la suppression du groupe', err);
-        console.error('Détails de l\'erreur:', {
+        console.error("Détails de l'erreur:", {
           status: err.status,
           statusText: err.statusText,
           message: err.message,
-          errorDetails: err.error
+          errorDetails: err.error,
         });
-        
+
         // Message d'erreur plus informatif
         let errorMessage = 'Erreur lors de la suppression du groupe.';
-        
+
         if (err.error && err.error.message) {
           if (err.error.message.includes('constraint')) {
-            errorMessage = 'Impossible de supprimer le groupe : il est encore lié à d\'autres éléments. ' +
-                          'Les cours et étudiants ont été traités, mais le groupe lui-même ne peut être supprimé. ' +
-                          'Contactez l\'administrateur.';
+            errorMessage =
+              "Impossible de supprimer le groupe : il est encore lié à d'autres éléments. " +
+              'Les cours et étudiants ont été traités, mais le groupe lui-même ne peut être supprimé. ' +
+              "Contactez l'administrateur.";
           } else {
             errorMessage = `Erreur API: ${err.error.message}`;
           }
         }
-        
+
         this.alertService.error(errorMessage);
-      }
+      },
     });
   }
 
@@ -288,7 +299,7 @@ export class GroupDetailsComponent implements OnInit {
    */
   openAddStudentModal(): void {
     this.loadAvailableStudents();
-    
+
     const modalElement = document.getElementById('addStudentModal');
     if (modalElement) {
       this.addStudentModal = new bootstrap.Modal(modalElement);
@@ -302,31 +313,31 @@ export class GroupDetailsComponent implements OnInit {
   loadAvailableStudents(): void {
     this.loadingStudents = true;
     console.log('Chargement des étudiants disponibles...');
-    
+
     this.studentService.getAllStudents().subscribe({
-      next: (allStudents) => {
+      next: allStudents => {
         console.log('Tous les étudiants reçus:', allStudents.length);
         console.log('Premier étudiant exemple:', allStudents[0]);
-        
+
         // Filtrer les étudiants qui ne sont pas déjà dans le groupe
         // Maintenant this.students contient les objets étudiants extraits
         const currentStudentIds = this.students.map(student => (student as any).id);
         console.log('IDs des étudiants déjà dans le groupe:', currentStudentIds);
-        
-        this.availableStudents = allStudents.filter(student => 
-          !currentStudentIds.includes((student as any).id || student.student_id)
+
+        this.availableStudents = allStudents.filter(
+          student => !currentStudentIds.includes((student as any).id || student.student_uuid)
         );
         this.filteredStudents = [...this.availableStudents];
         this.loadingStudents = false;
-        
+
         console.log('Étudiants disponibles après filtrage:', this.availableStudents.length);
         console.log('Étudiants disponibles:', this.availableStudents);
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des étudiants:', error);
         this.loadingStudents = false;
         this.alertService.error('Erreur lors du chargement des étudiants');
-      }
+      },
     });
   }
 
@@ -338,16 +349,17 @@ export class GroupDetailsComponent implements OnInit {
     if (this.studentSearchTimeout) {
       clearTimeout(this.studentSearchTimeout);
     }
-    
+
     this.studentSearchTimeout = setTimeout(() => {
       if (this.searchTerm.trim() === '') {
         this.filteredStudents = [...this.availableStudents];
       } else {
         const searchLower = this.searchTerm.toLowerCase();
-        this.filteredStudents = this.availableStudents.filter(student =>
-          student.firstname.toLowerCase().includes(searchLower) ||
-          student.lastname.toLowerCase().includes(searchLower) ||
-          (student.email && student.email.toLowerCase().includes(searchLower))
+        this.filteredStudents = this.availableStudents.filter(
+          student =>
+                  student.student_firstname.toLowerCase().includes(searchLower) ||
+      student.student_lastname.toLowerCase().includes(searchLower) ||
+            (student.student_mail && student.student_mail.toLowerCase().includes(searchLower))
         );
       }
     }, 300);
@@ -357,20 +369,20 @@ export class GroupDetailsComponent implements OnInit {
    * Toggle la sélection d'un étudiant
    */
   toggleStudentSelection(student: Student): void {
-    console.log('toggleStudentSelection appelée pour:', student.firstname, student.lastname);
+    console.log('toggleStudentSelection appelée pour:', student.student_firstname, student.student_lastname);
     console.log('Objet étudiant complet:', student);
-    
+
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || (student as any).student_id;
+    const studentId = (student as any).id || student.student_uuid;
     console.log('ID étudiant extrait:', studentId);
-    
-    const index = this.selectedStudents.findIndex(s => 
-      ((s as any).id || s.student_id) === studentId
+
+    const index = this.selectedStudents.findIndex(
+      s => ((s as any).id || s.student_uuid) === studentId
     );
-    
+
     console.log('Index dans selectedStudents:', index);
-    console.log('Nombre d\'étudiants sélectionnés avant:', this.selectedStudents.length);
-    
+    console.log("Nombre d'étudiants sélectionnés avant:", this.selectedStudents.length);
+
     if (index > -1) {
       this.selectedStudents.splice(index, 1);
       console.log('Étudiant retiré de la sélection');
@@ -378,9 +390,12 @@ export class GroupDetailsComponent implements OnInit {
       this.selectedStudents.push(student);
       console.log('Étudiant ajouté à la sélection');
     }
-    
-    console.log('Nombre d\'étudiants sélectionnés après:', this.selectedStudents.length);
-    console.log('Liste des étudiants sélectionnés:', this.selectedStudents.map(s => s.firstname + ' ' + s.lastname));
+
+    console.log("Nombre d'étudiants sélectionnés après:", this.selectedStudents.length);
+    console.log(
+      'Liste des étudiants sélectionnés:',
+      this.selectedStudents.map(s => s.firstname + ' ' + s.lastname)
+    );
   }
 
   /**
@@ -398,10 +413,8 @@ export class GroupDetailsComponent implements OnInit {
    */
   isStudentSelected(student: Student): boolean {
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || (student as any).student_id;
-    return this.selectedStudents.some(s => 
-      ((s as any).id || s.student_id) === studentId
-    );
+    const studentId = (student as any).id || student.student_uuid;
+    return this.selectedStudents.some(s => ((s as any).id || s.student_uuid) === studentId);
   }
 
   /**
@@ -413,29 +426,33 @@ export class GroupDetailsComponent implements OnInit {
       return;
     }
 
-    console.log('Tentative d\'ajout de', this.selectedStudents.length, 'étudiants au groupe');
+    console.log("Tentative d'ajout de", this.selectedStudents.length, 'étudiants au groupe');
 
     const addPromises = this.selectedStudents.map(student => {
       // Utiliser l'ID disponible - priorité à 'id' car c'est ce que retourne l'API
-      const studentId = (student as any).id || student.student_uuid || student.student_id;
-      
+      const studentId = (student as any).id || student.student_uuid;
+
       if (!studentId) {
-        console.error('Aucun ID trouvé pour l\'étudiant:', student);
-        throw new Error(`Aucun ID trouvé pour l'étudiant ${student.firstname} ${student.lastname}`);
+        console.error("Aucun ID trouvé pour l'étudiant:", student);
+        throw new Error(`Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`);
       }
-      
-      console.log('Ajout de l\'étudiant avec ID:', studentId, 'au groupe:', this.groupId);
+
+      console.log("Ajout de l'étudiant avec ID:", studentId, 'au groupe:', this.groupId);
       return this.groupService.addStudentToGroup(this.groupId, studentId.toString()).toPromise();
     });
 
-    Promise.all(addPromises).then(() => {
-      this.alertService.success(`${this.selectedStudents.length} étudiant(s) ajouté(s) au groupe`);
-      this.closeAddStudentModal();
-      this.loadGroup(); // Recharger les données du groupe
-    }).catch((error) => {
-      console.error('Erreur lors de l\'ajout des étudiants:', error);
-      this.alertService.error('Erreur lors de l\'ajout des étudiants');
-    });
+    Promise.all(addPromises)
+      .then(() => {
+        this.alertService.success(
+          `${this.selectedStudents.length} étudiant(s) ajouté(s) au groupe`
+        );
+        this.closeAddStudentModal();
+        this.loadGroup(); // Recharger les données du groupe
+      })
+      .catch(error => {
+        console.error("Erreur lors de l'ajout des étudiants:", error);
+        this.alertService.error("Erreur lors de l'ajout des étudiants");
+      });
   }
 
   /**
@@ -453,30 +470,32 @@ export class GroupDetailsComponent implements OnInit {
    * Supprime un étudiant du groupe
    */
   removeStudentFromGroup(student: Student): void {
-    const confirmMessage = `Êtes-vous sûr de vouloir retirer ${student.firstname} ${student.lastname} de ce groupe ?`;
-    
-    this.alertService.confirm(confirmMessage).then((confirmed) => {
+    const confirmMessage = `Êtes-vous sûr de vouloir retirer ${student.student_firstname} ${student.student_lastname} de ce groupe ?`;
+
+    this.alertService.confirm(confirmMessage).then(confirmed => {
       if (confirmed) {
-        // Maintenant student contient directement les données d'étudiant avec la propriété id
-        const studentId = (student as any).id || (student as any).student_id;
-        
+              // Maintenant student contient directement les données d'étudiant avec la propriété id
+      const studentId = (student as any).id || student.student_uuid;
+
         if (!studentId) {
-          console.error('Aucun ID trouvé pour l\'étudiant:', student);
-          this.alertService.error(`Aucun ID trouvé pour l'étudiant ${student.firstname} ${student.lastname}`);
+          console.error("Aucun ID trouvé pour l'étudiant:", student);
+          this.alertService.error(
+            `Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`
+          );
           return;
         }
-        
-        console.log('Suppression de l\'étudiant avec ID:', studentId, 'du groupe:', this.groupId);
-        
+
+        console.log("Suppression de l'étudiant avec ID:", studentId, 'du groupe:', this.groupId);
+
         this.groupService.removeStudentFromGroup(this.groupId, studentId.toString()).subscribe({
           next: () => {
             this.alertService.success('Étudiant retiré du groupe avec succès');
             this.loadGroup(); // Recharger les données du groupe
           },
-          error: (error) => {
-            console.error('Erreur lors de la suppression de l\'étudiant:', error);
-            this.alertService.error('Erreur lors de la suppression de l\'étudiant');
-          }
+          error: error => {
+            console.error("Erreur lors de la suppression de l'étudiant:", error);
+            this.alertService.error("Erreur lors de la suppression de l'étudiant");
+          },
         });
       }
     });
@@ -486,6 +505,6 @@ export class GroupDetailsComponent implements OnInit {
    * TrackBy function pour optimiser le rendu
    */
   trackByStudentId(index: number, student: Student): number | string {
-    return (student as any).id || (student as any).student_id || index;
+    return (student as any).id || student.student_uuid || index;
   }
-} 
+}

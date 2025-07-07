@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ConfirmationService, ConfirmationConfig } from '../../../core/services/confirmation.service';
+import {
+  ConfirmationService,
+  ConfirmationConfig,
+} from '../../../core/services/confirmation.service';
 import { Subscription } from 'rxjs';
 
 declare var bootstrap: any;
@@ -10,7 +13,7 @@ declare var bootstrap: any;
   templateUrl: './confirmation-modal.component.html',
   styleUrls: ['./confirmation-modal.component.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
 export class ConfirmationModalComponent implements OnInit, OnDestroy {
   config: ConfirmationConfig | null = null;
@@ -65,21 +68,31 @@ export class ConfirmationModalComponent implements OnInit, OnDestroy {
 
   getButtonClass(): string {
     switch (this.config?.type) {
-      case 'danger': return 'btn-danger';
-      case 'warning': return 'btn-warning';
-      case 'info': return 'btn-info';
-      case 'primary': return 'btn-primary';
-      default: return 'btn-danger';
+      case 'danger':
+        return 'btn-danger';
+      case 'warning':
+        return 'btn-warning';
+      case 'info':
+        return 'btn-info';
+      case 'primary':
+        return 'btn-primary';
+      default:
+        return 'btn-danger';
     }
   }
 
   getIconClass(): string {
     switch (this.config?.type) {
-      case 'danger': return 'fas fa-exclamation-triangle text-danger';
-      case 'warning': return 'fas fa-exclamation-circle text-warning';
-      case 'info': return 'fas fa-info-circle text-info';
-      case 'primary': return 'fas fa-question-circle text-primary';
-      default: return 'fas fa-exclamation-triangle text-danger';
+      case 'danger':
+        return 'fas fa-exclamation-triangle text-danger';
+      case 'warning':
+        return 'fas fa-exclamation-circle text-warning';
+      case 'info':
+        return 'fas fa-info-circle text-info';
+      case 'primary':
+        return 'fas fa-question-circle text-primary';
+      default:
+        return 'fas fa-exclamation-triangle text-danger';
     }
   }
-} 
+}
