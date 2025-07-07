@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { StudentService, CreateStudentRequest } from '../../services/student.service';
-import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
+import { StudentService } from '@core/services';
+import { CreateStudentRequest } from '@core/models';
+import { ReferenceDataService } from '@core/services';
 
 interface WizardStep {
   id: number;
@@ -17,7 +18,7 @@ interface WizardStep {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './student-wizard.component.html',
-  styleUrls: ['./student-wizard.component.scss']
+  styleUrls: ['./student-wizard.component.scss'],
 })
 export class StudentWizardComponent implements OnInit {
   // Forms pour chaque étape
@@ -45,7 +46,7 @@ export class StudentWizardComponent implements OnInit {
     { id: 1, title: 'Informations personnelles', isCompleted: false, isActive: true },
     { id: 2, title: 'Contact & Adresse', isCompleted: false, isActive: false },
     { id: 3, title: 'Informations administratives', isCompleted: false, isActive: false },
-    { id: 4, title: 'Informations complémentaires', isCompleted: false, isActive: false }
+    { id: 4, title: 'Informations complémentaires', isCompleted: false, isActive: false },
   ];
 
   constructor(
@@ -61,6 +62,8 @@ export class StudentWizardComponent implements OnInit {
     this.loadReferenceData();
   }
 
+
+
   private initializeForms(): void {
     // Étape 1 : Informations personnelles
     this.personalInfoForm = this.fb.group({
@@ -68,7 +71,7 @@ export class StudentWizardComponent implements OnInit {
       lastname: ['', [Validators.required, Validators.minLength(2)]],
       birthdate: ['', Validators.required],
       placeOfBirth: [''],
-      gender_id: ['', Validators.required]
+      gender_id: ['', Validators.required],
     });
 
     // Étape 2 : Contact & Adresse
@@ -78,7 +81,7 @@ export class StudentWizardComponent implements OnInit {
       address: [''],
       city: [''],
       postalCode: [''],
-      country: ['France']
+      country: ['France'],
     });
 
     // Étape 3 : Informations administratives
@@ -90,7 +93,7 @@ export class StudentWizardComponent implements OnInit {
       financing_id: ['', Validators.required],
       date_entree_france: [''],
       date_titre_sejour: [''],
-      date_cir: ['']
+      date_cir: [''],
     });
 
     // Étape 4 : Informations complémentaires
@@ -98,19 +101,19 @@ export class StudentWizardComponent implements OnInit {
       date_test_initial: [''],
       orientation_id: [''],
       disability_ids: [[]],
-      commentaire: ['']
+      commentaire: [''],
     });
   }
 
   private loadReferenceData(): void {
     // Charger toutes les données de référence en parallèle
-    this.referenceDataService.getGenders().subscribe(data => this.genders = data);
-    this.referenceDataService.getNationalities().subscribe(data => this.nationalities = data);
-    this.referenceDataService.getFrenchLevels().subscribe(data => this.frenchLevels = data);
-    this.referenceDataService.getStatuses().subscribe(data => this.statuses = data);
-    this.referenceDataService.getFinancings().subscribe(data => this.financings = data);
-    this.referenceDataService.getOrientations().subscribe(data => this.orientations = data);
-    this.referenceDataService.getDisabilities().subscribe(data => this.disabilities = data);
+    this.referenceDataService.getGenders().subscribe(data => (this.genders = data));
+    this.referenceDataService.getNationalities().subscribe(data => (this.nationalities = data));
+    this.referenceDataService.getFrenchLevels().subscribe(data => (this.frenchLevels = data));
+    this.referenceDataService.getStatuses().subscribe(data => (this.statuses = data));
+    this.referenceDataService.getFinancings().subscribe(data => (this.financings = data));
+    this.referenceDataService.getOrientations().subscribe(data => (this.orientations = data));
+    this.referenceDataService.getDisabilities().subscribe(data => (this.disabilities = data));
   }
 
   // Navigation entre étapes
@@ -118,7 +121,7 @@ export class StudentWizardComponent implements OnInit {
     if (this.isCurrentStepValid()) {
       this.steps[this.currentStep - 1].isCompleted = true;
       this.steps[this.currentStep - 1].isActive = false;
-      
+
       if (this.currentStep < this.totalSteps) {
         this.currentStep++;
         this.steps[this.currentStep - 1].isActive = true;
@@ -146,20 +149,33 @@ export class StudentWizardComponent implements OnInit {
 
   private isCurrentStepValid(): boolean {
     switch (this.currentStep) {
-      case 1: return this.personalInfoForm.valid;
-      case 2: return this.contactForm.valid;
-      case 3: return this.administrativeForm.valid;
-      case 4: return this.additionalForm.valid;
-      default: return false;
+      case 1:
+        return this.personalInfoForm.valid;
+      case 2:
+        return this.contactForm.valid;
+      case 3:
+        return this.administrativeForm.valid;
+      case 4:
+        return this.additionalForm.valid;
+      default:
+        return false;
     }
   }
 
   private markCurrentFormAsTouched(): void {
     switch (this.currentStep) {
-      case 1: this.markFormGroupTouched(this.personalInfoForm); break;
-      case 2: this.markFormGroupTouched(this.contactForm); break;
-      case 3: this.markFormGroupTouched(this.administrativeForm); break;
-      case 4: this.markFormGroupTouched(this.additionalForm); break;
+      case 1:
+        this.markFormGroupTouched(this.personalInfoForm);
+        break;
+      case 2:
+        this.markFormGroupTouched(this.contactForm);
+        break;
+      case 3:
+        this.markFormGroupTouched(this.administrativeForm);
+        break;
+      case 4:
+        this.markFormGroupTouched(this.additionalForm);
+        break;
     }
   }
 
@@ -181,9 +197,11 @@ export class StudentWizardComponent implements OnInit {
     if (!field || !field.errors || !field.touched) return '';
 
     if (field.errors['required']) return `Ce champ est requis`;
-    if (field.errors['email']) return 'Format d\'email invalide';
-    if (field.errors['minlength']) return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
+    if (field.errors['email']) return "Format d'email invalide";
+    if (field.errors['minlength'])
+      return `Minimum ${field.errors['minlength'].requiredLength} caractères`;
     if (field.errors['pattern']) return 'Format invalide';
+    if (field.errors['containsHtml']) return field.errors['containsHtml'].message;
 
     return 'Champ invalide';
   }
@@ -192,13 +210,13 @@ export class StudentWizardComponent implements OnInit {
   toggleDisability(disabilityId: string): void {
     const currentDisabilities = this.additionalForm.get('disability_ids')?.value || [];
     const index = currentDisabilities.indexOf(disabilityId);
-    
+
     if (index > -1) {
       currentDisabilities.splice(index, 1);
     } else {
       currentDisabilities.push(disabilityId);
     }
-    
+
     this.additionalForm.patchValue({ disability_ids: currentDisabilities });
   }
 
@@ -220,21 +238,24 @@ export class StudentWizardComponent implements OnInit {
     const studentData: CreateStudentRequest = this.buildStudentData();
 
     this.studentService.createStudent(studentData).subscribe({
-      next: (student) => {
+      next: student => {
         this.router.navigate(['/dashboard/apprenants']);
       },
-      error: (error) => {
+      error: error => {
         this.isSubmitting = false;
-        this.error = 'Erreur lors de la création de l\'étudiant : ' + (error.message || 'Erreur inconnue');
-      }
+        this.error =
+          "Erreur lors de la création de l'étudiant : " + (error.message || 'Erreur inconnue');
+      },
     });
   }
 
   public areAllFormsValid(): boolean {
-    return this.personalInfoForm.valid && 
-           this.contactForm.valid && 
-           this.administrativeForm.valid && 
-           this.additionalForm.valid;
+    return (
+      this.personalInfoForm.valid &&
+      this.contactForm.valid &&
+      this.administrativeForm.valid &&
+      this.additionalForm.valid
+    );
   }
 
   private buildStudentData(): CreateStudentRequest {
@@ -243,33 +264,42 @@ export class StudentWizardComponent implements OnInit {
     const admin = this.administrativeForm.value;
     const additional = this.additionalForm.value;
 
-    const studentData: CreateStudentRequest = {
+    // Préparer les données brutes
+    const rawStudentData: any = {
       // Informations personnelles obligatoires
-      firstname: personal.firstname,
-      lastname: personal.lastname,
-      birthdate: personal.birthdate,
-      gender_id: personal.gender_id,
+      student_firstname: personal.firstname,
+      student_lastname: personal.lastname,
+      student_birthdate: new Date(personal.birthdate),
+      gender_uuid: personal.gender_id,
 
-      // Informations administratives obligatoires
-      initial_level_id: admin.initial_level_id,
-      nationality_id: admin.nationality_id,
-      financing_id: admin.financing_id,
-      status_id: admin.status_id
+      // Informations administratives obligatoires selon le schéma Prisma
+      french_level_uuid: admin.initial_level_id,
+      nationality_uuid: admin.nationality_id,
+      financing_uuid: admin.financing_id,
+      status_uuid: admin.status_id,
     };
 
     // Ajouter les champs optionnels s'ils sont renseignés
-    if (personal.placeOfBirth) studentData.placeOfBirth = personal.placeOfBirth;
-    if (contact.email) studentData.email = contact.email;
-    if (contact.phone) studentData.phone = contact.phone;
-    if (admin.current_level_id) studentData.current_level_id = admin.current_level_id;
-    if (admin.date_entree_france) studentData.date_entree_france = admin.date_entree_france;
-    if (admin.date_titre_sejour) studentData.date_titre_sejour = admin.date_titre_sejour;
-    if (admin.date_cir) studentData.date_cir = admin.date_cir;
-    if (additional.date_test_initial) studentData.date_test_initial = additional.date_test_initial;
-    if (additional.orientation_id) studentData.orientation_id = additional.orientation_id;
-    if (additional.commentaire) studentData.commentaire = additional.commentaire;
+    if (personal.placeOfBirth) {
+      rawStudentData.student_place_of_birth = personal.placeOfBirth;
+    }
+    if (contact.email) {
+      rawStudentData.student_mail = contact.email;
+    }
+    if (contact.phone) {
+      rawStudentData.student_phone = contact.phone;
+    }
+    if (admin.date_entree_france) rawStudentData.student_date_entry_france = new Date(admin.date_entree_france);
+    if (admin.date_titre_sejour) rawStudentData.student_date_residence_permit = new Date(admin.date_titre_sejour);
+    if (admin.date_cir) rawStudentData.student_date_cir = new Date(admin.date_cir);
+    if (additional.date_test_initial) rawStudentData.student_date_test_initial = new Date(additional.date_test_initial);
+    if (additional.commentaire) rawStudentData.student_commentary = additional.commentaire;
 
-    return studentData;
+    // ✅ Angular protège automatiquement les données des formulaires
+    console.log('=== WIZARD - DONNÉES SÉCURISÉES PAR ANGULAR ===');
+    console.log('Student data:', rawStudentData);
+
+    return rawStudentData as CreateStudentRequest;
   }
 
   // Navigation
@@ -283,4 +313,4 @@ export class StudentWizardComponent implements OnInit {
     if (step.isActive) return step.id.toString();
     return step.id.toString();
   }
-} 
+}

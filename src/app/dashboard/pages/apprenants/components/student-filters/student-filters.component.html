@@ -2,11 +2,7 @@
   <div class="filters-grid">
     <div class="filter-group">
       <label for="level">Niveau</label>
-      <select 
-        id="level" 
-        [(ngModel)]="filters.level"
-        (ngModelChange)="onFiltersChange()"
-      >
+      <select id="level" [(ngModel)]="filters.level" (ngModelChange)="onFiltersChange()">
         <option value="">Tous les niveaux</option>
         <option *ngFor="let level of levels" [value]="level.code">
           {{ level.name }}
@@ -16,11 +12,7 @@
 
     <div class="filter-group">
       <label for="status">Statut</label>
-      <select 
-        id="status" 
-        [(ngModel)]="filters.status"
-        (ngModelChange)="onFiltersChange()"
-      >
+      <select id="status" [(ngModel)]="filters.status" (ngModelChange)="onFiltersChange()">
         <option value="">Tous les statuts</option>
         <option *ngFor="let status of statuses" [value]="status.code">
           {{ status.name }}
@@ -30,8 +22,8 @@
 
     <div class="filter-group">
       <label for="nationality">Nationalité</label>
-      <select 
-        id="nationality" 
+      <select
+        id="nationality"
         [(ngModel)]="filters.nationality"
         (ngModelChange)="onFiltersChange()"
       >
@@ -44,8 +36,6 @@
   </div>
 
   <div class="filters-actions">
-    <button class="btn-clear" (click)="clearFilters()">
-      Réinitialiser les filtres
-    </button>
+    <button class="btn-clear" (click)="clearFilters()">Réinitialiser les filtres</button>
   </div>
-</div> 
+</div>

@@ -6,15 +6,15 @@ $border-color: rgba(0, 0, 0, 0.1);
 $hover-bg: #f7fafc;
 $border-radius: 12px;
 $spacing: 20px;
-$green: #48BB78;
-$red: #F56565;
+$green: #48bb78;
+$red: #f56565;
 $white: #ffffff;
 $gray-100: #f7fafc;
 $gray-200: #edf2f7;
 $gray-300: #e2e8f0;
 $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-@use "sass:color";
+@use 'sass:color';
 
 .nationalities-container {
   width: 100%;
@@ -31,15 +31,16 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   gap: 20px;
   flex-wrap: wrap;
-  
+
   h2 {
     margin: 0;
     color: $text-color;
     font-size: 24px;
     font-weight: 600;
   }
-  
-  .back-btn, .create-btn {
+
+  .back-btn,
+  .create-btn {
     border: none;
     border-radius: 8px;
     padding: 10px 16px;
@@ -55,7 +56,7 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   .back-btn {
     background-color: $gray-200;
     color: $text-color;
-    
+
     &:hover {
       background-color: $gray-300;
     }
@@ -64,7 +65,7 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   .create-btn {
     background-color: $primary-color;
     color: white;
-    
+
     &:hover {
       background-color: color.scale($primary-color, $lightness: -8.85%);
     }
@@ -107,82 +108,83 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 .nationalities-content {
   flex: 1;
   overflow: auto;
-  
+
   .nationalities-list {
     width: 100%;
     background: white;
     border-radius: 8px;
     box-shadow: $shadow;
-    
+
     .nationalities-header {
       display: flex;
       padding: 15px 20px;
       border-bottom: 1px solid $border-color;
       background: $gray-100;
-      
+
       .column {
         font-size: 12px;
         font-weight: 600;
         color: $muted-color;
         text-transform: uppercase;
-        
+
         &.name {
           flex: 2;
         }
-        
+
         &.created {
           flex: 1;
         }
-        
+
         &.actions {
           width: 200px;
           text-align: right;
         }
       }
     }
-    
+
     .nationality-item {
       display: flex;
       padding: 15px 20px;
       border-bottom: 1px solid $border-color;
       align-items: center;
-      
+
       &:hover {
         background-color: $hover-bg;
       }
-      
+
       &:last-child {
         border-bottom: none;
       }
-      
+
       .column {
         &.name {
           flex: 2;
-          
+
           .nationality-name {
             color: $text-color;
             font-weight: 500;
             font-size: 16px;
           }
         }
-        
+
         &.created {
           flex: 1;
-          
+
           .created-date {
             color: $muted-color;
             font-size: 14px;
           }
         }
-        
+
         &.actions {
           width: 200px;
           text-align: right;
           display: flex;
           gap: 8px;
           justify-content: flex-end;
-          
-          .edit-btn, .delete-btn {
+
+          .edit-btn,
+          .delete-btn {
             padding: 6px 12px;
             border: 1px solid $border-color;
             border-radius: 6px;
@@ -243,15 +245,19 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 // État vide
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  
+
   p {
     color: $muted-color;
     margin-bottom: 20px;
@@ -389,7 +395,8 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     justify-content: flex-end;
     margin-top: 24px;
 
-    .cancel-btn, .submit-btn {
+    .cancel-btn,
+    .submit-btn {
       padding: 10px 20px;
       border-radius: 8px;
       font-size: 14px;
@@ -450,7 +457,8 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         flex-direction: column;
         gap: 4px;
 
-        .edit-btn, .delete-btn {
+        .edit-btn,
+        .delete-btn {
           font-size: 11px;
           padding: 4px 8px;
         }
@@ -462,4 +470,4 @@ $shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 95%;
     margin: 20px;
   }
-} 
+}

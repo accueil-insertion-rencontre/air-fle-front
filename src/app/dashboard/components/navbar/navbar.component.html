@@ -4,53 +4,41 @@
     <button class="sidebar-toggle" (click)="onToggleSidebar()">
       <span class="toggle-icon"></span>
     </button>
-    
+
     <div class="page-header">
       <!-- Fil d'Ariane (Breadcrumb) -->
       <div class="breadcrumb">
         <ng-container *ngFor="let item of breadcrumbs; let last = last; let i = index">
-          <a 
-            *ngIf="!last && item.path" 
-            [routerLink]="item.path" 
-            class="breadcrumb-item">
+          <a *ngIf="!last && item.path" [routerLink]="item.path" class="breadcrumb-item">
             {{ item.label }}
           </a>
-          <span 
-            *ngIf="!last && !item.path" 
-            class="breadcrumb-item">
+          <span *ngIf="!last && !item.path" class="breadcrumb-item">
             {{ item.label }}
           </span>
-          <span 
-            *ngIf="last" 
-            class="breadcrumb-item" 
-            [class.active]="item.active">
+          <span *ngIf="last" class="breadcrumb-item" [class.active]="item.active">
             {{ item.label }}
           </span>
           <span *ngIf="!last" class="breadcrumb-separator">/</span>
         </ng-container>
       </div>
-      
+
       <!-- Titre de la page sur une nouvelle ligne -->
       <h1 class="page-title">{{ pageTitle }}</h1>
     </div>
   </div>
-  
+
   <div class="navbar-right">
     <!-- Bouton notes de mises à jour -->
-    <button class="btn btn-outline" (click)="onOpenReleaseNotes()">
-      Notes de mises à jour
-    </button>
-    
+    <button class="btn btn-outline" (click)="onOpenReleaseNotes()">Notes de mises à jour</button>
+
     <!-- Bouton ouvrir un ticket -->
-    <button class="btn btn-primary" (click)="onOpenTicket()">
-      OUVRIR UN TICKET
-    </button>
-    
+    <button class="btn btn-primary" (click)="onOpenTicket()">OUVRIR UN TICKET</button>
+
     <!-- Menu utilisateur -->
     <div class="nav-item user-profile" (click)="toggleUserMenu()">
       <span class="user-name">{{ userName }}</span>
       <i class="dropdown-icon" [class.open]="showUserMenu"></i>
-      
+
       <!-- Menu déroulant utilisateur -->
       <div class="user-dropdown" *ngIf="showUserMenu">
         <div class="dropdown-item" [routerLink]="'/dashboard/users/profile/' + currentUserId">
@@ -65,4 +53,4 @@
       </div>
     </div>
   </div>
-</nav> 
+</nav>

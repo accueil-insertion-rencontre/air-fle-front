@@ -10,12 +10,12 @@
       Ajouter une orientation
     </button>
   </div>
-  
+
   <div *ngIf="error" class="error-message">
     <p>{{ error }}</p>
     <button (click)="error = null" class="close-error">×</button>
   </div>
-  
+
   <div class="orientations-content">
     <div class="orientations-list">
       <div class="orientations-header">
@@ -23,13 +23,16 @@
         <div class="column description">DESCRIPTION</div>
         <div class="column actions">ACTIONS</div>
       </div>
-      
+
       <div *ngIf="isLoading" class="loading-indicator">
         <div class="spinner"></div>
         <span>Chargement des orientations...</span>
       </div>
-      
-      <div *ngFor="let orientation of orientations; trackBy: trackByOrientationId" class="orientation-item">
+
+      <div
+        *ngFor="let orientation of orientations; trackBy: trackByOrientationId"
+        class="orientation-item"
+      >
         <div class="column type">{{ orientation.type }}</div>
         <div class="column description">{{ orientation.description || '-' }}</div>
         <div class="column actions">
@@ -37,7 +40,7 @@
           <button class="delete-btn" (click)="deleteOrientation(orientation)">Supprimer</button>
         </div>
       </div>
-      
+
       <div *ngIf="!isLoading && orientations.length === 0" class="empty-state">
         <p>Aucune orientation trouvée</p>
         <button class="create-btn" (click)="openCreateModal()">
@@ -59,23 +62,25 @@
       <form [formGroup]="createForm" (ngSubmit)="createOrientation()">
         <div class="form-group">
           <label for="createType">Type *</label>
-          <input 
+          <input
             id="createType"
             type="text"
-            formControlName="type" 
+            formControlName="type"
             placeholder="Type d'orientation"
             [class.error]="createType?.invalid && createType?.touched"
-          >
+          />
           <div *ngIf="createType?.invalid && createType?.touched" class="error-text">
             <span *ngIf="createType?.hasError('required')">Le type est requis</span>
-            <span *ngIf="createType?.hasError('minlength')">Le type doit contenir au moins 2 caractères</span>
+            <span *ngIf="createType?.hasError('minlength')"
+              >Le type doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
         <div class="form-group">
           <label for="createDescription">Description</label>
-          <textarea 
+          <textarea
             id="createDescription"
-            formControlName="description" 
+            formControlName="description"
             placeholder="Description de l'orientation (optionnel)"
             rows="3"
           ></textarea>
@@ -99,32 +104,36 @@
       <form [formGroup]="editForm" (ngSubmit)="updateOrientation()">
         <div class="form-group">
           <label for="editType">Type *</label>
-          <input 
+          <input
             id="editType"
             type="text"
-            formControlName="type" 
+            formControlName="type"
             placeholder="Type d'orientation"
             [class.error]="editType?.invalid && editType?.touched"
-          >
+          />
           <div *ngIf="editType?.invalid && editType?.touched" class="error-text">
             <span *ngIf="editType?.hasError('required')">Le type est requis</span>
-            <span *ngIf="editType?.hasError('minlength')">Le type doit contenir au moins 2 caractères</span>
+            <span *ngIf="editType?.hasError('minlength')"
+              >Le type doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
         <div class="form-group">
           <label for="editDescription">Description</label>
-          <textarea 
+          <textarea
             id="editDescription"
-            formControlName="description" 
+            formControlName="description"
             placeholder="Description de l'orientation (optionnel)"
             rows="3"
           ></textarea>
         </div>
         <div class="modal-actions">
           <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
-          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">Sauvegarder</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
         </div>
       </form>
     </div>
   </div>
-</div> 
+</div>

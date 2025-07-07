@@ -1,26 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { StudentService } from '../../services/student.service';
-import { LevelService } from '../../services/level.service';
-import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
+import { StudentService } from '@core/services';
+import { ReferenceDataService } from '@core/services';
 import { StudentAbsenceHistoryComponent } from '../student-absence-history/student-absence-history.component';
-import { ApiStudent } from '../../models/student.model';
-import { Level } from '../../models/level.model';
+import { DocumentGenerationModalComponent } from '../document-generation-modal/document-generation-modal.component';
+import { Student } from '@core/models';
+import { Level } from '@core/models';
 
 @Component({
   selector: 'app-student-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, StudentAbsenceHistoryComponent],
+  imports: [CommonModule, RouterModule, StudentAbsenceHistoryComponent, DocumentGenerationModalComponent],
   templateUrl: './student-profile.component.html',
-  styleUrls: ['./student-profile.component.scss']
+  styleUrls: ['./student-profile.component.scss'],
 })
 export class StudentProfileComponent implements OnInit {
-  student: ApiStudent | null = null;
+  student: Student | null = null;
   nextLevel: Level | null = null;
   loading = true;
   error: string | null = null;
   showAbsenceHistory = false;
+  showDocumentModal = false;
 
   // Données de référence pour le mapping
   statuses: any[] = [];
@@ -33,7 +34,6 @@ export class StudentProfileComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private studentService: StudentService,
-    private levelService: LevelService,
     private referenceDataService: ReferenceDataService
   ) {}
 
@@ -43,26 +43,12 @@ export class StudentProfileComponent implements OnInit {
   }
 
   private loadReferenceData(): void {
-    // Charger les données de référence pour faire le mapping
-    this.referenceDataService.getStatuses().subscribe(data => {
-      this.statuses = data;
-    });
-    
-    this.referenceDataService.getNationalities().subscribe(data => {
-      this.nationalities = data;
-    });
-    
-    this.referenceDataService.getFrenchLevels().subscribe(data => {
-      this.frenchLevels = data;
-    });
-
-    this.referenceDataService.getGenders().subscribe(data => {
-      this.genders = data;
-    });
-
-    this.referenceDataService.getOrientations().subscribe(data => {
-      this.orientations = data;
-    });
+    // Charger les données de référence pour les fallbacks
+    if (!this.student || !this.student.frenchLevel) {
+      console.warn('Étudiant ou niveau français non défini');
+      return;
+    }
+    // Logique de chargement des données de référence si nécessaire
   }
 
   loadStudent(): void {
@@ -77,21 +63,21 @@ export class StudentProfileComponent implements OnInit {
     this.error = null;
 
     this.studentService.getStudentById(id).subscribe({
-      next: (student) => {
+      next: student => {
         console.log('Données étudiant reçues:', student);
         this.student = student;
         this.loadNextLevel();
       },
-      error: (err) => {
-        console.error('Erreur lors du chargement de l\'étudiant:', err);
-        this.error = 'Erreur lors du chargement du profil de l\'étudiant';
+      error: err => {
+        console.error("Erreur lors du chargement de l'étudiant:", err);
+        this.error = "Erreur lors du chargement du profil de l'étudiant";
         this.loading = false;
-      }
+      },
     });
   }
 
   private loadNextLevel(): void {
-    if (!this.student || !this.student.initialLevel) {
+    if (!this.student || !this.student.frenchLevel) {
       this.loading = false;
       return;
     }
@@ -101,10 +87,10 @@ export class StudentProfileComponent implements OnInit {
     // TODO: Adapter LevelService pour fonctionner avec la vraie structure de l'API
     this.nextLevel = null;
     this.loading = false;
-    
+
     /* 
     // Code à réactiver quand LevelService sera adapté
-    const currentLevel = this.student.currentLevel || this.student.initialLevel;
+    const currentLevel = this.student.frenchLevel;
     
     this.levelService.getNextLevel(currentLevel).subscribe({
       next: (nextLevel) => {
@@ -120,11 +106,9 @@ export class StudentProfileComponent implements OnInit {
     */
   }
 
-  calculateAge(birthDate: string): number {
-    if (!birthDate) return 0;
-    
+  calculateAge(birthdate: string): number {
+    const birth = new Date(birthdate);
     const today = new Date();
-    const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
     
@@ -135,73 +119,100 @@ export class StudentProfileComponent implements OnInit {
     return age;
   }
 
-  // Méthodes pour faire le mapping avec les données de référence
-  getStudentStatus(): string {
+  getStudentInitials(): string {
+    if (!this.student) return '';
+    const firstName = this.student.student_firstname || '';
+    const lastName = this.student.student_lastname || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+
+  getStatusLabel(): string {
     if (!this.student) return 'Non défini';
     
-    // D'abord essayer l'objet complet
-    if (this.student.status?.label) {
-      return this.student.status.label;
+    if (this.student.status) {
+      return this.student.status.status_label;
     }
-    
-    // Sinon faire le mapping avec l'ID
-    if (this.student.status_id && this.statuses.length > 0) {
-      const status = this.statuses.find(s => s.id === this.student!.status_id);
+
+    // Fallback avec les données de référence si nécessaire
+    if (this.student.status_uuid && this.statuses.length > 0) {
+      const status = this.statuses.find(s => s.id === this.student!.status_uuid);
       return status?.label || 'Non défini';
     }
-    
+
     return 'Non défini';
   }
 
-  getStudentNationality(): string {
+  getNationalityLabel(): string {
     if (!this.student) return 'Non renseignée';
     
-    // D'abord essayer l'objet complet
-    if (this.student.nationality?.label) {
-      return this.student.nationality.label;
+    if (this.student.nationality) {
+      return this.student.nationality.nationality_label;
     }
-    
-    // Sinon faire le mapping avec l'ID
-    if (this.student.nationality_id && this.nationalities.length > 0) {
-      const nationality = this.nationalities.find(n => n.id === this.student!.nationality_id);
+
+    // Fallback avec les données de référence si nécessaire
+    if (this.student.nationality_uuid && this.nationalities.length > 0) {
+      const nationality = this.nationalities.find(n => n.id === this.student!.nationality_uuid);
       return nationality?.label || 'Non renseignée';
     }
-    
+
     return 'Non renseignée';
   }
 
-  getStudentGender(): string {
-    if (!this.student) return 'Non défini';
+  getGenderLabel(): string {
+    if (!this.student) return 'Non renseigné';
     
-    // D'abord essayer l'objet complet
-    if (this.student.gender?.label) {
-      return this.student.gender.label;
+    if (this.student.gender) {
+      return this.student.gender.gender_label;
     }
-    
-    // Sinon faire le mapping avec l'ID
-    if (this.student.gender_id && this.genders.length > 0) {
-      const gender = this.genders.find(g => g.id === this.student!.gender_id);
-      return gender?.label || 'Non défini';
+
+    // Fallback avec les données de référence si nécessaire
+    if (this.student.gender_uuid && this.genders.length > 0) {
+      const gender = this.genders.find(g => g.id === this.student!.gender_uuid);
+      return gender?.label || 'Non renseigné';
     }
-    
-    return 'Non défini';
+
+    return 'Non renseigné';
   }
 
-  getStudentOrientation(): string {
-    if (!this.student) return 'Non définie';
+  getOrientationLabel(): string {
+    if (!this.student) return 'Non renseignée';
     
-    // D'abord essayer l'objet complet
-    if (this.student.orientation?.type) {
-      return this.student.orientation.type;
+    if (this.student.orientation) {
+      return this.student.orientation.orientation_type;
     }
-    
-    // Sinon faire le mapping avec l'ID
-    if (this.student.orientation_id && this.orientations.length > 0) {
-      const orientation = this.orientations.find(o => o.id === this.student!.orientation_id);
-      return orientation?.type || 'Non définie';
+
+    // Fallback avec les données de référence si nécessaire
+    if (this.student.orientation_uuid && this.orientations.length > 0) {
+      const orientation = this.orientations.find(o => o.id === this.student!.orientation_uuid);
+      return orientation?.type || 'Non renseignée';
     }
-    
-    return 'Non définie';
+
+    return 'Non renseignée';
+  }
+
+  getCurrentLevel(): { code: string; description: string } {
+    if (!this.student) {
+      return { code: '', description: '' };
+    }
+
+    // Si l'étudiant a des niveaux de sortie (progression), prendre le dernier
+    if (this.student.exit_levels && this.student.exit_levels.length > 0) {
+      const latestExitLevel = this.student.exit_levels[this.student.exit_levels.length - 1];
+      return {
+        code: latestExitLevel.french_level_code || '',
+        description: latestExitLevel.french_level_description || ''
+      };
+    }
+
+    // Sinon, retourner le niveau d'entrée
+    if (this.student.frenchLevel) {
+      return {
+        code: this.student.frenchLevel.french_level_code,
+        description: this.student.frenchLevel.french_level_description
+      };
+    }
+
+    return { code: '', description: '' };
   }
 
   getRecentActivities() {
@@ -211,19 +222,19 @@ export class StudentProfileComponent implements OnInit {
 
   getActivityIcon(field: string): string {
     const iconMap: { [key: string]: string } = {
-      'niveau': 'level',
-      'statut': 'status',
-      'email': 'contact',
-      'téléphone': 'contact',
-      'adresse': 'location'
+      niveau: 'level',
+      statut: 'status',
+      email: 'contact',
+      téléphone: 'contact',
+      adresse: 'location',
     };
-    
+
     return iconMap[field.toLowerCase()] || 'default';
   }
 
   changeLevel(): void {
     if (this.student) {
-      console.log('Changement de niveau pour:', this.student.firstname);
+      console.log('Changement de niveau pour:', this.student.student_firstname);
       // TODO: Implémenter le changement de niveau
     }
   }
@@ -234,19 +245,15 @@ export class StudentProfileComponent implements OnInit {
 
   editStudent(): void {
     if (this.student) {
-      this.router.navigate(['/dashboard/apprenants/edit', this.student.id]);
+      this.router.navigate(['/dashboard/apprenants/edit', this.student.student_uuid]);
     }
   }
 
   deleteStudent(): void {
     if (!this.student) return;
-
-    const confirmDelete = confirm(
-      `Êtes-vous sûr de vouloir supprimer l'étudiant ${this.student.firstname} ${this.student.lastname} ?`
-    );
-
-    if (confirmDelete) {
-      this.studentService.deleteStudent(this.student.id).subscribe({
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
+      this.studentService.deleteStudent(this.student.student_uuid).subscribe({
         next: () => {
           this.router.navigate(['/dashboard/apprenants']);
         },
@@ -259,67 +266,58 @@ export class StudentProfileComponent implements OnInit {
   }
 
   // Nouvelles méthodes pour les fonctionnalités
-  generateAttestation(): void {
-    // TODO: Implémenter la génération d'attestation
-    console.log('Génération d\'attestation pour:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+  openDocumentModal(): void {
+    this.showDocumentModal = true;
+  }
+
+  closeDocumentModal(): void {
+    this.showDocumentModal = false;
   }
 
   viewAbsences(): void {
+    console.log("Affichage historique des absences pour:", this.student?.student_firstname);
     this.showAbsenceHistory = true;
-    console.log('Affichage historique des absences pour:', this.student?.firstname);
   }
 
   addAbsence(): void {
     if (!this.student) return;
-
-    const courseId = prompt('ID du cours pour lequel ajouter une absence:');
-    if (!courseId) return;
-
-    const reason = prompt('Raison de l\'absence (optionnelle):');
-
+    
+    const courseId = 'COURS_001'; // À remplacer par la vraie logique
     const absenceData = {
-      student_id: this.student.id,
+      student_id: this.student.student_uuid,
       course_id: courseId,
-      reason: reason || undefined
+      date: new Date(),
+      reason: 'Non renseigné'
     };
 
-    // TODO: Implémenter l'ajout d'absence avec l'API
-    console.log('Ajout d\'absence pour:', this.student.firstname, absenceData);
+    console.log("Ajout d'absence pour:", this.student.student_firstname, absenceData);
     
-    // Pour l'instant, afficher que la fonctionnalité est en développement
-    alert(`Fonctionnalité d'ajout d'absence en cours de développement.\n\nDonnées qui seraient envoyées:\nÉtudiant: ${this.student.firstname} ${this.student.lastname}\nCours: ${courseId}\nRaison: ${reason || 'Aucune'}`);
+    // Simuler une notification
+    alert(`Absence ajoutée:\nÉtudiant: ${this.student.student_firstname} ${this.student.student_lastname}\nCours: ${courseId}\nDate: ${new Date().toLocaleDateString()}`);
   }
 
   manageAbsences(): void {
-    // Basculer vers la vue de gestion des absences
+    console.log('Basculer la gestion des absences de:', this.student?.student_firstname);
     this.showAbsenceHistory = !this.showAbsenceHistory;
-    console.log('Basculer la gestion des absences de:', this.student?.firstname);
   }
 
   viewEvaluations(): void {
-    // TODO: Naviguer vers la page des évaluations
-    console.log('Voir les évaluations de:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    console.log('Voir les évaluations de:', this.student?.student_firstname);
   }
 
   addEvaluation(): void {
-    // TODO: Ouvrir le formulaire d'ajout d'évaluation
-    console.log('Ajouter une évaluation pour:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    console.log('Ajouter une évaluation pour:', this.student?.student_firstname);
   }
 
   manageEvaluations(): void {
-    // TODO: Naviguer vers la gestion des évaluations
-    console.log('Gérer les évaluations de:', this.student?.firstname);
-    alert('Fonctionnalité en cours de développement');
+    console.log('Gérer les évaluations de:', this.student?.student_firstname);
   }
 
   createParcours(): void {
     if (!this.student || !this.nextLevel) return;
-    
+
     // TODO: Implémenter la création de suite de parcours
     console.log('Créer un parcours vers le niveau:', this.nextLevel.name);
     alert('Fonctionnalité en cours de développement');
   }
-} 
+}

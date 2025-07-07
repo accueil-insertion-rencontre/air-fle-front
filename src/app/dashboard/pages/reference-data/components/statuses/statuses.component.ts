@@ -2,15 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { Status, CreateStatusDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { Status, CreateStatusDto } from '@core/models';
 
 @Component({
   selector: 'app-statuses',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './statuses.component.html',
-  styleUrls: ['./statuses.component.scss']
+  styleUrls: ['./statuses.component.scss'],
 })
 export class StatusesComponent implements OnInit {
   statuses: Status[] = [];
@@ -28,10 +28,10 @@ export class StatusesComponent implements OnInit {
     private router: Router
   ) {
     this.createForm = this.formBuilder.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
     this.editForm = this.formBuilder.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -47,16 +47,20 @@ export class StatusesComponent implements OnInit {
         this.statuses = statuses;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des statuts:', error);
         this.error = 'Erreur lors du chargement des statuts';
         this.isLoading = false;
-      }
+      },
     });
   }
 
-  get createLabel() { return this.createForm.get('label'); }
-  get editLabel() { return this.editForm.get('label'); }
+  get createLabel() {
+    return this.createForm.get('label');
+  }
+  get editLabel() {
+    return this.editForm.get('label');
+  }
 
   goBack(): void {
     this.router.navigate(['/dashboard/reference-data']);
@@ -92,10 +96,10 @@ export class StatusesComponent implements OnInit {
         this.statuses.push(newStatus);
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la création du statut:', error);
         this.error = 'Erreur lors de la création du statut';
-      }
+      },
     });
   }
 
@@ -110,10 +114,10 @@ export class StatusesComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors de la mise à jour du statut:', error);
         this.error = 'Erreur lors de la mise à jour du statut';
-      }
+      },
     });
   }
 
@@ -123,10 +127,10 @@ export class StatusesComponent implements OnInit {
         next: () => {
           this.statuses = this.statuses.filter(s => s.id !== status.id);
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression du statut:', error);
           this.error = 'Erreur lors de la suppression du statut';
-        }
+        },
       });
     }
   }
@@ -134,4 +138,4 @@ export class StatusesComponent implements OnInit {
   trackByStatusId(index: number, status: Status): string {
     return status.id;
   }
-} 
+}

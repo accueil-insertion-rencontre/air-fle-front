@@ -1,14 +1,19 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { CreateTodoRequest, TodoTask, CreateTodoWithSubtasksRequest, SubtaskRequest } from '../../services/todolist.service';
+import {
+  CreateTodoRequest,
+  TodoTask,
+  CreateTodoWithSubtasksRequest,
+  SubtaskRequest,
+} from '@core/services';
 
 @Component({
   selector: 'app-create-todo-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './create-todo-modal.component.html',
-  styleUrls: ['./create-todo-modal.component.scss']
+  styleUrls: ['./create-todo-modal.component.scss'],
 })
 export class CreateTodoModalComponent implements OnChanges {
   @Input() isOpen = false;
@@ -34,9 +39,9 @@ export class CreateTodoModalComponent implements OnChanges {
       dueAt: [''],
       parentTaskId: [''],
       hasSubtasks: [true],
-      subtasks: this.fb.array([])
+      subtasks: this.fb.array([]),
     });
-    
+
     this.hasSubtasks = true;
     this.addSubtask();
   }
@@ -49,16 +54,16 @@ export class CreateTodoModalComponent implements OnChanges {
     while (this.subtasks.length !== 0) {
       this.subtasks.removeAt(0);
     }
-    
+
     // Réinitialiser le formulaire
     this.todoForm.reset({
       title: '',
       description: '',
       dueAt: '',
       parentTaskId: '',
-      hasSubtasks: true
+      hasSubtasks: true,
     });
-    
+
     // Réajouter une sous-tâche vide
     this.addSubtask();
     this.isSubmitting = false;
@@ -66,12 +71,12 @@ export class CreateTodoModalComponent implements OnChanges {
 
   onSubmit() {
     const isFormValidForSubmission = this.isMainFormValid();
-    
+
     if (isFormValidForSubmission && !this.isSubmitting) {
       this.isSubmitting = true;
-      
+
       const formValue = this.todoForm.value;
-      
+
       // Préparer les sous-tâches
       const subtasks: SubtaskRequest[] = [];
       this.subtasks.controls.forEach(control => {
@@ -79,7 +84,7 @@ export class CreateTodoModalComponent implements OnChanges {
         if (subtaskValue.title?.trim()) {
           subtasks.push({
             title: subtaskValue.title.trim(),
-            description: subtaskValue.description?.trim() || undefined
+            description: subtaskValue.description?.trim() || undefined,
           });
         }
       });
@@ -93,11 +98,11 @@ export class CreateTodoModalComponent implements OnChanges {
       const todoData: CreateTodoWithSubtasksRequest = {
         title: formValue.title?.trim(),
         description: formValue.description?.trim() || undefined,
-        subtasks: subtasks
+        subtasks: subtasks,
       };
 
       this.submit.emit(todoData);
-      
+
       // Réinitialiser le formulaire après soumission
       setTimeout(() => {
         this.resetForm();
@@ -115,11 +120,21 @@ export class CreateTodoModalComponent implements OnChanges {
     event.stopPropagation();
   }
 
-  get title() { return this.todoForm.get('title'); }
-  get description() { return this.todoForm.get('description'); }
-  get dueAt() { return this.todoForm.get('dueAt'); }
-  get hasSubtasksControl() { return this.todoForm.get('hasSubtasks'); }
-  get subtasks() { return this.todoForm.get('subtasks') as FormArray; }
+  get title() {
+    return this.todoForm.get('title');
+  }
+  get description() {
+    return this.todoForm.get('description');
+  }
+  get dueAt() {
+    return this.todoForm.get('dueAt');
+  }
+  get hasSubtasksControl() {
+    return this.todoForm.get('hasSubtasks');
+  }
+  get subtasks() {
+    return this.todoForm.get('subtasks') as FormArray;
+  }
 
   /**
    * Validation personnalisée du formulaire
@@ -128,13 +143,15 @@ export class CreateTodoModalComponent implements OnChanges {
     const titleValid = this.title?.valid;
     const descriptionValid = this.description?.valid;
     const dueAtValid = this.dueAt?.valid;
-    
+
     // Vérifier qu'au moins une sous-tâche a un titre valide
-    const hasValidSubtask = this.subtasks.length > 0 && this.subtasks.controls.some(control => {
-      const titleControl = control.get('title');
-      return titleControl?.value?.trim() && titleControl.valid;
-    });
-    
+    const hasValidSubtask =
+      this.subtasks.length > 0 &&
+      this.subtasks.controls.some(control => {
+        const titleControl = control.get('title');
+        return titleControl?.value?.trim() && titleControl.valid;
+      });
+
     return !!(titleValid && descriptionValid && dueAtValid && hasValidSubtask);
   }
 
@@ -144,7 +161,7 @@ export class CreateTodoModalComponent implements OnChanges {
   addSubtask() {
     const subtaskGroup = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      description: ['', [Validators.maxLength(300)]]
+      description: ['', [Validators.maxLength(300)]],
     });
     this.subtasks.push(subtaskGroup);
   }
@@ -165,4 +182,4 @@ export class CreateTodoModalComponent implements OnChanges {
       this.resetForm();
     }
   }
-} 
+}

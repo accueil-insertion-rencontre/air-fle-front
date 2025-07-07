@@ -7,7 +7,7 @@ import { StatusHistoryEntry } from '../../models/student.model';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './student-history.component.html',
-  styleUrls: ['./student-history.component.scss']
+  styleUrls: ['./student-history.component.scss'],
 })
 export class StudentHistoryComponent {
   @Input() history: StatusHistoryEntry[] = [];
@@ -17,4 +17,4 @@ export class StudentHistoryComponent {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
   }
-} 
+}

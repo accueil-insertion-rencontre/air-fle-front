@@ -2,8 +2,15 @@ import { Component, AfterViewInit, OnInit, NgZone, OnDestroy } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { StudentService } from '../apprenants/services/student.service';
-import { TodolistService, TodoTask, CreateTodoRequest, TodoStats, CreateTodoWithSubtasksRequest, Subtask } from '../../services/todolist.service';
+import {
+  StudentService,
+  TodolistService,
+  TodoTask,
+  CreateTodoRequest,
+  TodoStats,
+  CreateTodoWithSubtasksRequest,
+  Subtask,
+} from '@core/services';
 import { CreateTodoModalComponent } from '../../components/create-todo-modal/create-todo-modal.component';
 import { TodoItemComponent } from '../../components/todo-item/todo-item.component';
 import { Subscription } from 'rxjs';
@@ -23,7 +30,7 @@ interface StatCard {
   standalone: true,
   imports: [CommonModule, CreateTodoModalComponent, TodoItemComponent],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private studentCountSubscription?: Subscription;
@@ -34,13 +41,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     { title: 'Apprenants', value: '0', change: null, icon: 'user', color: '#4fd1c5' },
     { title: 'Adresses', value: 'Aucune donnée', change: null, icon: 'map-pin', color: '#4fd1c5' },
     { title: 'Période', value: 'Aucune donnée', change: null, icon: 'calendar', color: '#4fd1c5' },
-    { title: 'Taux de Réussite', value: 'Aucune donnée', change: null, icon: 'bar-chart-2', color: '#4fd1c5' }
+    {
+      title: 'Taux de Réussite',
+      value: 'Aucune donnée',
+      change: null,
+      icon: 'bar-chart-2',
+      color: '#4fd1c5',
+    },
   ];
 
   // Données pour le graphique (vide pour l'instant)
   chartData = {
     labels: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
-    datasets: []
+    datasets: [],
   };
 
   // Todo list
@@ -61,32 +74,29 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   todayModules: any[] = [];
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private ngZone: NgZone,
     private studentService: StudentService,
     private todolistService: TodolistService
   ) {}
-  
+
   ngOnInit() {
     // S'abonner aux événements de navigation pour mettre à jour les icônes
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        setTimeout(() => {
-          this.initFeatherIcons();
-        }, 100);
-      });
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
+      setTimeout(() => {
+        this.initFeatherIcons();
+      }, 100);
+    });
 
     // S'abonner au nombre d'étudiants
-    this.studentCountSubscription = this.studentService.getStudentCount()
-      .subscribe(count => {
-        this.statCards[0].value = count.toString();
-      });
+    this.studentCountSubscription = this.studentService.getStudentCount().subscribe(count => {
+      this.statCards[0].value = count.toString();
+    });
 
     // Charger les tâches
     this.loadTodos();
   }
-  
+
   ngAfterViewInit() {
     // Initialiser les icônes après le rendu de la vue
     setTimeout(() => {
@@ -102,7 +112,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.todoSubscription.unsubscribe();
     }
   }
-  
+
   initFeatherIcons() {
     try {
       if (typeof feather !== 'undefined') {
@@ -121,16 +131,16 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.todoError = null;
 
     this.todoSubscription = this.todolistService.getTodolists().subscribe({
-      next: (todos) => {
+      next: todos => {
         this.todoItems = Array.isArray(todos) ? todos : [];
         this.todoStats = this.todolistService.calculateStats(this.todoItems);
         this.isLoadingTodos = false;
       },
-      error: (error) => {
+      error: error => {
         this.todoError = 'Erreur lors du chargement des tâches';
         this.todoItems = [];
         this.isLoadingTodos = false;
-      }
+      },
     });
   }
 
@@ -149,14 +159,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return {
       title: String(rawData?.title || '').trim(),
       description: rawData?.description ? String(rawData.description).trim() : undefined,
-      subtasks: Array.isArray(rawData?.subtasks) 
+      subtasks: Array.isArray(rawData?.subtasks)
         ? rawData.subtasks
             .map((subtask: any) => ({
               title: String(subtask?.title || '').trim(),
-              description: subtask?.description ? String(subtask.description).trim() : undefined
+              description: subtask?.description ? String(subtask.description).trim() : undefined,
             }))
             .filter((subtask: any) => subtask.title.length > 0)
-        : []
+        : [],
     };
   }
 
@@ -169,28 +179,28 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCreateTodo(todoData: any) {
     const cleanData = this.sanitizeTodoData(todoData);
-    
+
     if (!this.validateTodoData(cleanData)) {
       this.todoError = 'Données invalides: titre et sous-tâches requis';
       return;
     }
-    
+
     this.isCreatingTodo = true;
     this.todoError = null;
 
     this.todolistService.createTodoWithSubtasks(cleanData).subscribe({
-      next: (newTask) => {
+      next: newTask => {
         this.loadTodos();
         this.closeCreateModal();
       },
-      error: (error) => {
+      error: error => {
         this.todoError = 'Erreur lors de la création de la tâche';
         this.isCreatingTodo = false;
-      }
+      },
     });
   }
 
-  onSubtaskUpdated(event: {subtaskId: string, updatedSubtask: TodoTask | Subtask}) {
+  onSubtaskUpdated(event: { subtaskId: string; updatedSubtask: TodoTask | Subtask }) {
     // Trouver la tâche parente qui contient cette sous-tâche
     this.todoItems.forEach(parentTask => {
       if (parentTask.subtasks) {
@@ -198,7 +208,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         if (subtaskIndex !== -1) {
           // Mettre à jour la sous-tâche
           parentTask.subtasks[subtaskIndex] = event.updatedSubtask as any;
-          
+
           // Recalculer les stats localement
           this.updateParentTaskStats(parentTask);
         }
@@ -221,7 +231,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       total: totalSubtasks,
       completed: completedSubtasks,
       pending: pendingSubtasks,
-      completionPercentage: Math.round((completedSubtasks / totalSubtasks) * 100)
+      completionPercentage: Math.round((completedSubtasks / totalSubtasks) * 100),
     };
 
     // Calculer le pourcentage de complétion
@@ -239,15 +249,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get parentTasks(): TodoTask[] {
     if (!Array.isArray(this.todoItems)) return [];
-    
+
     // Toutes les tâches retournées par l'API sont des tâches principales
     let tasks = this.todoItems;
-    
+
     // Appliquer le filtre
     if (this.activeFilter !== 'all') {
       tasks = tasks.filter(task => task.status === this.activeFilter);
     }
-    
+
     return tasks;
   }
 
@@ -263,19 +273,27 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getFilterIcon(): string {
     switch (this.activeFilter) {
-      case 'pending': return '🕒';
-      case 'in_progress': return '⚡';
-      case 'completed': return '✅';
-      default: return '📋';
+      case 'pending':
+        return '🕒';
+      case 'in_progress':
+        return '⚡';
+      case 'completed':
+        return '✅';
+      default:
+        return '📋';
     }
   }
 
   getFilterLabel(): string {
     switch (this.activeFilter) {
-      case 'pending': return 'Pas commencé';
-      case 'in_progress': return 'En cours';
-      case 'completed': return 'Terminé';
-      default: return 'Toutes';
+      case 'pending':
+        return 'Pas commencé';
+      case 'in_progress':
+        return 'En cours';
+      case 'completed':
+        return 'Terminé';
+      default:
+        return 'Toutes';
     }
   }
 
@@ -288,14 +306,20 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getPendingTasksCount(): number {
-    return Array.isArray(this.todoItems) ? this.todoItems.filter(t => t.status === 'pending').length : 0;
+    return Array.isArray(this.todoItems)
+      ? this.todoItems.filter(t => t.status === 'pending').length
+      : 0;
   }
 
   getInProgressTasksCount(): number {
-    return Array.isArray(this.todoItems) ? this.todoItems.filter(t => t.status === 'in_progress').length : 0;
+    return Array.isArray(this.todoItems)
+      ? this.todoItems.filter(t => t.status === 'in_progress').length
+      : 0;
   }
 
   getCompletedTasksCount(): number {
-    return Array.isArray(this.todoItems) ? this.todoItems.filter(t => t.status === 'completed').length : 0;
+    return Array.isArray(this.todoItems)
+      ? this.todoItems.filter(t => t.status === 'completed').length
+      : 0;
   }
-} 
+}

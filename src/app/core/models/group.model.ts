@@ -3,9 +3,19 @@ import { Student } from './student.model';
 import { Course } from './course.model';
 
 export interface Group {
-  group_id: number | string;
+  // ✅ NOUVEAUX CHAMPS (schéma réel)
+  group_uuid?: string;
+  group_label?: string;
+  session_uuid?: string;
+  group_started_at?: Date | string;
+  group_ended_at?: Date | string;
+  group_more_info?: string;
+  group_created_at?: Date | string;
+  
+  // ✅ PROPRIÉTÉS DE COMPATIBILITÉ TEMPORAIRES
+  group_id?: number | string;
   id?: string; // ID au format UUID utilisé par l'API
-  label: string;
+  label?: string;
   session?: Session;
   session_id?: number | string;
   started_at?: Date | string;
@@ -19,4 +29,13 @@ export interface Group {
   externalId?: string;
   students?: Student[];
   courses?: Course[];
-} 
+}
+
+// Interface pour la création de groupe
+export interface CreateGroupRequest {
+  group_label: string;
+  session_uuid: string;
+  group_started_at?: Date | string;
+  group_ended_at?: Date | string;
+  group_more_info?: string;
+}

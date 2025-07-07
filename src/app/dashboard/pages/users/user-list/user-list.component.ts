@@ -1,8 +1,10 @@
+import { AuthService } from '@core/services';
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService, Role, CreateUserDto } from '../user.service';
-import { User } from '../models/user';
+import { User } from '@core/models';
 import { debounceTime } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +14,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   templateUrl: './user-list.component.html',
   styleUrls: ['./user-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule],
 })
 export class UserListComponent implements OnInit {
   users: User[] = [];
@@ -24,7 +26,7 @@ export class UserListComponent implements OnInit {
   emailFilter = new FormControl('');
   error: string | null = null;
   currentUserId: string = '';
-  
+
   // Création d'utilisateur
   showModal = false;
   createUserForm: FormGroup;
@@ -34,26 +36,27 @@ export class UserListComponent implements OnInit {
 
   // Mapping des rôles aux descriptions
   private roleDescriptions: { [key: string]: string } = {
-    'admin': 'Administration',
-    'teacher': 'Formateur',
-    'student': 'Apprenant',
-    'developer': 'Développeur',
-    'designer': 'UI/UX Design',
-    'executive': 'Project',
-    'manager': 'Organization',
-    'programmer': 'Developer'
+    admin: 'Administration',
+    teacher: 'Formateur',
+    student: 'Apprenant',
+    developer: 'Développeur',
+    designer: 'UI/UX Design',
+    executive: 'Project',
+    manager: 'Organization',
+    programmer: 'Developer',
   };
 
   constructor(
     private userService: UserService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       email: [''],
-      role: ['']
+      role: [''],
     });
-    
+
     this.createUserForm = this.fb.group({
       firstname: ['', [Validators.required, Validators.maxLength(100)]],
       lastname: ['', [Validators.required, Validators.maxLength(100)]],
@@ -61,7 +64,7 @@ export class UserListComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]],
       birthdate: [null],
       role_id: ['', [Validators.required]],
-      isActive: [true]
+      isActive: [true],
     });
   }
 
@@ -69,47 +72,46 @@ export class UserListComponent implements OnInit {
     this.loadUsers();
     this.getCurrentUserId();
     this.loadRoles();
-    
+
     // Utiliser emailFilter pour la recherche
-    this.emailFilter.valueChanges
-      .pipe(debounceTime(500))
-      .subscribe(value => {
-        this.filterForm.get('email')?.setValue(value);
-        this.currentPage = 0;
-        this.loadUsers();
-      });
-    
-    this.filterForm.get('role')?.valueChanges
-      .pipe(debounceTime(500))
+    this.emailFilter.valueChanges.pipe(debounceTime(500)).subscribe(value => {
+      this.filterForm.get('email')?.setValue(value);
+      this.currentPage = 0;
+      this.loadUsers();
+    });
+
+    this.filterForm
+      .get('role')
+      ?.valueChanges.pipe(debounceTime(500))
       .subscribe(() => {
         this.currentPage = 0;
         this.loadUsers();
       });
   }
-  
+
   // Chargement des rôles
   loadRoles(): void {
     this.userService.getRoles().subscribe({
-      next: (roles) => {
+      next: roles => {
         this.roles = roles;
       },
-      error: (error) => {
+      error: error => {
         // Gestion silencieuse
-      }
+      },
     });
   }
-  
+
   // Afficher/masquer le modal
   showCreateUserModal(): void {
     this.showModal = true;
     this.createUserForm.reset({ isActive: true });
   }
-  
+
   hideCreateUserModal(): void {
     this.showModal = false;
     this.errorMessage = '';
   }
-  
+
   // Création d'un utilisateur
   createUser(): void {
     if (this.createUserForm.invalid) {
@@ -120,49 +122,49 @@ export class UserListComponent implements OnInit {
       });
       return;
     }
-    
+
     this.isSubmitting = true;
     this.errorMessage = '';
-    
+
     // Récupérer les valeurs du formulaire
     const formValue = this.createUserForm.value;
-    
+
     // Créer l'objet utilisateur à envoyer
     const userData: CreateUserDto = {
-      firstname: formValue.firstname,
-      lastname: formValue.lastname,
-      email: formValue.email,
-      password: formValue.password,
-      role_id: formValue.role_id,
-      isActive: formValue.isActive
+      user_firstname: formValue.firstname,
+      user_lastname: formValue.lastname,
+      user_mail: formValue.email,
+      user_password: formValue.password,
+      role_uuid: formValue.role_id,
+      user_isactive: formValue.isActive,
     };
-    
+
     // Ajouter la date de naissance si elle est présente
     if (formValue.birthdate) {
-      userData.birthdate = formValue.birthdate;
+      userData.user_birthdate = formValue.birthdate;
     }
-    
+
     this.userService.createUser(userData).subscribe({
-      next: (user) => {
+      next: user => {
         this.isSubmitting = false;
         this.hideCreateUserModal();
         this.loadUsers(); // Recharger la liste des utilisateurs
       },
-      error: (error) => {
+      error: error => {
         this.isSubmitting = false;
-        
+
         // Gérer spécifiquement l'erreur 409 (Conflict)
         if (error.status === 409) {
           this.errorMessage = 'Un utilisateur avec cette adresse email existe déjà.';
         } else {
           this.errorMessage = `Erreur lors de la création de l'utilisateur: ${error.message || 'Veuillez réessayer plus tard.'}`;
         }
-      }
+      },
     });
   }
 
   getCurrentUserId(): void {
-    const token = localStorage.getItem('access_token');
+    const token = this.authService.getToken();
     if (token) {
       try {
         // Décoder le token JWT (format: header.payload.signature)
@@ -178,35 +180,37 @@ export class UserListComponent implements OnInit {
     this.loading = true;
     this.error = null;
     const filters = this.filterForm.value;
-    
-    this.userService.getUsers({
-      skip: this.currentPage * this.pageSize,
-      take: this.pageSize,
-      email: filters.email || undefined,
-      role: filters.role || undefined
-    }).subscribe({
-      next: (response: any) => {
-        // Gestion de différentes structures de réponse possibles
-        if (response.data && Array.isArray(response.data)) {
-          this.users = response.data;
-          this.totalUsers = response.total || response.data.length;
-        } else if (Array.isArray(response)) {
-          this.users = response;
-          this.totalUsers = response.length;
-        } else {
+
+    this.userService
+      .getUsers({
+        skip: this.currentPage * this.pageSize,
+        take: this.pageSize,
+        user_mail: filters.email || undefined,
+        role_uuid: filters.role || undefined,
+      })
+      .subscribe({
+        next: (response: any) => {
+          // Gestion de différentes structures de réponse possibles
+          if (response.data && Array.isArray(response.data)) {
+            this.users = response.data;
+            this.totalUsers = response.total || response.data.length;
+          } else if (Array.isArray(response)) {
+            this.users = response;
+            this.totalUsers = response.length;
+          } else {
+            this.users = [];
+            this.totalUsers = 0;
+            this.error = 'Format de réponse inattendu';
+          }
+
+          this.loading = false;
+        },
+        error: error => {
+          this.error = `Erreur: ${error.status} ${error.statusText}`;
+          this.loading = false;
           this.users = [];
-          this.totalUsers = 0;
-          this.error = 'Format de réponse inattendu';
-        }
-        
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = `Erreur: ${error.status} ${error.statusText}`;
-        this.loading = false;
-        this.users = [];
-      }
-    });
+        },
+      });
   }
 
   onPageChange(page: number): void {
@@ -222,26 +226,41 @@ export class UserListComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
       this.userService.deleteUser(id).subscribe({
         next: () => {
-          this.users = this.users.filter(user => user.id !== id);
+          this.users = this.users.filter(user => user.user_uuid !== id);
           this.loadUsers();
         },
-        error: (error) => {
+        error: error => {
           this.error = `Erreur lors de la suppression: ${error.status || ''} ${error.statusText || error.message || 'Erreur inconnue'}`;
-        }
+        },
       });
     }
   }
 
   // Méthodes pour le design
   getUserInitials(user: User): string {
-    const firstInitial = user.firstname ? user.firstname.charAt(0) : '';
-    const lastInitial = user.lastname ? user.lastname.charAt(0) : '';
+    const firstInitial = user.user_firstname ? user.user_firstname.charAt(0) : '';
+    const lastInitial = user.user_lastname ? user.user_lastname.charAt(0) : '';
     return (firstInitial + lastInitial).toUpperCase();
   }
 
-  getRoleDescription(roleName: string | undefined): string {
-    if (!roleName) return '';
-    return this.roleDescriptions[roleName.toLowerCase()] || roleName;
+  getRoleDescription(roleId: string | undefined): string {
+    if (!roleId) return 'Non assigné';
+    
+    // Chercher le rôle dans la liste des rôles chargés
+    // Essayer toutes les variantes possibles d'ID
+    const role = this.roles.find(r => 
+      r.role_uuid === roleId ||
+      r.role_uuid === roleId.toLowerCase()
+    );
+    
+    if (role) {
+      return role.role_name || 'Rôle inconnu';
+    }
+    
+
+    
+    // Fallback avec l'ancien mapping si le rôle n'est pas trouvé
+    return this.roleDescriptions[roleId.toLowerCase()] || `Rôle: ${roleId}`;
   }
 
   formatDate(dateString: string | Date | undefined): string {

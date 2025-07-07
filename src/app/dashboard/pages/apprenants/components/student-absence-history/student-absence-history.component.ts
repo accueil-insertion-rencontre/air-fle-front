@@ -1,14 +1,14 @@
+import { Absence, AlertService, AttendanceRecord, AttendanceService } from '@core/services';
+
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AttendanceService, Absence, AttendanceRecord } from '../../../../../core/services/attendance.service';
-import { AlertService } from '../../../../../core/services/alert.service';
 
 @Component({
   selector: 'app-student-absence-history',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './student-absence-history.component.html',
-  styleUrls: ['./student-absence-history.component.scss']
+  styleUrls: ['./student-absence-history.component.scss'],
 })
 export class StudentAbsenceHistoryComponent implements OnInit {
   @Input() studentId!: string | number;
@@ -37,23 +37,24 @@ export class StudentAbsenceHistoryComponent implements OnInit {
 
     this.attendanceService.getStudentAbsences(this.studentId.toString()).subscribe({
       next: (absences: Absence[]) => {
-        this.absenceHistory = absences.sort((a: Absence, b: Absence) => 
-          new Date(b.course?.day || '').getTime() - new Date(a.course?.day || '').getTime()
+        this.absenceHistory = absences.sort(
+          (a: Absence, b: Absence) =>
+            new Date(b.course?.day || '').getTime() - new Date(a.course?.day || '').getTime()
         );
         this.loading = false;
         this.calculateAbsenceStats();
       },
       error: (error: any) => {
-        console.error('Erreur lors du chargement de l\'historique des absences:', error);
-        this.error = 'Impossible de charger l\'historique des absences';
+        console.error("Erreur lors du chargement de l'historique des absences:", error);
+        this.error = "Impossible de charger l'historique des absences";
         this.loading = false;
-        
+
         // Si l'API d'absence n'est pas encore implémentée, essayer l'ancienne méthode
         if (error.status === 404) {
-          console.log('API d\'absence non trouvée, utilisation de l\'API legacy...');
+          console.log("API d'absence non trouvée, utilisation de l'API legacy...");
           this.loadLegacyAttendanceHistory();
         }
-      }
+      },
     });
   }
 
@@ -61,8 +62,9 @@ export class StudentAbsenceHistoryComponent implements OnInit {
    * Méthode de fallback pour utiliser l'ancienne API d'attendance
    */
   private loadLegacyAttendanceHistory(): void {
-    const numericStudentId = typeof this.studentId === 'string' ? parseInt(this.studentId) : this.studentId;
-    
+    const numericStudentId =
+      typeof this.studentId === 'string' ? parseInt(this.studentId) : this.studentId;
+
     this.attendanceService.getStudentAttendanceHistory(numericStudentId).subscribe({
       next: (records: AttendanceRecord[]) => {
         // Convertir les AttendanceRecord en Absence pour l'affichage
@@ -76,24 +78,24 @@ export class StudentAbsenceHistoryComponent implements OnInit {
             course: {
               course_id: record.course_id.toString(),
               intitule: 'Cours',
-              day: record.created_at
-            }
+              day: record.created_at,
+            },
           })) as Absence[];
         this.loading = false;
         this.calculateAbsenceStats();
       },
       error: (legacyError: any) => {
-        console.error('Erreur lors du chargement via l\'API legacy:', legacyError);
-        this.error = 'Impossible de charger l\'historique des absences';
+        console.error("Erreur lors du chargement via l'API legacy:", legacyError);
+        this.error = "Impossible de charger l'historique des absences";
         this.loading = false;
-      }
+      },
     });
   }
 
   calculateAbsenceStats(): void {
     this.absenceStats = {
       total_absences: this.absenceHistory.length,
-      absence_rate: 0 // Sera calculé quand on aura le nombre total de cours
+      absence_rate: 0, // Sera calculé quand on aura le nombre total de cours
     };
   }
 
@@ -102,12 +104,12 @@ export class StudentAbsenceHistoryComponent implements OnInit {
    */
   formatDate(dateString: string | undefined): string {
     if (!dateString) return 'Date inconnue';
-    
+
     return new Date(dateString).toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -116,10 +118,10 @@ export class StudentAbsenceHistoryComponent implements OnInit {
    */
   formatTime(dateString: string | undefined): string {
     if (!dateString) return '--:--';
-    
+
     return new Date(dateString).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -139,8 +141,8 @@ export class StudentAbsenceHistoryComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Erreur lors de la suppression:', error);
-        this.alertService.error('Erreur lors de la suppression de l\'absence');
-      }
+        this.alertService.error("Erreur lors de la suppression de l'absence");
+      },
     });
   }
 
@@ -148,22 +150,22 @@ export class StudentAbsenceHistoryComponent implements OnInit {
    * Modifie la raison d'une absence
    */
   editAbsenceReason(absence: Absence): void {
-    const newReason = prompt('Modifier la raison de l\'absence:', absence.reason || '');
-    
+    const newReason = prompt("Modifier la raison de l'absence:", absence.reason || '');
+
     if (newReason === null) return; // Annulé
-    
+
     this.attendanceService.updateAbsence(absence.id, { reason: newReason }).subscribe({
       next: (updatedAbsence: Absence) => {
         const index = this.absenceHistory.findIndex(a => a.id === absence.id);
         if (index > -1) {
           this.absenceHistory[index] = updatedAbsence;
         }
-        this.alertService.success('Raison d\'absence mise à jour');
+        this.alertService.success("Raison d'absence mise à jour");
       },
       error: (error: any) => {
         console.error('Erreur lors de la modification:', error);
         this.alertService.error('Erreur lors de la modification de la raison');
-      }
+      },
     });
   }
-} 
+}

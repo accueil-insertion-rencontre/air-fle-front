@@ -5,7 +5,7 @@
 }
 
 // Variables de couleurs
-$primary-color: #4FD1C5; // Couleur turquoise
+$primary-color: #4fd1c5; // Couleur turquoise
 $text-color: #344767;
 $bg-color: #f8f9fa;
 $border-color: #dee2e6; // Légèrement plus foncé pour les lignes
@@ -31,7 +31,7 @@ $search-border: #8a8a8a; // Couleur d'encadrement de la barre de recherche (gris
 .btn-group {
   .btn {
     padding: 0.25rem 0.5rem;
-    
+
     &:not(:last-child) {
       margin-right: 0.25rem;
     }
@@ -53,7 +53,9 @@ $search-border: #8a8a8a; // Couleur d'encadrement de la barre de recherche (gris
 }
 
 // Style spécifique pour le titre
-h1.h2, .title-text, h6 {
+h1.h2,
+.title-text,
+h6 {
   color: #344767 !important; // Forcer la couleur sur le titre
   letter-spacing: -0.5px;
   font-weight: 600;
@@ -75,49 +77,50 @@ h1.h2, .title-text, h6 {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     overflow: hidden;
   }
-  
+
   .modal-header {
     border-bottom: 1px solid $border-color;
     background-color: #fafbfc;
     padding: 1rem 1.5rem;
-    
+
     .modal-title {
       color: $text-color;
       font-weight: 600;
       font-size: 1.25rem;
     }
-    
+
     .btn-close {
       box-shadow: none;
       transition: all 0.2s;
-      
+
       &:hover {
         transform: rotate(90deg);
       }
     }
   }
-  
+
   .modal-body {
     padding: 1.5rem;
   }
-  
+
   .modal-footer {
     border-top: 1px solid $border-color;
     padding: 1rem 1.5rem;
   }
-  
-  .form-control, .form-select {
+
+  .form-control,
+  .form-select {
     border: 1px solid $border-color;
     border-radius: 0.5rem;
     padding: 0.6rem 1rem;
     transition: all 0.2s;
-    
+
     &:focus {
       border-color: $primary-color;
       box-shadow: 0 0 0 0.25rem rgba(79, 209, 197, 0.25);
     }
   }
-  
+
   .invalid-feedback {
     font-size: 0.8rem;
   }
@@ -149,7 +152,7 @@ h1.h2, .title-text, h6 {
     background-color: $primary-color !important;
     border-color: $primary-color !important;
     color: #fff;
-    
+
     &:hover {
       background-color: color.adjust($primary-color, $lightness: -10%) !important;
       border-color: color.adjust($primary-color, $lightness: -10%) !important;
@@ -161,7 +164,7 @@ h1.h2, .title-text, h6 {
     .fixed-table-container {
       border-radius: 0.75rem;
       border: none; // Suppression du cadre
-      
+
       .table {
         border: none;
         border-collapse: separate;
@@ -169,33 +172,33 @@ h1.h2, .title-text, h6 {
         margin-bottom: 0;
       }
     }
-    
+
     .fixed-table-toolbar {
       padding: 1rem;
     }
-    
+
     .search .form-control {
       height: 38px;
       border-radius: 0.5rem;
       border: 1px solid $search-border !important; // Encadrement gris foncé pour la barre de recherche
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
-    
+
     .pagination-detail {
       margin-top: 1rem;
       color: #8392ab;
       font-size: 0.875rem;
     }
-    
+
     .pagination {
       margin-top: 1rem;
     }
-    
+
     .page-item.active .page-link {
       background-color: $primary-color;
       border-color: $primary-color;
     }
-    
+
     .page-link {
       color: $text-color;
     }
@@ -217,7 +220,7 @@ h1.h2, .title-text, h6 {
           border-left: none; // Pas de bordure entre les colonnes
         }
       }
-      
+
       tbody {
         td {
           font-size: 0.875rem;
@@ -253,7 +256,7 @@ h1.h2, .title-text, h6 {
     background-color: $primary-color;
     border-color: $primary-color;
   }
-  
+
   .btn-warning {
     background-color: #f53939;
     border-color: #f53939;
@@ -277,7 +280,7 @@ h1.h2, .title-text, h6 {
     border-radius: 0.5rem;
     color: white;
     transition: all 0.2s ease;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
@@ -289,18 +292,18 @@ h1.h2, .title-text, h6 {
     display: inline-block;
     margin-left: 0.255em;
     vertical-align: 0.255em;
-    content: "";
+    content: '';
     border-top: 0.3em solid;
     border-right: 0.3em solid transparent;
     border-bottom: 0;
     border-left: 0.3em solid transparent;
   }
 
-  .keep-open button[data-toggle="dropdown"],
+  .keep-open button[data-toggle='dropdown'],
   .fixed-table-toolbar .dropdown-toggle {
     padding-right: 25px;
   }
-  
+
   .dropdown-menu {
     border: none;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);

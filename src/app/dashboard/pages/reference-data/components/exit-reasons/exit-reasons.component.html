@@ -60,16 +60,18 @@
       <form [formGroup]="createForm" (ngSubmit)="createExitReason()">
         <div class="form-group">
           <label for="createReason">Raison *</label>
-          <input 
+          <input
             id="createReason"
-            type="text" 
+            type="text"
             formControlName="reason"
             placeholder="Ex: Formation terminée, Abandon, Déménagement..."
             [class.error]="createReason?.invalid && createReason?.touched"
-          >
+          />
           <div *ngIf="createReason?.invalid && createReason?.touched" class="error-text">
             <span *ngIf="createReason?.hasError('required')">La raison est requise</span>
-            <span *ngIf="createReason?.hasError('minlength')">La raison doit contenir au moins 2 caractères</span>
+            <span *ngIf="createReason?.hasError('minlength')"
+              >La raison doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
         <div class="modal-actions">
@@ -92,23 +94,27 @@
       <form [formGroup]="editForm" (ngSubmit)="updateExitReason()">
         <div class="form-group">
           <label for="editReason">Raison *</label>
-          <input 
+          <input
             id="editReason"
-            type="text" 
+            type="text"
             formControlName="reason"
             placeholder="Ex: Formation terminée, Abandon, Déménagement..."
             [class.error]="editReason?.invalid && editReason?.touched"
-          >
+          />
           <div *ngIf="editReason?.invalid && editReason?.touched" class="error-text">
             <span *ngIf="editReason?.hasError('required')">La raison est requise</span>
-            <span *ngIf="editReason?.hasError('minlength')">La raison doit contenir au moins 2 caractères</span>
+            <span *ngIf="editReason?.hasError('minlength')"
+              >La raison doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
-          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">Sauvegarder</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
         </div>
       </form>
     </div>
   </div>
-</div> 
+</div>

@@ -1,27 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
-import { ReferenceDataService } from '../../services/reference-data.service';
-import { Nationality, CreateNationalityDto } from '../../models/reference-data.model';
+import { ReferenceDataService } from '@core/services';
+import { Nationality, CreateNationalityDto } from '@core/models';
 
 @Component({
   selector: 'app-nationalities',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './nationalities.component.html',
-  styleUrls: ['./nationalities.component.scss']
+  styleUrls: ['./nationalities.component.scss'],
 })
 export class NationalitiesComponent implements OnInit {
   nationalities: Nationality[] = [];
   isLoading = false;
   error: string | null = null;
-  
+
   // Modal states
   isCreateModalOpen = false;
   isEditModalOpen = false;
   editingNationality: Nationality | null = null;
-  
+
   // Form
   createForm: FormGroup;
   editForm: FormGroup;
@@ -32,11 +38,11 @@ export class NationalitiesComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.createForm = this.fb.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
 
     this.editForm = this.fb.group({
-      label: ['', [Validators.required, Validators.minLength(2)]]
+      label: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -52,24 +58,24 @@ export class NationalitiesComponent implements OnInit {
     console.log('Chargement des nationalités...');
 
     this.referenceDataService.getNationalities().subscribe({
-      next: (data) => {
+      next: data => {
         console.log('Nationalités reçues:', data);
         this.nationalities = data;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Erreur lors du chargement des nationalités:', error);
         if (error.status === 401) {
           this.error = 'Accès non autorisé. Veuillez vous reconnecter.';
         } else if (error.status === 403) {
-          this.error = 'Accès interdit. Vous n\'avez pas les permissions nécessaires.';
+          this.error = "Accès interdit. Vous n'avez pas les permissions nécessaires.";
         } else if (error.status === 0) {
           this.error = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
         } else {
           this.error = `Erreur lors du chargement des données (${error.status})`;
         }
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -91,14 +97,14 @@ export class NationalitiesComponent implements OnInit {
       const formData: CreateNationalityDto = this.createForm.value;
 
       this.referenceDataService.createNationality(formData).subscribe({
-        next: (response) => {
+        next: response => {
           this.loadNationalities(); // Recharger la liste
           this.closeCreateModal();
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la création:', error);
           this.error = 'Erreur lors de la création de la nationalité';
-        }
+        },
       });
     }
   }
@@ -107,7 +113,7 @@ export class NationalitiesComponent implements OnInit {
   openEditModal(nationality: Nationality): void {
     this.editingNationality = nationality;
     this.editForm.patchValue({
-      label: nationality.label
+      label: nationality.label,
     });
     this.isEditModalOpen = true;
   }
@@ -125,14 +131,14 @@ export class NationalitiesComponent implements OnInit {
       const formData: CreateNationalityDto = this.editForm.value;
 
       this.referenceDataService.updateNationality(this.editingNationality.id, formData).subscribe({
-        next: (response) => {
+        next: response => {
           this.loadNationalities(); // Recharger la liste
           this.closeEditModal();
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la modification:', error);
           this.error = 'Erreur lors de la modification de la nationalité';
-        }
+        },
       });
     }
   }
@@ -144,10 +150,10 @@ export class NationalitiesComponent implements OnInit {
         next: () => {
           this.loadNationalities(); // Recharger la liste
         },
-        error: (error) => {
+        error: error => {
           console.error('Erreur lors de la suppression:', error);
           this.error = 'Erreur lors de la suppression de la nationalité';
-        }
+        },
       });
     }
   }
@@ -158,11 +164,15 @@ export class NationalitiesComponent implements OnInit {
   }
 
   // Getters pour les formulaires
-  get createLabel() { return this.createForm.get('label'); }
-  get editLabel() { return this.editForm.get('label'); }
+  get createLabel() {
+    return this.createForm.get('label');
+  }
+  get editLabel() {
+    return this.editForm.get('label');
+  }
 
   // TrackBy function pour optimiser les performances
   trackByNationalityId(index: number, nationality: Nationality): string {
     return nationality.id;
   }
-} 
+}

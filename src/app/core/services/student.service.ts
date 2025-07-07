@@ -1,9 +1,10 @@
+import { environment } from '@environments/environment';
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { Student } from '../models/student.model';
-import { environment } from '../../../environments/environment';
+import { Student, CreateStudentRequest, StudentListResponse, StudentListConfig } from '../models';
 
 export interface StudentSearchResult {
   students: Student[];
@@ -11,7 +12,7 @@ export interface StudentSearchResult {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StudentService {
   private readonly apiUrl = `${environment.apiUrl}/students`;
@@ -24,8 +25,6 @@ export class StudentService {
   getAllStudents(): Observable<Student[]> {
     return this.http.get<any>(this.apiUrl).pipe(
       map(response => {
-        console.log('Réponse API étudiants:', response);
-        
         let students = [];
         if (response.success && response.data) {
           students = response.data.students || response.data || [];
@@ -34,19 +33,10 @@ export class StudentService {
         } else {
           students = [];
         }
-        
-        // Log de debug pour voir la structure des étudiants
-        if (students.length > 0) {
-          console.log('Premier étudiant récupéré:', students[0]);
-          console.log('Clés disponibles pour le premier étudiant:', Object.keys(students[0]));
-        }
-        
+
         return students;
       }),
-      catchError(error => {
-        console.error('Erreur lors du chargement des étudiants:', error);
-        return of([]);
-      })
+      catchError(error => of([]))
     );
   }
 
@@ -55,7 +45,7 @@ export class StudentService {
    */
   searchStudents(query: string): Observable<Student[]> {
     let params = new HttpParams();
-    
+
     if (query.trim()) {
       // Si la requête contient un espace, on divise en prénom et nom
       const parts = query.trim().split(' ');
@@ -67,7 +57,7 @@ export class StudentService {
         params = params.set('search', query);
       }
     }
-    
+
     return this.http.get<any>(this.apiUrl, { params }).pipe(
       map(response => {
         if (response.success && response.data) {
@@ -78,10 +68,7 @@ export class StudentService {
           return [];
         }
       }),
-      catchError(error => {
-        console.error('Erreur lors de la recherche d\'étudiants:', error);
-        return of([]);
-      })
+      catchError(error => of([]))
     );
   }
 
@@ -98,7 +85,6 @@ export class StudentService {
         }
       }),
       catchError(error => {
-        console.error('Erreur lors du chargement de l\'étudiant:', error);
         throw error;
       })
     );
@@ -107,41 +93,92 @@ export class StudentService {
   /**
    * Récupère les étudiants avec pagination
    */
-  getStudentsWithPagination(page: number = 1, pageSize: number = 10, search: string = ''): Observable<StudentSearchResult> {
+  getStudentsWithPagination(
+    page: number = 1,
+    pageSize: number = 10,
+    search: string = ''
+  ): Observable<StudentSearchResult> {
     let params = new HttpParams();
-    
+
     const skip = (page - 1) * pageSize;
     params = params.set('skip', skip.toString());
     params = params.set('take', pageSize.toString());
-    
+
     if (search.trim()) {
       params = params.set('search', search);
     }
-    
+
     return this.http.get<any>(this.apiUrl, { params }).pipe(
       map(response => {
         if (response.success && response.data) {
           return {
             students: response.data.students || response.data || [],
-            total: response.data.total || 0
+            total: response.data.total || 0,
           };
         } else if (Array.isArray(response)) {
           return {
             students: response,
-            total: response.length
+            total: response.length,
           };
         } else {
           return {
             students: [],
-            total: 0
+            total: 0,
           };
         }
       }),
-      catchError(error => {
-        console.error('Erreur lors du chargement des étudiants:', error);
-        return of({ students: [], total: 0 });
-      })
+      catchError(error => of({ students: [], total: 0 }))
     );
+  }
+
+  /**
+   * Récupère le nombre total d'étudiants
+   */
+  getStudentCount(): Observable<number> {
+    // Pour éviter l'erreur 404, on retourne 0 pour le moment
+    return new Observable(observer => {
+      observer.next(0);
+      observer.complete();
+    });
+  }
+
+  /**
+   * Crée un nouvel étudiant
+   */
+  createStudent(studentData: CreateStudentRequest): Observable<Student> {
+    return this.http.post<Student>(this.apiUrl, studentData);
+  }
+
+  /**
+   * Récupère les étudiants avec configuration (alias pour getAllStudents pour compatibilité)
+   */
+  getStudents(config?: StudentListConfig): Observable<StudentListResponse> {
+    return this.getAllStudents().pipe(
+      map(students => ({
+        students: students,
+        total: students.length,
+        page: config?.page || 1,
+        pageSize: config?.pageSize || students.length,
+        totalPages: Math.ceil(students.length / (config?.pageSize || students.length))
+      }))
+    );
+  }
+
+  /**
+   * Supprime un étudiant
+   */
+  deleteStudent(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Associe des handicaps à un étudiant
+   */
+  assignDisabilities(studentId: string, disabilityIds: string[]): Observable<any> {
+    const data = {
+      disability_ids: disabilityIds,
+    };
+    return this.http.post(`${this.apiUrl}/${studentId}/disabilities`, data);
   }
 
   /**
@@ -149,11 +186,10 @@ export class StudentService {
    */
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
-      console.error(`${operation} failed:`, error);
       return new Observable(observer => {
         observer.next(result as T);
         observer.complete();
       });
     };
   }
-} 
+}

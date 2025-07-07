@@ -9,28 +9,28 @@ import { StudentImportComponent } from './components/student-import/student-impo
 const routes: Routes = [
   {
     path: '',
-    component: StudentListComponent
+    component: StudentListComponent,
   },
   {
     path: 'new',
-    component: StudentWizardComponent
+    component: StudentWizardComponent,
   },
   {
     path: 'import',
-    component: StudentImportComponent
+    component: StudentImportComponent,
   },
   {
     path: ':id/view',
-    component: StudentProfileComponent
+    component: StudentProfileComponent,
   },
   {
     path: ':id/edit',
-    component: StudentFormComponent
-  }
+    component: StudentFormComponent,
+  },
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class ApprenantsRoutingModule { } 
+export class ApprenantsRoutingModule {}

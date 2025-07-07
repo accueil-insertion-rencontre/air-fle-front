@@ -11,10 +11,12 @@ import { RouterModule } from '@angular/router';
       <router-outlet></router-outlet>
     </div>
   `,
-  styles: [`
-    .apprenants-container {
-      padding: 1rem;
-    }
-  `]
+  styles: [
+    `
+      .apprenants-container {
+        padding: 1rem;
+      }
+    `,
+  ],
 })
-export class ApprenantsComponent {} 
+export class ApprenantsComponent {}

@@ -1,23 +1,23 @@
 // Variables de couleurs
-$teal-300: #4FD1C5;
+$teal-300: #4fd1c5;
 $text-color: #333;
 $light-text: #718096;
 $white: #fff;
-$green: #48BB78;
-$red: #F56565;
-$blue: #4299E1;
-$yellow: #ECC94B;
-$orange: #ED8936;
-$purple: #9F7AEA;
-$gray-50: #F9FAFB;
-$gray-100: #F7FAFC;
-$gray-200: #EDF2F7;
-$gray-300: #E2E8F0;
-$gray-400: #CBD5E0;
-$gray-500: #A0AEC0;
+$green: #48bb78;
+$red: #f56565;
+$blue: #4299e1;
+$yellow: #ecc94b;
+$orange: #ed8936;
+$purple: #9f7aea;
+$gray-50: #f9fafb;
+$gray-100: #f7fafc;
+$gray-200: #edf2f7;
+$gray-300: #e2e8f0;
+$gray-400: #cbd5e0;
+$gray-500: #a0aec0;
 
 // Import du module de couleur Sass
-@use "sass:color";
+@use 'sass:color';
 
 .profile-container {
   width: 100%;
@@ -26,16 +26,17 @@ $gray-500: #A0AEC0;
   padding: 0 10px;
   font-family: 'Roboto', sans-serif;
   position: relative;
-  
+
   // États de chargement et d'erreur
-  .loading-container, .error-container {
+  .loading-container,
+  .error-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
     text-align: center;
-    
+
     .spinner {
       width: 40px;
       height: 40px;
@@ -45,13 +46,13 @@ $gray-500: #A0AEC0;
       animation: spin 1s linear infinite;
       margin-bottom: 20px;
     }
-    
+
     p {
       font-size: 16px;
       color: $light-text;
       margin: 0 0 20px;
     }
-    
+
     .retry-button {
       background: $teal-300;
       color: $white;
@@ -62,19 +63,23 @@ $gray-500: #A0AEC0;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
-      
+
       &:hover {
         background: color.scale($teal-300, $lightness: -10%);
       }
     }
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
-  // Bannière principale 
+
+  // Bannière principale
   .banner {
     background: linear-gradient(135deg, $teal-300 0%, color.scale($teal-300, $lightness: 10%) 100%);
     height: 180px;
@@ -84,12 +89,12 @@ $gray-500: #A0AEC0;
     z-index: 0;
     width: 100%;
     transition: background 0.3s ease;
-    
+
     &.inactive-banner {
       background: linear-gradient(135deg, $red 0%, color.scale($red, $lightness: 10%) 100%);
     }
   }
-  
+
   // Boutons flottants
   .floating-buttons {
     position: absolute;
@@ -100,8 +105,10 @@ $gray-500: #A0AEC0;
     justify-content: space-between;
     padding: 0 20px;
     z-index: 2;
-    
-    .back-button, .edit-button, .delete-button {
+
+    .back-button,
+    .edit-button,
+    .delete-button {
       background: rgba(255, 255, 255, 0.2);
       border: none;
       border-radius: 8px;
@@ -115,32 +122,32 @@ $gray-500: #A0AEC0;
       cursor: pointer;
       transition: all 0.2s;
       backdrop-filter: blur(10px);
-      
+
       svg {
         width: 14px;
         height: 14px;
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.3);
         transform: translateY(-1px);
       }
     }
-    
+
     .delete-button {
       background: rgba(255, 0, 0, 0.2);
-      
+
       &:hover {
         background: rgba(255, 0, 0, 0.3);
       }
     }
-    
+
     .action-buttons {
       display: flex;
       gap: 10px;
     }
   }
-  
+
   // Carte principale avec nom et email
   .main-student-card {
     background: rgba(255, 255, 255, 0.95);
@@ -153,7 +160,7 @@ $gray-500: #A0AEC0;
     border: 1px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
-    
+
     .student-header {
       h1 {
         font-size: 28px;
@@ -161,7 +168,7 @@ $gray-500: #A0AEC0;
         margin: 0 0 8px;
         color: $text-color;
       }
-      
+
       .email {
         font-size: 16px;
         color: $light-text;
@@ -169,7 +176,7 @@ $gray-500: #A0AEC0;
       }
     }
   }
-  
+
   // Sections pleine largeur
   .full-width-section {
     background: $white;
@@ -178,7 +185,7 @@ $gray-500: #A0AEC0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid $gray-200;
     margin-bottom: 32px;
-    
+
     h3 {
       font-size: 18px;
       font-weight: 600;
@@ -187,7 +194,7 @@ $gray-500: #A0AEC0;
       padding-bottom: 12px;
       border-bottom: 1px solid $gray-200;
     }
-    
+
     .section-subtitle {
       font-size: 13px;
       color: $light-text;
@@ -201,31 +208,32 @@ $gray-500: #A0AEC0;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
-    
+
     .profile-column {
       .detail-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .detail-label {
           font-size: 13px;
           color: $light-text;
           font-weight: 500;
         }
-        
+
         .detail-value {
           font-size: 13px;
           color: $text-color;
           font-weight: 600;
           text-align: right;
-          
-          &.level-badge, &.status-badge {
+
+          &.level-badge,
+          &.status-badge {
             padding: 6px 10px;
             border-radius: 12px;
             font-size: 11px;
@@ -243,7 +251,7 @@ $gray-500: #A0AEC0;
       padding: 20px;
       border-radius: 8px;
       border-left: 4px solid $teal-300;
-      
+
       p {
         margin: 0;
         font-size: 14px;
@@ -260,14 +268,14 @@ $gray-500: #A0AEC0;
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
     margin-bottom: 40px;
-    
+
     > div {
       background: $white;
       border-radius: 12px;
       padding: 28px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border: 1px solid $gray-200;
-      
+
       h3 {
         font-size: 17px;
         font-weight: 600;
@@ -278,73 +286,73 @@ $gray-500: #A0AEC0;
       }
     }
   }
-  
+
   // Empty states
   .empty-state {
     text-align: center;
     padding: 20px 10px;
     color: $light-text;
-    
+
     p {
       margin: 0 0 5px;
       font-size: 14px;
-      
+
       &.empty-subtitle {
         font-size: 12px;
         color: $gray-500;
       }
     }
   }
-  
+
   // Section Attestations
   .attestations-section {
     .attestation-item {
       margin-bottom: 15px;
-      
+
       .course-header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 5px;
-        
+
         .flag {
           font-size: 16px;
         }
-        
+
         .warning-icon {
           font-size: 16px;
         }
-        
+
         .course-title {
           font-size: 14px;
           font-weight: 600;
           color: $text-color;
         }
       }
-      
+
       .course-details {
         display: flex;
         flex-direction: column;
         gap: 3px;
         margin-left: 24px;
-        
+
         .course-date {
           font-size: 12px;
           color: $red;
           font-weight: 500;
         }
-        
+
         .course-level {
           font-size: 12px;
           color: $light-text;
         }
       }
     }
-    
+
     .generate-button-container {
       margin-top: 20px;
       text-align: center;
-      
+
       .generate-btn {
         background: $teal-300;
         color: $white;
@@ -355,71 +363,71 @@ $gray-500: #A0AEC0;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
-        
+
         &:hover {
           background: color.scale($teal-300, $lightness: -10%);
         }
       }
     }
   }
-  
+
   // Section Absences
   .absences-section {
     .absence-item {
       margin-bottom: 15px;
-      
+
       .course-header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 5px;
-        
+
         .flag {
           font-size: 16px;
         }
-        
+
         .warning-icon {
           font-size: 16px;
         }
-        
+
         .course-title {
           font-size: 14px;
           font-weight: 600;
           color: $text-color;
           flex: 1;
         }
-        
+
         .score {
           font-size: 12px;
           font-weight: 600;
           color: $text-color;
         }
       }
-      
+
       .course-details {
         display: flex;
         flex-direction: column;
         gap: 3px;
         margin-left: 24px;
-        
+
         .course-date {
           font-size: 12px;
           color: $red;
           font-weight: 500;
         }
-        
+
         .course-level {
           font-size: 12px;
           color: $light-text;
         }
       }
     }
-    
+
     .action-buttons-row {
       display: flex;
       gap: 8px;
       margin-top: 20px;
-      
+
       .action-btn-small {
         flex: 1;
         padding: 6px 12px;
@@ -429,29 +437,29 @@ $gray-500: #A0AEC0;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
-        
+
         &.blue {
           background: $blue;
           color: $white;
-          
+
           &:hover {
             background: color.scale($blue, $lightness: -10%);
           }
         }
-        
+
         &.orange {
           background: $orange;
           color: $white;
-          
+
           &:hover {
             background: color.scale($orange, $lightness: -10%);
           }
         }
-        
+
         &.red {
           background: $red;
           color: $white;
-          
+
           &:hover {
             background: color.scale($red, $lightness: -10%);
           }
@@ -459,64 +467,64 @@ $gray-500: #A0AEC0;
       }
     }
   }
-  
+
   // Section Évaluations
   .evaluations-section {
     .evaluation-item {
       margin-bottom: 15px;
-      
+
       .course-header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 5px;
-        
+
         .flag {
           font-size: 16px;
         }
-        
+
         .warning-icon {
           font-size: 16px;
         }
-        
+
         .course-title {
           font-size: 14px;
           font-weight: 600;
           color: $text-color;
           flex: 1;
         }
-        
+
         .score {
           font-size: 12px;
           font-weight: 600;
           color: $text-color;
         }
       }
-      
+
       .course-details {
         display: flex;
         flex-direction: column;
         gap: 3px;
         margin-left: 24px;
-        
+
         .course-date {
           font-size: 12px;
           color: $red;
           font-weight: 500;
         }
-        
+
         .course-level {
           font-size: 12px;
           color: $light-text;
         }
       }
     }
-    
+
     .action-buttons-row {
       display: flex;
       gap: 8px;
       margin-top: 20px;
-      
+
       .action-btn-small {
         flex: 1;
         padding: 6px 12px;
@@ -526,29 +534,29 @@ $gray-500: #A0AEC0;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
-        
+
         &.blue {
           background: $blue;
           color: $white;
-          
+
           &:hover {
             background: color.scale($blue, $lightness: -10%);
           }
         }
-        
+
         &.orange {
           background: $orange;
           color: $white;
-          
+
           &:hover {
             background: color.scale($orange, $lightness: -10%);
           }
         }
-        
+
         &.red {
           background: $red;
           color: $white;
-          
+
           &:hover {
             background: color.scale($red, $lightness: -10%);
           }
@@ -556,7 +564,7 @@ $gray-500: #A0AEC0;
       }
     }
   }
-  
+
   // Section Suite de parcours
   .parcours-section {
     background: $white;
@@ -565,7 +573,7 @@ $gray-500: #A0AEC0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid $gray-200;
     text-align: center;
-    
+
     h3 {
       font-size: 16px;
       font-weight: 600;
@@ -574,13 +582,13 @@ $gray-500: #A0AEC0;
       padding-bottom: 10px;
       border-bottom: 1px solid $gray-200;
     }
-    
+
     .parcours-content {
       margin-bottom: 20px;
-      
+
       .parcours-icon {
         margin-bottom: 15px;
-        
+
         .level-badge-large {
           display: inline-block;
           width: 60px;
@@ -594,28 +602,30 @@ $gray-500: #A0AEC0;
           text-align: center;
         }
       }
-      
-      .parcours-description, .parcours-next, .parcours-max {
+
+      .parcours-description,
+      .parcours-next,
+      .parcours-max {
         font-size: 14px;
         margin: 5px 0;
-        
+
         &.parcours-description {
           color: $text-color;
           font-weight: 500;
         }
-        
+
         &.parcours-next {
           color: $green;
           font-weight: 600;
         }
-        
+
         &.parcours-max {
           color: $purple;
           font-weight: 600;
         }
       }
     }
-    
+
     .parcours-action {
       .parcours-btn {
         background: $teal-300;
@@ -627,11 +637,11 @@ $gray-500: #A0AEC0;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
-        
+
         &:hover:not(:disabled) {
           background: color.scale($teal-300, $lightness: -10%);
         }
-        
+
         &:disabled {
           background: $gray-400;
           cursor: not-allowed;
@@ -643,54 +653,54 @@ $gray-500: #A0AEC0;
 
 // Badges pour niveaux et statuts
 .level-badge {
-  &[data-level="A1"] { 
-    background-color: #cce5ff; 
-    color: #004085; 
+  &[data-level='A1'] {
+    background-color: #cce5ff;
+    color: #004085;
   }
-  &[data-level="A2"] { 
-    background-color: #d4edda; 
-    color: #155724; 
+  &[data-level='A2'] {
+    background-color: #d4edda;
+    color: #155724;
   }
-  &[data-level="B1"] { 
-    background-color: #fff3cd; 
-    color: #856404; 
+  &[data-level='B1'] {
+    background-color: #fff3cd;
+    color: #856404;
   }
-  &[data-level="B2"] { 
-    background-color: #f8d7da; 
-    color: #721c24; 
+  &[data-level='B2'] {
+    background-color: #f8d7da;
+    color: #721c24;
   }
-  &[data-level="C1"] { 
-    background-color: #e2e3e5; 
-    color: #383d41; 
+  &[data-level='C1'] {
+    background-color: #e2e3e5;
+    color: #383d41;
   }
-  &[data-level="C2"] { 
-    background-color: #d6d8d9; 
-    color: #1b1e21; 
+  &[data-level='C2'] {
+    background-color: #d6d8d9;
+    color: #1b1e21;
   }
 }
 
 .status-badge {
-  &[data-status="ACTIVE"] { 
+  &[data-status='ACTIVE'] {
     background-color: rgba($green, 0.2);
     color: $green;
   }
-  &[data-status="INACTIVE"] { 
+  &[data-status='INACTIVE'] {
     background-color: rgba($red, 0.2);
     color: $red;
   }
-  &[data-status="PENDING"] { 
+  &[data-status='PENDING'] {
     background-color: rgba($yellow, 0.2);
     color: color.scale($yellow, $lightness: -30%);
   }
-  &[data-status="SUSPENDED"] { 
+  &[data-status='SUSPENDED'] {
     background-color: rgba($red, 0.2);
     color: $red;
   }
-  &[data-status="COMPLETED"] { 
+  &[data-status='COMPLETED'] {
     background-color: rgba($blue, 0.2);
     color: $blue;
   }
-  &[data-status="DROPPED"] { 
+  &[data-status='DROPPED'] {
     background-color: rgba($gray-500, 0.2);
     color: $gray-500;
   }
@@ -709,7 +719,7 @@ $gray-500: #A0AEC0;
       grid-template-columns: repeat(2, 1fr);
       gap: 30px;
     }
-    
+
     .three-columns-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
@@ -717,41 +727,59 @@ $gray-500: #A0AEC0;
   }
 }
 
+// Style spécial pour forcer l'apparence du bouton générer
+.generate-btn-special {
+  flex: 1 !important;
+  padding: 6px 12px !important;
+  border: none !important;
+  border-radius: 15px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  background: #ed8936 !important;
+  color: white !important;
+  
+  &:hover {
+    background: #dd7624 !important;
+  }
+}
+
 @media (max-width: 768px) {
   .profile-container {
     padding: 0 5px;
-    
+
     .profile-details-grid {
       grid-template-columns: 1fr;
       gap: 20px;
     }
-    
+
     .three-columns-grid {
       grid-template-columns: 1fr;
       gap: 20px;
     }
-    
+
     .full-width-section {
       padding: 24px 20px;
       margin-bottom: 24px;
-      
+
       h3 {
         font-size: 16px;
       }
     }
-    
+
     .main-student-card .student-header {
       text-align: center;
       padding: 30px 20px 25px;
-      
+
       h1 {
         font-size: 22px;
       }
     }
-    
+
     .parcours-section {
       margin-top: 20px;
       padding: 20px;
     }
   }
-} 
+}

@@ -16,36 +16,36 @@ export const REFERENCE_DATA_ROUTES: Routes = [
     children: [
       {
         path: 'nationalities',
-        component: NationalitiesComponent
+        component: NationalitiesComponent,
       },
       {
         path: 'french-levels',
-        component: FrenchLevelsComponent
+        component: FrenchLevelsComponent,
       },
       {
         path: 'genders',
-        component: GendersComponent
+        component: GendersComponent,
       },
       {
         path: 'exit-reasons',
-        component: ExitReasonsComponent
+        component: ExitReasonsComponent,
       },
       {
         path: 'orientations',
-        component: OrientationsComponent
+        component: OrientationsComponent,
       },
       {
         path: 'statuses',
-        component: StatusesComponent
+        component: StatusesComponent,
       },
       {
         path: 'financings',
-        component: FinancingsComponent
+        component: FinancingsComponent,
       },
       {
         path: 'disabilities',
-        component: DisabilitiesComponent
-      }
-    ]
-  }
-]; 
+        component: DisabilitiesComponent,
+      },
+    ],
+  },
+];

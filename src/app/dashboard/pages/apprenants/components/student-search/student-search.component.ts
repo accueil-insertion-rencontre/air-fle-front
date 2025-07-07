@@ -1,14 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { StudentFilters } from '../../models/student.model';
+import { StudentFilters } from '@core/models';
 
 @Component({
   selector: 'app-student-search',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './student-search.component.html',
-  styleUrls: ['./student-search.component.scss']
+  styleUrls: ['./student-search.component.scss'],
 })
 export class StudentSearchComponent {
   @Input() maxHistoryItems = 5;
@@ -24,7 +24,7 @@ export class StudentSearchComponent {
     email: '',
     level: '',
     status: '',
-    nationality: ''
+    nationality: '',
   };
 
   onSearchChange(value: string): void {
@@ -49,7 +49,7 @@ export class StudentSearchComponent {
       email: '',
       level: '',
       status: '',
-      nationality: ''
+      nationality: '',
     };
     this.filtersChange.emit(this.filters);
   }
@@ -72,4 +72,4 @@ export class StudentSearchComponent {
     event.stopPropagation();
     this.searchHistory = this.searchHistory.filter(t => t !== term);
   }
-} 
+}

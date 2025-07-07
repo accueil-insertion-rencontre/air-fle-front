@@ -5,9 +5,9 @@
       <span class="btn-icon">←</span>
       Retour
     </button>
-    
+
     <h2>👥 Genres</h2>
-    
+
     <button class="create-btn" (click)="openCreateModal()">
       <span class="btn-icon">+</span>
       Ajouter un genre
@@ -36,14 +36,11 @@
       </div>
 
       <!-- Liste des genres -->
-      <div 
-        *ngFor="let gender of genders; trackBy: trackByGenderId" 
-        class="gender-item"
-      >
+      <div *ngFor="let gender of genders; trackBy: trackByGenderId" class="gender-item">
         <div class="column name">
           <div class="gender-name">{{ gender.label }}</div>
         </div>
-        
+
         <div class="column actions">
           <button class="edit-btn" (click)="openEditModal(gender)">Modifier</button>
           <button class="delete-btn" (click)="deleteGender(gender)">Supprimer</button>
@@ -69,31 +66,29 @@
       <h2>Ajouter un genre</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <form [formGroup]="createForm" (ngSubmit)="createGender()">
         <div class="form-group">
           <label for="createLabel">Libellé *</label>
-          <input 
+          <input
             id="createLabel"
-            type="text" 
+            type="text"
             formControlName="label"
             placeholder="Ex: Homme, Femme, Autre..."
             [class.error]="createLabel?.invalid && createLabel?.touched"
-          >
+          />
           <div *ngIf="createLabel?.invalid && createLabel?.touched" class="error-text">
             <span *ngIf="createLabel?.hasError('required')">Le libellé est requis</span>
-            <span *ngIf="createLabel?.hasError('minlength')">Le libellé doit contenir au moins 2 caractères</span>
+            <span *ngIf="createLabel?.hasError('minlength')"
+              >Le libellé doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" (click)="closeCreateModal()">
-            Annuler
-          </button>
-          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">
-            Créer
-          </button>
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
         </div>
       </form>
     </div>
@@ -107,28 +102,28 @@
       <h2>Modifier le genre</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <form [formGroup]="editForm" (ngSubmit)="updateGender()">
         <div class="form-group">
           <label for="editLabel">Libellé *</label>
-          <input 
+          <input
             id="editLabel"
-            type="text" 
+            type="text"
             formControlName="label"
             placeholder="Ex: Homme, Femme, Autre..."
             [class.error]="editLabel?.invalid && editLabel?.touched"
-          >
+          />
           <div *ngIf="editLabel?.invalid && editLabel?.touched" class="error-text">
             <span *ngIf="editLabel?.hasError('required')">Le libellé est requis</span>
-            <span *ngIf="editLabel?.hasError('minlength')">Le libellé doit contenir au moins 2 caractères</span>
+            <span *ngIf="editLabel?.hasError('minlength')"
+              >Le libellé doit contenir au moins 2 caractères</span
+            >
           </div>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" (click)="closeEditModal()">
-            Annuler
-          </button>
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
           <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
             Sauvegarder
           </button>
@@ -136,4 +131,4 @@
       </form>
     </div>
   </div>
-</div> 
+</div>

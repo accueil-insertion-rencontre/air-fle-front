@@ -2,24 +2,47 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { StudentService, CreateStudentRequest } from '../../services/student.service';
-import { ReferenceDataService, ReferenceData, Gender, Nationality, FrenchLevel, Financing, Status, Orientation, ExitReason, Disability } from '../../services/reference-data.service';
+import { StudentService, ReferenceDataService, SanitizationService, ValidationService } from '@core/services';
+import { AutoSanitizeDirective } from '@shared/directives';
+import {
+  CreateStudentRequest,
+  Gender,
+  Nationality,
+  FrenchLevel,
+  Financing,
+  Status,
+  Orientation,
+  ExitReason,
+  Disability,
+} from '@core/models';
+
+// Interface ReferenceData pour les données locales
+export interface ReferenceData {
+  genders: Gender[];
+  nationalities: Nationality[];
+  frenchLevels: FrenchLevel[];
+  financings: Financing[];
+  statuses: Status[];
+  orientations: Orientation[];
+  exitReasons: ExitReason[];
+  disabilities: Disability[];
+}
 import { finalize, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-student-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AutoSanitizeDirective],
   templateUrl: './student-form.component.html',
-  styleUrls: ['./student-form.component.scss']
+  styleUrls: ['./student-form.component.scss'],
 })
 export class StudentFormComponent implements OnInit {
   studentForm: FormGroup;
   isSubmitting = false;
   isLoading = true;
   error: string | null = null;
-  
+
   // Données de référence
   genders: Gender[] = [];
   nationalities: Nationality[] = [];
@@ -34,6 +57,8 @@ export class StudentFormComponent implements OnInit {
     private fb: FormBuilder,
     private studentService: StudentService,
     private referenceDataService: ReferenceDataService,
+    private sanitizationService: SanitizationService,
+    private validationService: ValidationService,
     private route: ActivatedRoute,
     private router: Router
   ) {
@@ -47,35 +72,53 @@ export class StudentFormComponent implements OnInit {
   private createForm(): FormGroup {
     return this.fb.group({
       // INFORMATIONS PERSONNELLES OBLIGATOIRES
-      firstname: ['', [Validators.required, Validators.maxLength(100)]],
-      lastname: ['', [Validators.required, Validators.maxLength(100)]],
+      firstname: ['', [
+        Validators.required, 
+        Validators.maxLength(100),
+        this.validationService.validNameValidator(),
+        this.validationService.noHtmlValidator()
+      ]],
+      lastname: ['', [
+        Validators.required, 
+        Validators.maxLength(100),
+        this.validationService.validNameValidator(),
+        this.validationService.noHtmlValidator()
+      ]],
       birthdate: ['', [Validators.required]],
-      
+
       // INFORMATIONS PERSONNELLES OPTIONNELLES
-      placeOfBirth: [''],
-      email: ['', [Validators.email]],
-      phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]{8,}$/)]],
+      placeOfBirth: ['', [this.validationService.noHtmlValidator()]],
+      email: ['', [
+        Validators.email,
+        this.validationService.validSanitizedEmailValidator(),
+        this.validationService.noHtmlValidator()
+      ]],
+      phone: ['', [
+        Validators.pattern(/^\+?[0-9\s\-\(\)]{8,}$/),
+        this.validationService.validSanitizedPhoneValidator(),
+        this.validationService.noHtmlValidator()
+      ]],
       date_test_initial: [''],
-      commentaire: [''],
+      commentaire: ['', [this.validationService.noHtmlValidator()]],
       date_entree_france: [''],
       date_titre_sejour: [''],
       date_cir: [''],
-      
+
       // IDS OBLIGATOIRES
       gender_id: ['', [Validators.required]],
       initial_level_id: ['', [Validators.required]], // Niveau déterminé par test de positionnement
       nationality_id: ['', [Validators.required]],
       financing_id: ['', [Validators.required]],
       status_id: ['', [Validators.required]],
-      
+
       // IDS OPTIONNELS
       current_level_id: [''], // Niveau actuel en cours de formation
       orientation_id: [''],
       exit_reason_id: [''],
-      
+
       // HANDICAPS
       hasDisability: [false], // Switch pour activer/désactiver la sélection des handicaps
-      selectedDisabilities: [[]] // Tableau des handicaps sélectionnés
+      selectedDisabilities: [[]], // Tableau des handicaps sélectionnés
     });
   }
 
@@ -91,7 +134,7 @@ export class StudentFormComponent implements OnInit {
         this.orientations = Array.isArray(data.orientations) ? data.orientations : [];
         this.exitReasons = Array.isArray(data.exitReasons) ? data.exitReasons : [];
         this.disabilities = Array.isArray(data.disabilities) ? data.disabilities : [];
-        
+
         console.log('Données de référence chargées:', {
           genders: this.genders.length,
           nationalities: this.nationalities.length,
@@ -100,15 +143,15 @@ export class StudentFormComponent implements OnInit {
           statuses: this.statuses.length,
           orientations: this.orientations.length,
           exitReasons: this.exitReasons.length,
-          disabilities: this.disabilities.length
+          disabilities: this.disabilities.length,
         });
-        
+
         this.isLoading = false;
       },
-      error: (err) => {
-        this.error = "Erreur lors du chargement des données de référence";
+      error: err => {
+        this.error = 'Erreur lors du chargement des données de référence';
         console.error('Erreur lors du chargement des données:', err);
-        
+
         // Initialiser des tableaux vides en cas d'erreur
         this.genders = [];
         this.nationalities = [];
@@ -118,9 +161,9 @@ export class StudentFormComponent implements OnInit {
         this.orientations = [];
         this.exitReasons = [];
         this.disabilities = [];
-        
+
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -136,7 +179,7 @@ export class StudentFormComponent implements OnInit {
         return 'Ce champ est obligatoire';
       }
       if (control.errors['email']) {
-        return 'Format d\'email invalide';
+        return "Format d'email invalide";
       }
       if (control.errors['pattern']) {
         return 'Format invalide';
@@ -144,13 +187,25 @@ export class StudentFormComponent implements OnInit {
       if (control.errors['maxlength']) {
         return `Maximum ${control.errors['maxlength'].requiredLength} caractères`;
       }
+      if (control.errors['containsHtml']) {
+        return 'Ce champ ne peut pas contenir de code HTML';
+      }
+      if (control.errors['invalidNameCharacters']) {
+        return 'Ce nom contient des caractères non autorisés';
+      }
+      if (control.errors['invalidSanitizedEmail']) {
+        return 'Format d\'email invalide après nettoyage';
+      }
+      if (control.errors['invalidSanitizedPhone']) {
+        return 'Format de téléphone invalide';
+      }
     }
     return '';
   }
 
   onDisabilityToggle(disabilityId: string, isChecked: boolean): void {
     const selectedDisabilities = this.studentForm.get('selectedDisabilities')?.value || [];
-    
+
     if (isChecked) {
       // Ajouter le handicap s'il n'est pas déjà présent
       if (!selectedDisabilities.includes(disabilityId)) {
@@ -163,7 +218,7 @@ export class StudentFormComponent implements OnInit {
         selectedDisabilities.splice(index, 1);
       }
     }
-    
+
     this.studentForm.patchValue({ selectedDisabilities });
   }
 
@@ -181,81 +236,98 @@ export class StudentFormComponent implements OnInit {
     if (this.studentForm.valid) {
       this.isSubmitting = true;
       this.error = null;
-      
+
       const formValue = this.studentForm.value;
+
+      // ÉTAPE 1: Sanitiser les données du formulaire
+      console.log('=== AVANT SANITISATION ===');
+      console.log('Données brutes:', formValue);
       
-      // Préparer les données selon l'API
-      const studentData: CreateStudentRequest = {
+      const sanitizedFormData = this.sanitizationService.sanitizeStudentFormData(formValue);
+      
+      console.log('=== APRÈS SANITISATION ===');
+      console.log('Données sanitisées:', sanitizedFormData);
+
+      // ÉTAPE 2: Préparer les données selon le schéma Prisma - OBJET PROPRE
+      const studentData: any = {
         // INFORMATIONS PERSONNELLES OBLIGATOIRES
-        firstname: formValue.firstname,
-        lastname: formValue.lastname,
-        birthdate: new Date(formValue.birthdate).toISOString(),
-        
-        // IDS OBLIGATOIRES
-        gender_id: formValue.gender_id,
-        initial_level_id: formValue.initial_level_id,
-        nationality_id: formValue.nationality_id,
-        financing_id: formValue.financing_id,
-        status_id: formValue.status_id
+        student_firstname: sanitizedFormData.firstname,
+        student_lastname: sanitizedFormData.lastname,
+        student_birthdate: new Date(sanitizedFormData.birthdate),
+
+        // IDS OBLIGATOIRES selon le schéma Prisma
+        gender_uuid: sanitizedFormData.gender_id,
+        french_level_uuid: sanitizedFormData.initial_level_id,
+        nationality_uuid: sanitizedFormData.nationality_id,
+        financing_uuid: sanitizedFormData.financing_id,
+        status_uuid: sanitizedFormData.status_id,
       };
 
-      // Ajouter les champs optionnels seulement s'ils ont une valeur
-      if (formValue.placeOfBirth) {
-        studentData.placeOfBirth = formValue.placeOfBirth;
+      // Ajouter les champs optionnels seulement s'ils ont une valeur NON VIDE
+      if (sanitizedFormData.placeOfBirth && sanitizedFormData.placeOfBirth.trim()) {
+        studentData.student_place_of_birth = sanitizedFormData.placeOfBirth.trim();
       }
-      if (formValue.email) {
-        studentData.email = formValue.email;
+      if (sanitizedFormData.email && sanitizedFormData.email.trim()) {
+        studentData.student_mail = sanitizedFormData.email.trim();
       }
-      if (formValue.phone) {
-        studentData.phone = formValue.phone;
+      if (sanitizedFormData.phone && sanitizedFormData.phone.trim()) {
+        // Nettoyer le téléphone et le convertir en nombre
+        const cleanPhone = sanitizedFormData.phone.replace(/[^0-9]/g, '');
+        if (cleanPhone) {
+          studentData.student_phone = parseInt(cleanPhone);
+        }
       }
-      if (formValue.date_test_initial) {
-        studentData.date_test_initial = formValue.date_test_initial;
+      if (sanitizedFormData.date_test_initial) {
+        studentData.student_date_test_initial = new Date(sanitizedFormData.date_test_initial);
       }
-      if (formValue.commentaire) {
-        studentData.commentaire = formValue.commentaire;
+      if (sanitizedFormData.commentaire && sanitizedFormData.commentaire.trim()) {
+        studentData.student_commentary = sanitizedFormData.commentaire.trim();
       }
-      if (formValue.date_entree_france) {
-        studentData.date_entree_france = new Date(formValue.date_entree_france).toISOString();
+      if (sanitizedFormData.date_entree_france) {
+        studentData.student_date_entry_france = new Date(sanitizedFormData.date_entree_france);
       }
-      if (formValue.date_titre_sejour) {
-        studentData.date_titre_sejour = new Date(formValue.date_titre_sejour).toISOString();
+      if (sanitizedFormData.date_titre_sejour) {
+        studentData.student_date_residence_permit = new Date(sanitizedFormData.date_titre_sejour);
       }
-      if (formValue.date_cir) {
-        studentData.date_cir = new Date(formValue.date_cir).toISOString();
-      }
-      if (formValue.current_level_id) {
-        studentData.current_level_id = formValue.current_level_id;
-      }
-      if (formValue.orientation_id) {
-        studentData.orientation_id = formValue.orientation_id;
-      }
-      if (formValue.exit_reason_id) {
-        studentData.exit_reason_id = formValue.exit_reason_id;
+      if (sanitizedFormData.date_cir) {
+        studentData.student_date_cir = new Date(sanitizedFormData.date_cir);
       }
 
-      // Créer l'étudiant puis associer les handicaps si nécessaire
-      this.studentService.createStudent(studentData).pipe(
-        switchMap((createdStudent: any) => {
-          // Si des handicaps sont sélectionnés, les associer à l'étudiant
-          if (formValue.hasDisability && formValue.selectedDisabilities.length > 0) {
-            return this.studentService.assignDisabilities(createdStudent.id, formValue.selectedDisabilities).pipe(
-              switchMap(() => of(createdStudent))
-            );
-          }
-          return of(createdStudent);
-        }),
-        finalize(() => this.isSubmitting = false)
-      ).subscribe({
-        next: (response) => {
-          console.log('Apprenant créé avec succès:', response);
-          this.router.navigate(['/dashboard/apprenants']);
-        },
-        error: (err) => {
-          this.error = "Erreur lors de la création de l'apprenant";
-          console.error('Erreur lors de la création:', err);
-        }
+      // DEBUG : Voir exactement ce qui est envoyé
+      console.log('=== DONNÉES FINALES ENVOYÉES À L\'API ===');
+      console.log('Student data:', studentData);
+      console.log('Email check:', {
+        rawEmail: formValue.email,
+        sanitizedEmail: sanitizedFormData.email,
+        trimmedEmail: sanitizedFormData.email?.trim(),
+        willSend: !!(sanitizedFormData.email && sanitizedFormData.email.trim())
       });
+
+      // Créer l'étudiant puis associer les handicaps si nécessaire
+      this.studentService
+        .createStudent(studentData)
+        .pipe(
+          switchMap((createdStudent: any) => {
+            // Si des handicaps sont sélectionnés, les associer à l'étudiant
+            if (sanitizedFormData.hasDisability && sanitizedFormData.selectedDisabilities.length > 0) {
+              return this.studentService
+                .assignDisabilities(createdStudent.student_uuid, sanitizedFormData.selectedDisabilities)
+                .pipe(switchMap(() => of(createdStudent)));
+            }
+            return of(createdStudent);
+          }),
+          finalize(() => (this.isSubmitting = false))
+        )
+        .subscribe({
+          next: response => {
+            console.log('Apprenant créé avec succès:', response);
+            this.router.navigate(['/dashboard/apprenants']);
+          },
+          error: err => {
+            this.error = "Erreur lors de la création de l'apprenant";
+            console.error('Erreur lors de la création:', err);
+          },
+        });
     } else {
       // Marquer tous les champs comme touchés pour afficher les erreurs
       Object.keys(this.studentForm.controls).forEach(key => {
@@ -267,4 +339,4 @@ export class StudentFormComponent implements OnInit {
   onCancel(): void {
     this.router.navigate(['/dashboard/apprenants']);
   }
-} 
+}

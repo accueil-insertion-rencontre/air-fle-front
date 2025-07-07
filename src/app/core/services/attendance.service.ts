@@ -1,8 +1,9 @@
+import { environment } from '@environments/environment';
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
 
 // Interface pour le modèle Absence de l'API backend
 export interface Absence {
@@ -74,7 +75,7 @@ export interface AttendanceStats {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AttendanceService {
   private absenceApiUrl = `${environment.apiUrl}/absences`;
@@ -135,17 +136,17 @@ export class AttendanceService {
       map(response => {
         // L'API retourne { data: Absence[], meta: any }
         const allAbsences = response.data || [];
-        
+
         // Filtrer les absences pour le cours spécifique
-        const courseAbsences = allAbsences.filter(absence => 
-          absence.course_id === courseId || absence.course_id === courseId.toString()
+        const courseAbsences = allAbsences.filter(
+          absence => absence.course_id === courseId || absence.course_id === courseId.toString()
         );
-        
+
         console.log(`[getCourseAbsences] Course ID: ${courseId}`);
         console.log(`[getCourseAbsences] Total absences dans la base: ${allAbsences.length}`);
         console.log(`[getCourseAbsences] Absences pour ce cours: ${courseAbsences.length}`);
         console.log(`[getCourseAbsences] Absences filtrées:`, courseAbsences);
-        
+
         return courseAbsences;
       }),
       catchError(error => {
@@ -171,17 +172,27 @@ export class AttendanceService {
   /**
    * Enregistre les présences pour un cours (méthode legacy)
    */
-  saveCourseAttendance(courseId: number, attendances: AttendanceStatus[]): Observable<AttendanceRecord[]> {
+  saveCourseAttendance(
+    courseId: number,
+    attendances: AttendanceStatus[]
+  ): Observable<AttendanceRecord[]> {
     return this.http.post<AttendanceRecord[]>(`${this.attendanceApiUrl}/course/${courseId}`, {
-      attendances
+      attendances,
     });
   }
 
   /**
    * Met à jour le statut d'un élève pour un cours (méthode legacy)
    */
-  updateStudentAttendance(courseId: number, studentId: number, status: AttendanceStatus): Observable<AttendanceRecord> {
-    return this.http.put<AttendanceRecord>(`${this.attendanceApiUrl}/course/${courseId}/student/${studentId}`, status);
+  updateStudentAttendance(
+    courseId: number,
+    studentId: number,
+    status: AttendanceStatus
+  ): Observable<AttendanceRecord> {
+    return this.http.put<AttendanceRecord>(
+      `${this.attendanceApiUrl}/course/${courseId}/student/${studentId}`,
+      status
+    );
   }
 
   /**
@@ -204,7 +215,7 @@ export class AttendanceService {
   markAllPresent(courseId: number, studentIds: number[]): Observable<AttendanceRecord[]> {
     const attendances = studentIds.map(studentId => ({
       student_id: studentId,
-      status: 'present' as const
+      status: 'present' as const,
     }));
     return this.saveCourseAttendance(courseId, attendances);
   }
@@ -215,7 +226,7 @@ export class AttendanceService {
   markAllAbsent(courseId: number, studentIds: number[]): Observable<AttendanceRecord[]> {
     const attendances = studentIds.map(studentId => ({
       student_id: studentId,
-      status: 'absent' as const
+      status: 'absent' as const,
     }));
     return this.saveCourseAttendance(courseId, attendances);
   }
@@ -230,12 +241,16 @@ export class AttendanceService {
   /**
    * Ajoute une absence manuelle pour un élève (méthode legacy)
    */
-  addManualAbsence(studentId: number, courseId: number, comment?: string): Observable<AttendanceRecord> {
+  addManualAbsence(
+    studentId: number,
+    courseId: number,
+    comment?: string
+  ): Observable<AttendanceRecord> {
     return this.http.post<AttendanceRecord>(`${this.attendanceApiUrl}/manual`, {
       student_id: studentId,
       course_id: courseId,
       status: 'absent',
-      comment
+      comment,
     });
   }
-} 
+}

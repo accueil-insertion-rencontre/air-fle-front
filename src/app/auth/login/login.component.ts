@@ -10,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
@@ -22,14 +22,14 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private authService: AuthService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
-    
+
     // Rediriger si déjà connecté
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']);
@@ -40,16 +40,16 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.valid) {
       this.loading = true;
       this.error = '';
-      
+
       const { email, password } = this.loginForm.value;
-      
+
       this.authService.login(email, password).subscribe({
         next: () => {
           this.loading = false;
-          
+
           // Vérifier l'état de connexion après un court délai
           setTimeout(() => {
-            if (localStorage.getItem('access_token')) {
+            if (this.authService.isLoggedIn()) {
               this.router.navigate(['/dashboard']);
             } else {
               this.error = 'Échec de connexion';
@@ -59,7 +59,7 @@ export class LoginComponent implements OnInit {
         error: () => {
           this.loading = false;
           this.error = 'Identifiants invalides';
-        }
+        },
       });
     }
   }

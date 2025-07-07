@@ -10,140 +10,162 @@ export const DASHBOARD_ROUTES: Routes = [
     children: [
       {
         path: '',
-        component: HomeComponent
+        component: HomeComponent,
       },
       {
         path: 'groups',
-        loadComponent: () => import('./pages/groups/list/group-list.component').then(c => c.GroupListComponent)
+        loadComponent: () =>
+          import('./pages/groups/list/group-list.component').then(c => c.GroupListComponent),
       },
       {
         path: 'groups/create',
-        loadComponent: () => import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent)
+        loadComponent: () =>
+          import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent),
       },
       {
         path: 'groups/edit/:id',
-        loadComponent: () => import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent)
+        loadComponent: () =>
+          import('./pages/groups/create/group-create.component').then(c => c.GroupCreateComponent),
       },
       {
         path: 'groups/:id',
-        loadComponent: () => import('./pages/groups/details/group-details.component').then(c => c.GroupDetailsComponent)
+        loadComponent: () =>
+          import('./pages/groups/details/group-details.component').then(
+            c => c.GroupDetailsComponent
+          ),
       },
       {
         path: 'sessions',
-        loadComponent: () => import('./pages/sessions/list/session-list.component').then(c => c.SessionListComponent)
+        loadComponent: () =>
+          import('./pages/sessions/list/session-list.component').then(c => c.SessionListComponent),
       },
       {
         path: 'sessions/create',
-        loadComponent: () => import('./pages/sessions/create/session-create.component').then(c => c.SessionCreateComponent)
+        loadComponent: () =>
+          import('./pages/sessions/create/session-create.component').then(
+            c => c.SessionCreateComponent
+          ),
       },
       {
         path: 'sessions/edit/:id',
-        loadComponent: () => import('./pages/sessions/create/session-create.component').then(c => c.SessionCreateComponent)
+        loadComponent: () =>
+          import('./pages/sessions/create/session-create.component').then(
+            c => c.SessionCreateComponent
+          ),
       },
       {
         path: 'sessions/:id',
-        loadComponent: () => import('./pages/sessions/details/session-details.component').then(c => c.SessionDetailsComponent)
+        loadComponent: () =>
+          import('./pages/sessions/details/session-details.component').then(
+            c => c.SessionDetailsComponent
+          ),
       },
       {
         path: 'courses',
-        loadComponent: () => import('./pages/courses/calendar/course-calendar.component').then(c => c.CourseCalendarComponent)
+        loadComponent: () =>
+          import('./pages/courses/calendar/course-calendar.component').then(
+            c => c.CourseCalendarComponent
+          ),
       },
       {
         path: 'courses/create',
-        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+        loadComponent: () =>
+          import('./pages/courses/create/course-create.component').then(
+            c => c.CourseCreateComponent
+          ),
       },
       {
         path: 'courses/edit/:id',
-        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+        loadComponent: () =>
+          import('./pages/courses/create/course-create.component').then(
+            c => c.CourseCreateComponent
+          ),
       },
       {
         path: 'courses/:id',
-        loadComponent: () => import('./pages/courses/create/course-create.component').then(c => c.CourseCreateComponent)
+        loadComponent: () =>
+          import('./pages/courses/create/course-create.component').then(
+            c => c.CourseCreateComponent
+          ),
       },
       {
         path: 'apprenants',
-        loadChildren: () => import('./pages/apprenants/apprenants.module').then(m => m.ApprenantsModule)
+        loadChildren: () =>
+          import('./pages/apprenants/apprenants.module').then(m => m.ApprenantsModule),
       },
       {
         path: 'users',
-        loadChildren: () => import('./pages/users/users.module').then(m => m.UsersModule)
+        loadChildren: () => import('./pages/users/users.module').then(m => m.UsersModule),
       },
       {
         path: 'reference-data',
-        loadChildren: () => import('./pages/reference-data/reference-data.routes').then(m => m.REFERENCE_DATA_ROUTES)
+        loadChildren: () =>
+          import('./pages/reference-data/reference-data.routes').then(m => m.REFERENCE_DATA_ROUTES),
       },
       {
         path: 'periodes',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Périodes',
           features: [
             'Calendrier des périodes',
             'Planification des sessions',
-            'Gestion des disponibilités'
-          ]
-        }
+            'Gestion des disponibilités',
+          ],
+        },
       },
       {
         path: 'heures',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Heures travaillées',
-          features: [
-            'Suivi du temps de travail',
-            'Validation des heures',
-            'Rapports mensuels'
-          ]
-        }
+          features: ['Suivi du temps de travail', 'Validation des heures', 'Rapports mensuels'],
+        },
       },
       {
         path: 'adresses',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Adresses',
-          features: [
-            'Gestion des adresses',
-            'Informations de contact',
-            'Géolocalisation'
-          ]
-        }
+          features: ['Gestion des adresses', 'Informations de contact', 'Géolocalisation'],
+        },
       },
       {
         path: 'examens',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Examens',
           features: [
             'Planification des examens',
             'Suivi des résultats',
-            'Statistiques de réussite'
-          ]
-        }
+            'Statistiques de réussite',
+          ],
+        },
       },
       {
         path: 'parcours',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Suivi de parcours',
           features: [
             'Visualisation des parcours',
             'Progression des apprenants',
-            'Validation des compétences'
-          ]
-        }
+            'Validation des compétences',
+          ],
+        },
       },
       {
         path: 'profile',
         component: PagePlaceholderComponent,
-        data: { 
+        data: {
           title: 'Profil',
           features: [
             'Informations personnelles',
             'Préférences utilisateur',
-            'Historique des activités'
-          ]
-        }
-      }
-    ]
-  }
-]; 
+            'Historique des activités',
+          ],
+        },
+      },
+    ],
+  },
+];

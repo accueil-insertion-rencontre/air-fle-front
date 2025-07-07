@@ -15,7 +15,7 @@
         </div>
         <p class="mt-2">Chargement des groupes...</p>
       </div>
-      
+
       <!-- Bootstrap Table -->
       <table id="groupTable" class="table align-items-center mb-0"></table>
     </div>
@@ -23,12 +23,23 @@
 </div>
 
 <!-- Modal pour créer un groupe -->
-<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="createGroupModal"
+  tabindex="-1"
+  aria-labelledby="createGroupModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="createGroupModalLabel">Créer un nouveau groupe</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fermer"
+        ></button>
       </div>
       <div class="modal-body">
         <form [formGroup]="groupForm" (ngSubmit)="onSubmit()">
@@ -36,33 +47,43 @@
           <div *ngIf="error" class="alert alert-danger">
             {{ error }}
           </div>
-          
+
           <!-- Nom du groupe -->
           <div class="mb-3">
-            <label for="label" class="form-label">Nom du groupe <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="label" 
+            <label for="label" class="form-label"
+              >Nom du groupe <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="label"
               formControlName="label"
-              [ngClass]="{ 'is-invalid': isFieldInvalid('label') }">
+              [ngClass]="{ 'is-invalid': isFieldInvalid('label') }"
+            />
             <div *ngIf="isFieldInvalid('label')" class="invalid-feedback">
               <div *ngIf="f['label'].errors?.['required']">Le nom du groupe est obligatoire</div>
-              <div *ngIf="f['label'].errors?.['minlength']">Le nom doit comporter au moins 3 caractères</div>
-              <div *ngIf="f['label'].errors?.['maxlength']">Le nom ne peut pas dépasser 255 caractères</div>
+              <div *ngIf="f['label'].errors?.['minlength']">
+                Le nom doit comporter au moins 3 caractères
+              </div>
+              <div *ngIf="f['label'].errors?.['maxlength']">
+                Le nom ne peut pas dépasser 255 caractères
+              </div>
             </div>
           </div>
-          
+
           <!-- Session -->
           <div class="mb-3">
-            <label for="session_id" class="form-label">Session <span class="text-danger">*</span></label>
-            <select 
-              class="form-select" 
-              id="session_id" 
+            <label for="session_id" class="form-label"
+              >Session <span class="text-danger">*</span></label
+            >
+            <select
+              class="form-select"
+              id="session_id"
               formControlName="session_id"
-              [ngClass]="{ 'is-invalid': isFieldInvalid('session_id') }">
+              [ngClass]="{ 'is-invalid': isFieldInvalid('session_id') }"
+            >
               <option [ngValue]="null" disabled>Sélectionnez une session</option>
-              <option *ngFor="let session of sessions" [value]="session.session_id">
+              <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">
                 {{ session.label }}
               </option>
             </select>
@@ -73,15 +94,30 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="resetForm()" data-bs-dismiss="modal">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="resetForm()"
+          data-bs-dismiss="modal"
+        >
           Annuler
         </button>
-        <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading || groupForm.invalid">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onSubmit()"
+          [disabled]="loading || groupForm.invalid"
+        >
+          <span
+            *ngIf="loading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+            aria-hidden="true"
+          ></span>
           <i *ngIf="!loading" class="fas fa-save me-2"></i>
           Enregistrer
         </button>
       </div>
     </div>
   </div>
-</div> 
+</div>

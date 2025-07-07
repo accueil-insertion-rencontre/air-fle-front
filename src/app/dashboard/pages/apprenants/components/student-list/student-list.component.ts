@@ -2,16 +2,23 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { StudentService, StudentListResponse } from '../../services/student.service';
-import { ReferenceDataService } from '../../../reference-data/services/reference-data.service';
-import { Student, StudentFilters, StudentListConfig, StudentSortConfig, StudentSortField } from '../../models/student.model';
+import { StudentService } from '@core/services';
+import { StudentListResponse } from '@core/models';
+import { ReferenceDataService } from '@core/services';
+import {
+  Student,
+  StudentFilters,
+  StudentListConfig,
+  StudentSortConfig,
+  StudentSortField,
+} from '@core/models';
 
 @Component({
   selector: 'app-student-list',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './student-list.component.html',
-  styleUrls: ['./student-list.component.scss']
+  styleUrls: ['./student-list.component.scss'],
 })
 export class StudentListComponent implements OnInit {
   students: any[] = []; // Utilisation de any[] temporairement pour gérer les différences de structure
@@ -23,12 +30,12 @@ export class StudentListComponent implements OnInit {
   totalPages = 1;
   showCreateModal = false; // Pour gérer l'affichage de la modal
   filters: StudentFilters = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    level: '',
-    status: '',
-    nationality: ''
+    student_firstname: '',
+    student_lastname: '',
+    student_mail: '',
+    french_level_uuid: '',
+    status_uuid: '',
+    nationality_uuid: '',
   };
 
   // Données de référence pour le mapping
@@ -52,11 +59,11 @@ export class StudentListComponent implements OnInit {
     this.referenceDataService.getStatuses().subscribe(data => {
       this.statuses = data;
     });
-    
+
     this.referenceDataService.getNationalities().subscribe(data => {
       this.nationalities = data;
     });
-    
+
     this.referenceDataService.getFrenchLevels().subscribe(data => {
       this.frenchLevels = data;
     });
@@ -65,98 +72,70 @@ export class StudentListComponent implements OnInit {
   loadStudents(): void {
     this.loading = true;
     this.error = null;
-    
+
     const config: StudentListConfig = {
       page: this.currentPage,
       pageSize: this.pageSize,
       filters: this.filters,
-      sort: undefined
+      sort: undefined,
     };
 
     this.studentService.getStudents(config).subscribe({
       next: (result: StudentListResponse) => {
-        console.log('Données reçues de l\'API:', result);
+        console.log("Données reçues de l'API:", result);
         this.students = result.students || [];
         this.totalItems = result.total || 0;
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.loading = false;
       },
-      error: (err) => {
+      error: err => {
         this.error = 'Erreur lors du chargement des apprenants';
         this.loading = false;
         console.error('Erreur:', err);
-      }
+      },
     });
   }
 
   getStudentInitials(student: any): string {
-    // Utiliser les vraies propriétés de l'API
-    const firstName = student.firstname || '';
-    const lastName = student.lastname || '';
+    // Utiliser les vraies propriétés de l'API Prisma
+    const firstName = student.student_firstname || '';
+    const lastName = student.student_lastname || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
   getStudentName(student: any): string {
-    // Utiliser les vraies propriétés de l'API
-    const firstName = student.firstname || '';
-    const lastName = student.lastname || '';
+    // Utiliser les vraies propriétés de l'API Prisma
+    const firstName = student.student_firstname || '';
+    const lastName = student.student_lastname || '';
     return `${firstName} ${lastName}`.trim();
   }
 
   getStudentEmail(student: any): string {
-    // Utiliser la vraie propriété de l'API
-    return student.email || 'Non renseigné';
+    // Utiliser la vraie propriété de l'API Prisma
+    return student.student_mail || 'Non renseigné';
   }
 
   getStudentLevel(student: any): string {
-    // Utiliser les vraies propriétés de l'API - d'abord chercher les objets complets
-    if (student.currentLevel) {
-      return `${student.currentLevel.code} - ${student.currentLevel.description}`;
-    } else if (student.initialLevel) {
-      return `${student.initialLevel.code} - ${student.initialLevel.description}`;
+    // Utiliser l'objet frenchLevel directement de l'API Prisma
+    if (student.frenchLevel) {
+      return `${student.frenchLevel.french_level_code} - ${student.frenchLevel.french_level_description}`;
     }
-    
-    // Si on a seulement les IDs, faire le mapping
-    if (student.current_level_id && this.frenchLevels.length > 0) {
-      const level = this.frenchLevels.find(l => l.id === student.current_level_id);
-      if (level) return `${level.code} - ${level.description}`;
-    }
-    
-    if (student.initial_level_id && this.frenchLevels.length > 0) {
-      const level = this.frenchLevels.find(l => l.id === student.initial_level_id);
-      if (level) return `${level.code} - ${level.description}`;
-    }
-    
     return 'Non défini';
   }
 
   getStudentStatus(student: any): string {
-    // Utiliser la vraie propriété de l'API - d'abord l'objet complet
-    if (student.status?.label) {
-      return student.status.label;
+    // Utiliser l'objet status directement de l'API Prisma
+    if (student.status) {
+      return student.status.status_label;
     }
-    
-    // Si on a seulement l'ID, faire le mapping avec les données de référence chargées
-    if (student.status_id && this.statuses.length > 0) {
-      const status = this.statuses.find(s => s.id === student.status_id);
-      return status?.label || 'Non défini';
-    }
-    
     return 'Non défini';
   }
 
   getStudentNationality(student: any): string {
-    // Utiliser la vraie propriété de l'API - d'abord l'objet complet
-    if (student.nationality?.label) {
-      return student.nationality.label;
+    // Utiliser l'objet nationality directement de l'API Prisma
+    if (student.nationality) {
+      return student.nationality.nationality_label;
     }
-    
-    // Si on a seulement l'ID, faire le mapping
-    if (student.nationality_id && this.nationalities.length > 0) {
-      const nationality = this.nationalities.find(n => n.id === student.nationality_id);
-      return nationality?.label || 'Non renseignée';
-    }
-    
     return 'Non renseignée';
   }
 
@@ -183,19 +162,19 @@ export class StudentListComponent implements OnInit {
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxPagesToShow = 5;
-    
+
     let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
     let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-    
+
     // Ajuster le début si on est proche de la fin
     if (endPage - startPage + 1 < maxPagesToShow) {
       startPage = Math.max(1, endPage - maxPagesToShow + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -203,21 +182,21 @@ export class StudentListComponent implements OnInit {
   onSearch(searchTerm: string): void {
     this.filters = {
       ...this.filters,
-      firstName: searchTerm,
-      lastName: searchTerm
+      student_firstname: searchTerm,
+      student_lastname: searchTerm,
     };
-    this.currentPage = 1; // Retour à la première page lors d'une recherche
+    this.currentPage = 1;
     this.loadStudents();
   }
 
   clearFilters(): void {
     this.filters = {
-      firstName: '',
-      lastName: '',
-      email: '',
-      level: '',
-      status: '',
-      nationality: ''
+      student_firstname: '',
+      student_lastname: '',
+      student_mail: '',
+      french_level_uuid: '',
+      status_uuid: '',
+      nationality_uuid: '',
     };
     this.currentPage = 1;
     this.loadStudents();
@@ -233,10 +212,10 @@ export class StudentListComponent implements OnInit {
           }
           this.loadStudents();
         },
-        error: (err) => {
+        error: err => {
           console.error('Erreur lors de la suppression:', err);
-          alert('Erreur lors de la suppression de l\'étudiant');
-        }
+          alert("Erreur lors de la suppression de l'étudiant");
+        },
       });
     }
   }
@@ -244,10 +223,10 @@ export class StudentListComponent implements OnInit {
   // Méthode utilitaire pour l'affichage
   getDisplayRange(): string {
     if (this.totalItems === 0) return '0 résultat';
-    
+
     const start = (this.currentPage - 1) * this.pageSize + 1;
     const end = Math.min(this.currentPage * this.pageSize, this.totalItems);
-    
+
     return `${start}-${end} sur ${this.totalItems}`;
   }
 
@@ -269,4 +248,4 @@ export class StudentListComponent implements OnInit {
     this.closeCreateModal();
     this.router.navigate(['/dashboard/apprenants/import']);
   }
-} 
+}
