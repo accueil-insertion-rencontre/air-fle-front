@@ -129,6 +129,10 @@ export interface StudentFilters {
   french_level_uuid?: string;
   status_uuid?: string;
   nationality_uuid?: string;
+  group_uuid?: string;
+  financing_uuid?: string;
+  orientation_uuid?: string;
+  search?: string;
 }
 
 export type StudentSortField =
