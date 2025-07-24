@@ -17,13 +17,57 @@
       <button (click)="onSearch(searchInput.value)" class="search-btn">Rechercher</button>
       <button (click)="clearFilters(); searchInput.value = ''" class="clear-btn">Effacer</button>
     </div>
+
+    <button class="advanced-filters-toggle" (click)="showAdvancedFilters = !showAdvancedFilters">
+      {{ showAdvancedFilters ? 'Masquer les filtres avancés' : 'Filtres avancés' }}
+    </button>
+
+    <div class="advanced-filters" *ngIf="showAdvancedFilters">
+      <select [(ngModel)]="filters.french_level_uuid">
+        <option value="">Aucun niveau de français</option>
+        <option *ngFor="let level of frenchLevels" [value]="level.id">
+          {{ level.code }} - {{ level.description }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.group_uuid">
+        <option value="">Aucun groupe</option>
+        <option *ngFor="let group of groups" [value]="group.id">
+          {{ group.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.nationality_uuid">
+        <option value="">Aucune nationalité</option>
+        <option *ngFor="let nat of nationalities" [value]="nat.id">
+          {{ nat.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.status_uuid">
+        <option value="">Tous statuts</option>
+        <option *ngFor="let status of statuses" [value]="status.id">
+          {{ status.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.financing_uuid">
+        <option value="">Tous financements</option>
+        <option *ngFor="let fin of financings" [value]="fin.id">
+          {{ fin.type }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.orientation_uuid">
+        <option value="">Toutes orientations</option>
+        <option *ngFor="let ori of orientations" [value]="ori.id">
+          {{ ori.type }}
+        </option>
+      </select>
+      <button class="apply-advanced-filters-btn" (click)="applyAdvancedFilters()">Appliquer les filtres</button>
+    </div>
   </div>
 
   <!-- Informations sur les résultats -->
   <div class="results-info" *ngIf="!loading">
-    <span>{{ getDisplayRange() }}</span>
+    <span *ngIf="totalItems > 0">{{ getDisplayRange() }}</span>
+    <span *ngIf="totalItems === 0">0 résultat</span>
   </div>
-  a
   <div class="students-content">
     <div class="students-list">
       <div class="students-header">
@@ -112,21 +156,7 @@
         Suivant ›
       </button>
     </div>
-
-    <!-- Sélecteur de taille de page -->
-    <div class="page-size-selector">
-      <label>Éléments par page:</label>
-      <select
-        [(ngModel)]="pageSize"
-        (change)="currentPage = 1; loadStudents()"
-        class="page-size-select"
-      >
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
+    <!-- Suppression du sélecteur de taille de page -->
   </div>
 
   <!-- Modal de choix de création -->
