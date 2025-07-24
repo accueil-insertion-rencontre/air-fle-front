@@ -4,7 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StudentService } from '@core/services';
 import { StudentListResponse } from '@core/models';
-import { ReferenceDataService } from '@core/services';
+import { ReferenceDataService, GroupService } from '@core/services';
 import {
   Student,
   StudentFilters,
@@ -25,10 +25,11 @@ export class StudentListComponent implements OnInit {
   loading = false;
   error: string | null = null;
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 20; // Forcer à 20 élèves par page
   totalItems = 0;
   totalPages = 1;
   showCreateModal = false; // Pour gérer l'affichage de la modal
+  showAdvancedFilters = false;
   filters: StudentFilters = {
     student_firstname: '',
     student_lastname: '',
@@ -36,16 +37,23 @@ export class StudentListComponent implements OnInit {
     french_level_uuid: '',
     status_uuid: '',
     nationality_uuid: '',
+    group_uuid: '',
+    financing_uuid: '',
+    orientation_uuid: '',
   };
 
   // Données de référence pour le mapping
   statuses: any[] = [];
   nationalities: any[] = [];
   frenchLevels: any[] = [];
+  groups: any[] = [];
+  financings: any[] = [];
+  orientations: any[] = [];
 
   constructor(
     private studentService: StudentService,
     private referenceDataService: ReferenceDataService,
+    private groupService: GroupService,
     private router: Router
   ) {}
 
@@ -67,16 +75,36 @@ export class StudentListComponent implements OnInit {
     this.referenceDataService.getFrenchLevels().subscribe(data => {
       this.frenchLevels = data;
     });
+
+    this.groupService.getGroups().subscribe(data => {
+      this.groups = data;
+    });
+
+    this.referenceDataService.getFinancings().subscribe(data => {
+      this.financings = data;
+    });
+
+    this.referenceDataService.getOrientations().subscribe(data => {
+      this.orientations = data;
+    });
   }
 
   loadStudents(): void {
     this.loading = true;
     this.error = null;
 
+    // Ne garder que les filtres renseignés
+    const nonEmptyFilters: any = {};
+    Object.entries(this.filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        nonEmptyFilters[key] = value;
+      }
+    });
+
     const config: StudentListConfig = {
       page: this.currentPage,
       pageSize: this.pageSize,
-      filters: this.filters,
+      filters: nonEmptyFilters,
       sort: undefined,
     };
 
@@ -87,6 +115,9 @@ export class StudentListComponent implements OnInit {
         this.totalItems = result.total || 0;
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.loading = false;
+        // Affichage temporaire des UUID de niveaux de français présents dans les étudiants reçus
+        const uuids = (this.students || []).map(s => s.french_level_uuid).filter((v, i, arr) => v && arr.indexOf(v) === i);
+        console.log('UUID de niveaux de français présents dans les étudiants reçus:', uuids);
       },
       error: err => {
         this.error = 'Erreur lors du chargement des apprenants';
@@ -182,8 +213,7 @@ export class StudentListComponent implements OnInit {
   onSearch(searchTerm: string): void {
     this.filters = {
       ...this.filters,
-      student_firstname: searchTerm,
-      student_lastname: searchTerm,
+      search: searchTerm
     };
     this.currentPage = 1;
     this.loadStudents();
@@ -197,7 +227,17 @@ export class StudentListComponent implements OnInit {
       french_level_uuid: '',
       status_uuid: '',
       nationality_uuid: '',
+      group_uuid: '',
+      financing_uuid: '',
+      orientation_uuid: '',
+      search: ''
     };
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  applyAdvancedFilters(): void {
+    console.log('Filtres envoyés à l\'API:', this.filters);
     this.currentPage = 1;
     this.loadStudents();
   }
@@ -222,12 +262,13 @@ export class StudentListComponent implements OnInit {
 
   // Méthode utilitaire pour l'affichage
   getDisplayRange(): string {
-    if (this.totalItems === 0) return '0 résultat';
+    const count = this.totalItems || this.students.length;
+    if (count === 0) return '0 résultat';
 
     const start = (this.currentPage - 1) * this.pageSize + 1;
-    const end = Math.min(this.currentPage * this.pageSize, this.totalItems);
+    const end = Math.min(this.currentPage * this.pageSize, count);
 
-    return `${start}-${end} sur ${this.totalItems}`;
+    return `${start}-${end} sur ${count}`;
   }
 
   // Méthodes pour gérer la modal
