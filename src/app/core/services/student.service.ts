@@ -135,11 +135,17 @@ export class StudentService {
    * Récupère le nombre total d'étudiants
    */
   getStudentCount(): Observable<number> {
-    // Pour éviter l'erreur 404, on retourne 0 pour le moment
-    return new Observable(observer => {
-      observer.next(0);
-      observer.complete();
-    });
+    // Appeler l'API pour obtenir le vrai total d'étudiants
+    let params = new HttpParams().set('skip', '0').set('take', '1');
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => {
+        if (response.success && response.data && typeof response.data.total === 'number') {
+          return response.data.total;
+        }
+        return 0;
+      }),
+      catchError(() => of(0))
+    );
   }
 
   /**
@@ -153,14 +159,49 @@ export class StudentService {
    * Récupère les étudiants avec configuration (alias pour getAllStudents pour compatibilité)
    */
   getStudents(config?: StudentListConfig): Observable<StudentListResponse> {
-    return this.getAllStudents().pipe(
-      map(students => ({
-        students: students,
-        total: students.length,
-        page: config?.page || 1,
-        pageSize: config?.pageSize || students.length,
-        totalPages: Math.ceil(students.length / (config?.pageSize || students.length))
-      }))
+    let params = new HttpParams();
+    const skip = ((config?.page || 1) - 1) * (config?.pageSize || 20);
+    const take = config?.pageSize || 20;
+
+    params = params.set('skip', skip.toString());
+    params = params.set('take', take.toString());
+
+    if (config?.filters) {
+      Object.entries(config.filters).forEach(([key, value]) => {
+        if (value && value !== '') {
+          params = params.set(key, value);
+        }
+      });
+    }
+    // Ajout du tri si besoin
+    if (config?.sort) {
+      params = params.set('orderBy', JSON.stringify({ [config.sort.field]: config.sort.direction }));
+    }
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => {
+        let students = [];
+        let total = 0;
+        let page = config?.page || 1;
+        let pageSize = config?.pageSize || 20;
+        let totalPages = 1;
+        if (response.success && response.data) {
+          students = response.data.students || response.data || [];
+          total = response.data.total || 0;
+          totalPages = Math.ceil(total / pageSize);
+        } else if (Array.isArray(response)) {
+          students = response;
+          total = response.length;
+          totalPages = Math.ceil(total / pageSize);
+        }
+        return {
+          students,
+          total,
+          page,
+          pageSize,
+          totalPages
+        };
+      }),
+      catchError(error => of({ students: [], total: 0, page: 1, pageSize: 20, totalPages: 1 }))
     );
   }
 
