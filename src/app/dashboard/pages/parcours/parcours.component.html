@@ -1,0 +1,578 @@
+<div class="parcours-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-route me-3"></i>
+        Suivi de Parcours
+      </h1>
+      <p class="page-description">
+        Visualisez la progression et les réussites de vos apprenants
+      </p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button"
+        class="btn btn-outline-secondary me-2"
+        (click)="onRefresh()"
+        [disabled]="isLoading"
+        title="Actualiser">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+      </button>
+      <button 
+        type="button"
+        class="btn btn-outline-primary me-2"
+        (click)="toggleFilters()"
+        [class.active]="showFilters">
+        <i class="fas fa-filter me-2"></i>
+        Filtres
+      </button>
+      <div class="btn-group" role="group">
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary"
+          [class.active]="viewMode === 'cards'"
+          (click)="setViewMode('cards')"
+          title="Vue cartes">
+          <i class="fas fa-th"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary"
+          [class.active]="viewMode === 'list'"
+          (click)="setViewMode('list')"
+          title="Vue liste">
+          <i class="fas fa-list"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary"
+          [class.active]="viewMode === 'timeline'"
+          (click)="setViewMode('timeline')"
+          title="Vue chronologique">
+          <i class="fas fa-clock"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close float-end" (click)="error = null"></button>
+  </div>
+
+  <!-- Summary Stats -->
+  <div *ngIf="progressSummary && !isLoadingSummary" class="summary-section mb-4">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h4 class="stat-number">{{ progressSummary.total_students }}</h4>
+            <p class="stat-label">Apprenants total</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-play-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h4 class="stat-number">{{ progressSummary.active_students }}</h4>
+            <p class="stat-label">En parcours</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h4 class="stat-number">{{ progressSummary.completed_paths }}</h4>
+            <p class="stat-label">Parcours terminés</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-content">
+            <h4 class="stat-number">{{ progressSummary.average_progress }}%</h4>
+            <p class="stat-label">Progression moyenne</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Summary -->
+  <div *ngIf="isLoadingSummary" class="loading-summary mb-4">
+    <div class="row g-3">
+      <div class="col-md-3" *ngFor="let i of [1,2,3,4]">
+        <div class="stat-card skeleton">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-number"></div>
+            <div class="skeleton-label"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div *ngIf="showFilters" class="filters-section mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="fas fa-filter me-2"></i>
+          Filtres et recherche
+        </h6>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="filterForm">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Rechercher</label>
+              <input 
+                type="text" 
+                class="form-control"
+                formControlName="searchTerm"
+                placeholder="Nom, prénom ou email...">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Niveau</label>
+              <select class="form-select" formControlName="level">
+                <option value="">Tous les niveaux</option>
+                <option *ngFor="let level of frenchLevels" [value]="level.code">
+                  {{ level.label }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Progression min.</label>
+              <input 
+                type="number" 
+                class="form-control"
+                formControlName="progressMin"
+                min="0" max="100">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Progression max.</label>
+              <input 
+                type="number" 
+                class="form-control"
+                formControlName="progressMax"
+                min="0" max="100">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary w-100"
+                (click)="resetFilters()"
+                title="Réinitialiser">
+                <i class="fas fa-undo"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-3">Chargement des parcours...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="content-section">
+    
+    <!-- Sort Controls -->
+    <div *ngIf="filteredProgressList.length > 0" class="sort-section mb-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted">{{ filteredProgressList.length }} parcours trouvés</span>
+        <div class="sort-controls">
+          <span class="me-2">Trier par :</span>
+          <div class="btn-group btn-group-sm" role="group">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary"
+              [class.active]="currentSort.field === 'name'"
+              (click)="onSort('name')">
+              Nom
+              <i *ngIf="currentSort.field === 'name'" 
+                 class="fas ms-1"
+                 [class.fa-sort-up]="currentSort.direction === 'asc'"
+                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary"
+              [class.active]="currentSort.field === 'progress'"
+              (click)="onSort('progress')">
+              Progression
+              <i *ngIf="currentSort.field === 'progress'" 
+                 class="fas ms-1"
+                 [class.fa-sort-up]="currentSort.direction === 'asc'"
+                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary"
+              [class.active]="currentSort.field === 'level'"
+              (click)="onSort('level')">
+              Niveau
+              <i *ngIf="currentSort.field === 'level'" 
+                 class="fas ms-1"
+                 [class.fa-sort-up]="currentSort.direction === 'asc'"
+                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredProgressList.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-route"></i>
+      </div>
+      <h3>Aucun parcours trouvé</h3>
+      <p>Aucun apprenant ne correspond à vos critères de recherche</p>
+      <button *ngIf="showFilters" class="btn btn-primary" (click)="resetFilters()">
+        <i class="fas fa-undo me-2"></i>
+        Réinitialiser les filtres
+      </button>
+    </div>
+
+    <!-- Cards View -->
+    <div *ngIf="viewMode === 'cards' && filteredProgressList.length > 0" class="cards-view">
+      <div class="row g-4">
+        <div 
+          class="col-lg-6 col-xl-4" 
+          *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
+          <div class="progress-card" (click)="showStudentDetails(student)">
+            <div class="card-header">
+              <div class="student-info">
+                <div class="avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="details">
+                  <h6 class="student-name">{{ student.student_firstname }} {{ student.student_lastname }}</h6>
+                  <small class="text-muted" *ngIf="student.student_mail">{{ student.student_mail }}</small>
+                </div>
+              </div>
+              <div class="level-badge">
+                {{ student.current_french_level.code }}
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-label">Progression</span>
+                  <span class="progress-percentage">{{ student.stats.progress_percentage }}%</span>
+                </div>
+                <div class="progress progress-animated">
+                  <div 
+                    class="progress-bar" 
+                    [style.width.%]="student.stats.progress_percentage"
+                    [style.background-color]="getProgressColor(student.stats.progress_percentage)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <i class="fas fa-clipboard-check"></i>
+                  <span class="stat-value">{{ student.stats.passed_exams }}/{{ student.stats.total_exams }}</span>
+                  <span class="stat-label">Examens</span>
+                </div>
+                <div class="stat-item">
+                  <i class="fas fa-trophy"></i>
+                  <span class="stat-value">{{ student.milestones.length }}</span>
+                  <span class="stat-label">Jalons</span>
+                </div>
+                <div class="stat-item" *ngIf="student.stats.average_score">
+                  <i class="fas fa-star"></i>
+                  <span class="stat-value">{{ student.stats.average_score }}/20</span>
+                  <span class="stat-label">Moyenne</span>
+                </div>
+              </div>
+
+              <div class="next-steps" *ngIf="student.next_steps.length > 0">
+                <small class="text-muted">Prochaine étape :</small>
+                <div class="next-step-item">
+                  <i class="fas fa-circle" [style.color]="getPriorityColor(student.next_steps[0].priority)"></i>
+                  <span>{{ student.next_steps[0].title }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div *ngIf="viewMode === 'list' && filteredProgressList.length > 0" class="list-view">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Apprenant</th>
+              <th>Niveau</th>
+              <th>Progression</th>
+              <th>Examens</th>
+              <th>Dernière activité</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
+              <td>
+                <div class="student-cell">
+                  <div class="avatar-sm">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div class="student-details">
+                    <strong>{{ student.student_firstname }} {{ student.student_lastname }}</strong>
+                    <br>
+                    <small class="text-muted" *ngIf="student.student_mail">{{ student.student_mail }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-primary">{{ student.current_french_level.code }}</span>
+              </td>
+              <td>
+                <div class="progress-cell">
+                  <div class="progress mb-1">
+                    <div 
+                      class="progress-bar" 
+                      [style.width.%]="student.stats.progress_percentage"
+                      [style.background-color]="getProgressColor(student.stats.progress_percentage)">
+                    </div>
+                  </div>
+                  <small>{{ student.stats.progress_percentage }}%</small>
+                </div>
+              </td>
+              <td>
+                <span class="exam-stats">
+                  {{ student.stats.passed_exams }}/{{ student.stats.total_exams }}
+                  <span *ngIf="student.stats.average_score" class="ms-2 text-muted">
+                    ({{ student.stats.average_score }}/20)
+                  </span>
+                </span>
+              </td>
+              <td>
+                <span *ngIf="student.exam_history.length > 0; else noActivity">
+                  {{ formatDate(student.exam_history[0].exam_date) }}
+                </span>
+                <ng-template #noActivity>
+                  <span class="text-muted">Aucune</span>
+                </ng-template>
+              </td>
+              <td class="text-center">
+                <button 
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="showStudentDetails(student)"
+                  title="Voir les détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Timeline View -->
+    <div *ngIf="viewMode === 'timeline' && filteredProgressList.length > 0" class="timeline-view">
+      <div class="timeline-container">
+        <div 
+          class="timeline-item" 
+          *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
+          <div class="timeline-marker">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h6>{{ student.student_firstname }} {{ student.student_lastname }}</h6>
+              <span class="badge bg-primary">{{ student.current_french_level.code }}</span>
+            </div>
+            <div class="timeline-milestones">
+              <div 
+                class="milestone-item" 
+                *ngFor="let milestone of student.milestones.slice(0, 3)">
+                <i [class]="getMilestoneIcon(milestone.type)"></i>
+                <div class="milestone-details">
+                  <strong>{{ milestone.title }}</strong>
+                  <small class="text-muted d-block">{{ formatDate(milestone.date) }}</small>
+                </div>
+              </div>
+            </div>
+            <button 
+              class="btn btn-sm btn-outline-primary mt-2"
+              (click)="showStudentDetails(student)">
+              Voir le parcours complet
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Detail Modal -->
+  <div *ngIf="showStudentDetail && selectedStudent" class="modal-overlay" (click)="closeStudentDetails()">
+    <div class="modal-content student-detail-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-route me-2"></i>
+          Parcours de {{ selectedStudent.student_firstname }} {{ selectedStudent.student_lastname }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeStudentDetails()"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Student Overview -->
+        <div class="student-overview mb-4">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <div class="student-identity">
+                <div class="avatar-lg">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="identity-details">
+                  <h4>{{ selectedStudent.student_firstname }} {{ selectedStudent.student_lastname }}</h4>
+                  <p class="text-muted mb-1" *ngIf="selectedStudent.student_mail">{{ selectedStudent.student_mail }}</p>
+                  <p class="text-muted mb-0">Inscrit le {{ formatDate(selectedStudent.start_date) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="level-progress">
+                <div class="current-level">
+                  <span class="level-badge-lg">{{ selectedStudent.current_french_level.code }}</span>
+                  <small class="d-block text-center text-muted">Niveau actuel</small>
+                </div>
+                <div class="progress mt-2">
+                  <div 
+                    class="progress-bar" 
+                    [style.width.%]="selectedStudent.stats.progress_percentage"
+                    [style.background-color]="getProgressColor(selectedStudent.stats.progress_percentage)">
+                  </div>
+                </div>
+                <small class="text-center d-block">{{ selectedStudent.stats.progress_percentage }}% de progression</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-section mb-4">
+          <h6>Statistiques</h6>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <div class="stat-card-sm">
+                <div class="stat-icon-sm">
+                  <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="stat-details">
+                  <strong>{{ selectedStudent.stats.passed_exams }}/{{ selectedStudent.stats.total_exams }}</strong>
+                  <small>Examens réussis</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3" *ngIf="selectedStudent.stats.average_score">
+              <div class="stat-card-sm">
+                <div class="stat-icon-sm">
+                  <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-details">
+                  <strong>{{ selectedStudent.stats.average_score }}/20</strong>
+                  <small>Note moyenne</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card-sm">
+                <div class="stat-icon-sm">
+                  <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-details">
+                  <strong>{{ selectedStudent.milestones.length }}</strong>
+                  <small>Jalons atteints</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card-sm">
+                <div class="stat-icon-sm">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-details">
+                  <strong>{{ selectedStudent.stats.progress_percentage }}%</strong>
+                  <small>Progression</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exam History -->
+        <div class="exam-history-section mb-4" *ngIf="selectedStudent.exam_history.length > 0">
+          <h6>Historique des examens</h6>
+          <div class="exam-timeline">
+            <div 
+              class="exam-item" 
+              *ngFor="let exam of selectedStudent.exam_history"
+              [class.passed]="exam.is_passed"
+              [class.failed]="!exam.is_passed">
+              <div class="exam-marker">
+                <i [class]="exam.is_passed ? 'fas fa-check' : 'fas fa-times'"></i>
+              </div>
+              <div class="exam-details">
+                <strong>{{ exam.exam_label }}</strong>
+                <div class="exam-meta">
+                  <span class="exam-date">{{ formatDate(exam.exam_date) }}</span>
+                  <span class="exam-score" *ngIf="exam.exam_score">{{ exam.exam_score }}</span>
+                  <span class="exam-level" *ngIf="exam.level_achieved">Niveau {{ exam.level_achieved }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="next-steps-section" *ngIf="selectedStudent.next_steps.length > 0">
+          <h6>Prochaines étapes recommandées</h6>
+          <div class="next-steps-list">
+            <div 
+              class="next-step-item" 
+              *ngFor="let step of selectedStudent.next_steps">
+              <div class="step-priority">
+                <i class="fas fa-circle" [style.color]="getPriorityColor(step.priority)"></i>
+              </div>
+              <div class="step-content">
+                <strong>{{ step.title }}</strong>
+                <p class="text-muted mb-0">{{ step.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
