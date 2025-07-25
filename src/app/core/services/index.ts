@@ -7,6 +7,7 @@ export * from './course.service';
 export * from './group.service';
 export * from './session.service';
 export * from './attendance.service';
+export * from './exam.service';
 export * from './alert.service';
 export * from './confirmation.service';
 export * from './calendar.service';
