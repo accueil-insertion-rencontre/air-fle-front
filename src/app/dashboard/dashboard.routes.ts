@@ -144,7 +144,7 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'parcours',
-        component: PagePlaceholderComponent,
+        loadComponent: () => import('./pages/parcours/parcours.component').then(m => m.ParcoursComponent),
         data: {
           title: 'Suivi de parcours',
           features: [
