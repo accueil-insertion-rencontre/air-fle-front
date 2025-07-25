@@ -132,13 +132,13 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'examens',
-        component: PagePlaceholderComponent,
+        loadComponent: () => import('./pages/examens/examens.component').then(m => m.ExamensComponent),
         data: {
           title: 'Examens',
           features: [
-            'Planification des examens',
+            'Gestion des examens',
+            'Création et modification',
             'Suivi des résultats',
-            'Statistiques de réussite',
           ],
         },
       },
