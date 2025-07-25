@@ -105,21 +105,10 @@ export class UserService {
 
   getRoles(): Observable<Role[]> {
     const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-
-    return this.http
-      .get<ApiResponse<{ roles: Role[]; success: boolean }>>(`${this.authUrl}/roles`, { headers })
-      .pipe(
-        map(response => {
-          if (response.success && response.data && response.data.roles) {
-            return response.data.roles;
-          } else {
-            throw new Error(response.message || 'Erreur lors de la récupération des rôles');
-          }
-        })
-      );
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.get<any>(`${this.authUrl}/roles`, { headers }).pipe(
+      map(response => (response.data && Array.isArray(response.data.roles)) ? response.data.roles : [])
+    );
   }
 
   createUser(user: CreateUserDto): Observable<User> {
