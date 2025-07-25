@@ -69,7 +69,8 @@
     <span *ngIf="totalItems === 0">0 résultat</span>
   </div>
   <div class="students-content">
-    <div class="students-list">
+    <!-- Desktop/tablette : tableau -->
+    <div class="students-list" *ngIf="!isReallyMobile()">
       <div class="students-header">
         <div class="column author">APPRENANT</div>
         <div class="column level">NIVEAU</div>
@@ -77,59 +78,65 @@
         <div class="column nationality">NATIONALITÉ</div>
         <div class="column actions"></div>
       </div>
-
       <div class="student-item" *ngFor="let student of students">
         <div class="column author">
           <div class="student-avatar">
             <div class="avatar-initials">{{ getStudentInitials(student) }}</div>
           </div>
           <div class="student-info">
-            <div class="student-name">
-              {{ getStudentName(student) }}
-            </div>
+            <div class="student-name">{{ getStudentName(student) }}</div>
             <div class="student-email">{{ getStudentEmail(student) }}</div>
           </div>
         </div>
-
         <div class="column level">
-          <div
-            class="level-badge"
-            [attr.data-level]="student.currentLevel?.code || student.level?.code"
-          >
+          <div class="level-badge" [attr.data-level]="student.currentLevel?.code || student.level?.code">
             {{ getStudentLevel(student) }}
           </div>
         </div>
-
         <div class="column status">
           <div class="status-badge" [attr.data-status]="student.status?.code">
             {{ getStudentStatus(student) }}
           </div>
         </div>
-
         <div class="column nationality">
           <div class="nationality-name">{{ getStudentNationality(student) }}</div>
         </div>
-
         <div class="column actions">
-          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">
-            Voir
-          </button>
+          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">Voir</button>
         </div>
       </div>
-
-      <div *ngIf="loading" class="loading-indicator">
-        <div class="spinner"></div>
-        <span>Chargement des apprenants...</span>
+    </div>
+    <!-- Mobile : cartes -->
+    <div class="students-list-mobile" *ngIf="isReallyMobile()">
+      <div class="student-card-mobile" *ngFor="let student of students">
+        <div class="student-avatar">
+          <div class="avatar-initials">{{ getStudentInitials(student) }}</div>
+        </div>
+        <div class="student-info-mobile">
+          <div><span class="label">Nom :</span> {{ getStudentName(student) }}</div>
+          <div><span class="label">Email :</span> {{ getStudentEmail(student) }}</div>
+          <div><span class="label">Niveau :</span> {{ getStudentLevel(student) }}</div>
+          <div><span class="label">Statut :</span> {{ getStudentStatus(student) }}</div>
+          <div><span class="label">Nationalité :</span> {{ getStudentNationality(student) }}</div>
+          <div class="actions-mobile">
+            <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">Voir</button>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <div *ngIf="!loading && students.length === 0" class="empty-state">
-        <p>Aucun apprenant trouvé</p>
-      </div>
+    <div *ngIf="loading" class="loading-indicator">
+      <div class="spinner"></div>
+      <span>Chargement des apprenants...</span>
+    </div>
 
-      <div *ngIf="error" class="error-message">
-        <p>{{ error }}</p>
-        <button (click)="loadStudents()" class="retry-btn">Réessayer</button>
-      </div>
+    <div *ngIf="!loading && students.length === 0" class="empty-state">
+      <p>Aucun apprenant trouvé</p>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      <p>{{ error }}</p>
+      <button (click)="loadStudents()" class="retry-btn">Réessayer</button>
     </div>
   </div>
 
