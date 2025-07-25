@@ -794,3 +794,56 @@ $font-size-xs: 12px; // Labels, badges
     }
   }
 }
+
+.students-list-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.student-card-mobile {
+  background: $white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 16px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  .student-avatar {
+    margin-right: 10px;
+    .avatar-initials {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+  }
+  .student-info-mobile {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .label {
+      font-weight: 600;
+      color: $muted-color;
+      font-size: 12px;
+      margin-right: 4px;
+    }
+    .actions-mobile {
+      margin-top: 8px;
+      .edit-btn {
+        padding: 8px 14px;
+        border-radius: 8px;
+        background-color: $primary-color;
+        color: white;
+        border: none;
+        font-size: $font-size-sm;
+        cursor: pointer;
+        transition: background 0.2s;
+        &:hover {
+          background: color.scale($primary-color, $lightness: -10%);
+        }
+      }
+    }
+  }
+}

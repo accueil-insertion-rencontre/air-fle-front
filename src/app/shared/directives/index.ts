@@ -1,1 +1,1 @@
-export * from './auto-sanitize.directive'; 
+export * from './auto-sanitize.directive';

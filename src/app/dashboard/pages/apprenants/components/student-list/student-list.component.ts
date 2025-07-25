@@ -12,6 +12,8 @@ import {
   StudentSortConfig,
   StudentSortField,
 } from '@core/models';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { map, shareReplay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-student-list',
@@ -50,11 +52,17 @@ export class StudentListComponent implements OnInit {
   financings: any[] = [];
   orientations: any[] = [];
 
+  // Remplacer l'observable par une méthode synchrone fiable
+  isReallyMobile(): boolean {
+    return window.innerWidth <= 768;
+  }
+
   constructor(
     private studentService: StudentService,
     private referenceDataService: ReferenceDataService,
     private groupService: GroupService,
-    private router: Router
+    private router: Router,
+    private breakpointObserver: BreakpointObserver
   ) {}
 
   ngOnInit(): void {
