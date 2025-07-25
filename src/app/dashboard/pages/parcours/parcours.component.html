@@ -1,13 +1,21 @@
+<!-- Breadcrumb -->
+<nav class="breadcrumb">
+  <ol>
+    <li><a routerLink="/dashboard">Tableau de bord</a></li>
+    <li class="active">Suite de parcours</li>
+  </ol>
+</nav>
+
 <div class="parcours-container">
   <!-- Header Section -->
   <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">
         <i class="fas fa-route me-3"></i>
-        Suivi de Parcours
+        Suite de parcours
       </h1>
       <p class="page-description">
-        Visualisez la progression et les réussites de vos apprenants
+        Gestion des continuations d'apprentissage des étudiants
       </p>
     </div>
     <div class="header-actions">
@@ -20,39 +28,12 @@
         <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
       </button>
       <button 
-        type="button"
-        class="btn btn-outline-primary me-2"
-        (click)="toggleFilters()"
-        [class.active]="showFilters">
-        <i class="fas fa-filter me-2"></i>
-        Filtres
+        class="btn btn-primary"
+        (click)="showCreateContinuationForm()"
+        [disabled]="isLoading">
+        <i class="fas fa-plus me-2"></i>
+        Nouvelle continuation
       </button>
-      <div class="btn-group" role="group">
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary"
-          [class.active]="viewMode === 'cards'"
-          (click)="setViewMode('cards')"
-          title="Vue cartes">
-          <i class="fas fa-th"></i>
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary"
-          [class.active]="viewMode === 'list'"
-          (click)="setViewMode('list')"
-          title="Vue liste">
-          <i class="fas fa-list"></i>
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary"
-          [class.active]="viewMode === 'timeline'"
-          (click)="setViewMode('timeline')"
-          title="Vue chronologique">
-          <i class="fas fa-clock"></i>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -63,261 +44,205 @@
     <button type="button" class="btn-close float-end" (click)="error = null"></button>
   </div>
 
-  <!-- Summary Stats -->
-  <div *ngIf="progressSummary && !isLoadingSummary" class="summary-section mb-4">
-    <div class="row g-3">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-content">
-            <h4 class="stat-number">{{ progressSummary.total_students }}</h4>
-            <p class="stat-label">Apprenants total</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-play-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h4 class="stat-number">{{ progressSummary.active_students }}</h4>
-            <p class="stat-label">En parcours</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h4 class="stat-number">{{ progressSummary.completed_paths }}</h4>
-            <p class="stat-label">Parcours terminés</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="stat-content">
-            <h4 class="stat-number">{{ progressSummary.average_progress }}%</h4>
-            <p class="stat-label">Progression moyenne</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading Summary -->
-  <div *ngIf="isLoadingSummary" class="loading-summary mb-4">
-    <div class="row g-3">
-      <div class="col-md-3" *ngFor="let i of [1,2,3,4]">
-        <div class="stat-card skeleton">
-          <div class="skeleton-icon"></div>
-          <div class="skeleton-content">
-            <div class="skeleton-number"></div>
-            <div class="skeleton-label"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters Section -->
-  <div *ngIf="showFilters" class="filters-section mb-4">
-    <div class="card">
-      <div class="card-header">
-        <h6 class="mb-0">
-          <i class="fas fa-filter me-2"></i>
-          Filtres et recherche
-        </h6>
-      </div>
-      <div class="card-body">
-        <form [formGroup]="filterForm">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Rechercher</label>
-              <input 
-                type="text" 
-                class="form-control"
-                formControlName="searchTerm"
-                placeholder="Nom, prénom ou email...">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Niveau</label>
-              <select class="form-select" formControlName="level">
-                <option value="">Tous les niveaux</option>
-                <option *ngFor="let level of frenchLevels" [value]="level.code">
-                  {{ level.label }}
-                </option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Progression min.</label>
-              <input 
-                type="number" 
-                class="form-control"
-                formControlName="progressMin"
-                min="0" max="100">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Progression max.</label>
-              <input 
-                type="number" 
-                class="form-control"
-                formControlName="progressMax"
-                min="0" max="100">
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-              <button 
-                type="button" 
-                class="btn btn-outline-secondary w-100"
-                (click)="resetFilters()"
-                title="Réinitialiser">
-                <i class="fas fa-undo"></i>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Chargement...</span>
     </div>
-    <p class="mt-3">Chargement des parcours...</p>
+    <p class="mt-3">Chargement des continuations...</p>
   </div>
 
   <!-- Main Content -->
   <div *ngIf="!isLoading" class="content-section">
     
-    <!-- Sort Controls -->
-    <div *ngIf="filteredProgressList.length > 0" class="sort-section mb-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <span class="text-muted">{{ filteredProgressList.length }} parcours trouvés</span>
-        <div class="sort-controls">
-          <span class="me-2">Trier par :</span>
-          <div class="btn-group btn-group-sm" role="group">
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary"
-              [class.active]="currentSort.field === 'name'"
-              (click)="onSort('name')">
-              Nom
-              <i *ngIf="currentSort.field === 'name'" 
-                 class="fas ms-1"
-                 [class.fa-sort-up]="currentSort.direction === 'asc'"
-                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary"
-              [class.active]="currentSort.field === 'progress'"
-              (click)="onSort('progress')">
-              Progression
-              <i *ngIf="currentSort.field === 'progress'" 
-                 class="fas ms-1"
-                 [class.fa-sort-up]="currentSort.direction === 'asc'"
-                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-outline-secondary"
-              [class.active]="currentSort.field === 'level'"
-              (click)="onSort('level')">
-              Niveau
-              <i *ngIf="currentSort.field === 'level'" 
-                 class="fas ms-1"
-                 [class.fa-sort-up]="currentSort.direction === 'asc'"
-                 [class.fa-sort-down]="currentSort.direction === 'desc'"></i>
-            </button>
+    <!-- Stats Summary -->
+    <div class="stats-section mb-4" *ngIf="continuationStats">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ continuationStats.total_continuations }}</h4>
+              <p class="stat-label">Total continuations</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ continuationStats.continuations_with_date }}</h4>
+              <p class="stat-label">Avec date</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar-times"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ continuationStats.continuations_without_date }}</h4>
+              <p class="stat-label">Sans date</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ continuationStats.recent_continuations }}</h4>
+              <p class="stat-label">Récentes (30j)</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div *ngIf="filteredProgressList.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <i class="fas fa-route"></i>
+    <!-- Filters Section -->
+    <div class="filters-section mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-filter me-2"></i>
+            Filtres
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="filterForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="student_name" class="form-label">Nom de l'étudiant</label>
+                <input 
+                  type="text" 
+                  id="student_name"
+                  formControlName="student_name"
+                  class="form-control"
+                  placeholder="Rechercher par nom...">
+              </div>
+              <div class="col-md-4">
+                <label for="date_from" class="form-label">Date de début</label>
+                <input 
+                  type="date" 
+                  id="date_from"
+                  formControlName="date_from"
+                  class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label for="date_to" class="form-label">Date de fin</label>
+                <input 
+                  type="date" 
+                  id="date_to"
+                  formControlName="date_to"
+                  class="form-control">
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
-      <h3>Aucun parcours trouvé</h3>
-      <p>Aucun apprenant ne correspond à vos critères de recherche</p>
-      <button *ngIf="showFilters" class="btn btn-primary" (click)="resetFilters()">
-        <i class="fas fa-undo me-2"></i>
-        Réinitialiser les filtres
-      </button>
+    </div>
+
+    <!-- View Controls -->
+    <div class="view-controls mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="btn-group" role="group">
+          <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            [class.active]="viewMode === 'cards'"
+            (click)="setViewMode('cards')">
+            <i class="fas fa-th-large me-2"></i>
+            Cartes
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            [class.active]="viewMode === 'list'"
+            (click)="setViewMode('list')">
+            <i class="fas fa-list me-2"></i>
+            Liste
+          </button>
+        </div>
+        <span class="text-muted">
+          {{ filteredContinuations.length }} résultat(s)
+        </span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="continuations.length === 0" class="empty-state">
+      <div class="text-center py-5">
+        <i class="fas fa-clipboard-list empty-icon"></i>
+        <h3 class="mt-3">Aucune continuation</h3>
+        <p class="text-muted">Il n'y a encore aucune continuation de parcours enregistrée.</p>
+        <button class="btn btn-primary" (click)="showCreateContinuationForm()">
+          <i class="fas fa-plus me-2"></i>
+          Créer la première continuation
+        </button>
+      </div>
     </div>
 
     <!-- Cards View -->
-    <div *ngIf="viewMode === 'cards' && filteredProgressList.length > 0" class="cards-view">
+    <div *ngIf="viewMode === 'cards' && filteredContinuations.length > 0" class="cards-view">
       <div class="row g-4">
-        <div 
-          class="col-lg-6 col-xl-4" 
-          *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
-          <div class="progress-card" (click)="showStudentDetails(student)">
+        <div class="col-lg-6 col-xl-4" *ngFor="let continuation of filteredContinuations; trackBy: trackByContinuationId">
+          <div class="card continuation-card h-100">
             <div class="card-header">
-              <div class="student-info">
-                <div class="avatar">
-                  <i class="fas fa-user"></i>
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="student-info">
+                  <h6 class="card-title mb-1">
+                    {{ continuation.student?.student_firstname }} {{ continuation.student?.student_lastname }}
+                  </h6>
+                  <small class="text-muted">{{ continuation.student?.student_mail || 'Pas d\'email' }}</small>
                 </div>
-                <div class="details">
-                  <h6 class="student-name">{{ student.student_firstname }} {{ student.student_lastname }}</h6>
-                  <small class="text-muted" *ngIf="student.student_mail">{{ student.student_mail }}</small>
+                <div class="dropdown">
+                  <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="showEditContinuationForm(continuation); $event.preventDefault()">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item text-danger" href="#" (click)="deleteContinuation(continuation); $event.preventDefault()">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                      </a>
+                    </li>
+                  </ul>
                 </div>
-              </div>
-              <div class="level-badge">
-                {{ student.current_french_level.code }}
               </div>
             </div>
-            
             <div class="card-body">
-              <div class="progress-section">
-                <div class="progress-header">
-                  <span class="progress-label">Progression</span>
-                  <span class="progress-percentage">{{ student.stats.progress_percentage }}%</span>
-                </div>
-                <div class="progress progress-animated">
-                  <div 
-                    class="progress-bar" 
-                    [style.width.%]="student.stats.progress_percentage"
-                    [style.background-color]="getProgressColor(student.stats.progress_percentage)">
-                  </div>
-                </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Temporalité</label>
+                <p class="mb-0">{{ continuation.continuation_temporality || 'Non définie' }}</p>
               </div>
-
-              <div class="stats-grid">
-                <div class="stat-item">
-                  <i class="fas fa-clipboard-check"></i>
-                  <span class="stat-value">{{ student.stats.passed_exams }}/{{ student.stats.total_exams }}</span>
-                  <span class="stat-label">Examens</span>
-                </div>
-                <div class="stat-item">
-                  <i class="fas fa-trophy"></i>
-                  <span class="stat-value">{{ student.milestones.length }}</span>
-                  <span class="stat-label">Jalons</span>
-                </div>
-                <div class="stat-item" *ngIf="student.stats.average_score">
-                  <i class="fas fa-star"></i>
-                  <span class="stat-value">{{ student.stats.average_score }}/20</span>
-                  <span class="stat-label">Moyenne</span>
-                </div>
+              <div *ngIf="continuation.continuation_commentary">
+                <label class="form-label fw-bold">Commentaire</label>
+                <p class="mb-0">{{ continuation.continuation_commentary }}</p>
               </div>
-
-              <div class="next-steps" *ngIf="student.next_steps.length > 0">
-                <small class="text-muted">Prochaine étape :</small>
-                <div class="next-step-item">
-                  <i class="fas fa-circle" [style.color]="getPriorityColor(student.next_steps[0].priority)"></i>
-                  <span>{{ student.next_steps[0].title }}</span>
-                </div>
+            </div>
+            <div class="card-footer">
+              <div class="d-flex gap-2">
+                <button 
+                  class="btn btn-sm btn-outline-primary flex-fill" 
+                  (click)="showEditContinuationForm(continuation)">
+                  <i class="fas fa-edit me-1"></i>
+                  Modifier
+                </button>
+                <button 
+                  class="btn btn-sm btn-outline-danger" 
+                  (click)="deleteContinuation(continuation)">
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -326,253 +251,194 @@
     </div>
 
     <!-- List View -->
-    <div *ngIf="viewMode === 'list' && filteredProgressList.length > 0" class="list-view">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead class="table-light">
-            <tr>
-              <th>Apprenant</th>
-              <th>Niveau</th>
-              <th>Progression</th>
-              <th>Examens</th>
-              <th>Dernière activité</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
-              <td>
-                <div class="student-cell">
-                  <div class="avatar-sm">
-                    <i class="fas fa-user"></i>
-                  </div>
-                  <div class="student-details">
-                    <strong>{{ student.student_firstname }} {{ student.student_lastname }}</strong>
-                    <br>
-                    <small class="text-muted" *ngIf="student.student_mail">{{ student.student_mail }}</small>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="badge bg-primary">{{ student.current_french_level.code }}</span>
-              </td>
-              <td>
-                <div class="progress-cell">
-                  <div class="progress mb-1">
-                    <div 
-                      class="progress-bar" 
-                      [style.width.%]="student.stats.progress_percentage"
-                      [style.background-color]="getProgressColor(student.stats.progress_percentage)">
+    <div *ngIf="viewMode === 'list' && filteredContinuations.length > 0" class="list-view">
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Étudiant</th>
+                <th>Temporalité</th>
+                <th>Commentaire</th>
+                <th width="120">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let continuation of filteredContinuations; trackBy: trackByContinuationId">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="student-avatar me-3">
+                      {{ (continuation.student?.student_firstname || 'U')[0] }}{{ (continuation.student?.student_lastname || 'U')[0] }}
+                    </div>
+                    <div>
+                      <div class="fw-semibold">
+                        {{ continuation.student?.student_firstname }} {{ continuation.student?.student_lastname }}
+                      </div>
+                      <small class="text-muted">{{ continuation.student?.student_mail || 'Pas d\'email' }}</small>
                     </div>
                   </div>
-                  <small>{{ student.stats.progress_percentage }}%</small>
-                </div>
-              </td>
-              <td>
-                <span class="exam-stats">
-                  {{ student.stats.passed_exams }}/{{ student.stats.total_exams }}
-                  <span *ngIf="student.stats.average_score" class="ms-2 text-muted">
-                    ({{ student.stats.average_score }}/20)
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark">
+                    {{ continuation.continuation_temporality || 'Non définie' }}
                   </span>
-                </span>
-              </td>
-              <td>
-                <span *ngIf="student.exam_history.length > 0; else noActivity">
-                  {{ formatDate(student.exam_history[0].exam_date) }}
-                </span>
-                <ng-template #noActivity>
-                  <span class="text-muted">Aucune</span>
-                </ng-template>
-              </td>
-              <td class="text-center">
-                <button 
-                  class="btn btn-sm btn-outline-primary"
-                  (click)="showStudentDetails(student)"
-                  title="Voir les détails">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Timeline View -->
-    <div *ngIf="viewMode === 'timeline' && filteredProgressList.length > 0" class="timeline-view">
-      <div class="timeline-container">
-        <div 
-          class="timeline-item" 
-          *ngFor="let student of filteredProgressList; trackBy: trackByStudentId">
-          <div class="timeline-marker">
-            <i class="fas fa-user"></i>
-          </div>
-          <div class="timeline-content">
-            <div class="timeline-header">
-              <h6>{{ student.student_firstname }} {{ student.student_lastname }}</h6>
-              <span class="badge bg-primary">{{ student.current_french_level.code }}</span>
-            </div>
-            <div class="timeline-milestones">
-              <div 
-                class="milestone-item" 
-                *ngFor="let milestone of student.milestones.slice(0, 3)">
-                <i [class]="getMilestoneIcon(milestone.type)"></i>
-                <div class="milestone-details">
-                  <strong>{{ milestone.title }}</strong>
-                  <small class="text-muted d-block">{{ formatDate(milestone.date) }}</small>
-                </div>
-              </div>
-            </div>
-            <button 
-              class="btn btn-sm btn-outline-primary mt-2"
-              (click)="showStudentDetails(student)">
-              Voir le parcours complet
-            </button>
-          </div>
+                </td>
+                <td>
+                  <span class="text-muted">{{ continuation.continuation_commentary || '—' }}</span>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <button 
+                      class="btn btn-outline-primary" 
+                      (click)="showEditContinuationForm(continuation)"
+                      title="Modifier">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn btn-outline-danger" 
+                      (click)="deleteContinuation(continuation)"
+                      title="Supprimer">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Student Detail Modal -->
-  <div *ngIf="showStudentDetail && selectedStudent" class="modal-overlay" (click)="closeStudentDetails()">
-    <div class="modal-content student-detail-modal" (click)="$event.stopPropagation()">
+<!-- Create Modal -->
+<div class="modal fade" [class.show]="showCreateForm" [style.display]="showCreateForm ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-route me-2"></i>
-          Parcours de {{ selectedStudent.student_firstname }} {{ selectedStudent.student_lastname }}
+          <i class="fas fa-plus me-2"></i>
+          Nouvelle continuation
         </h5>
-        <button type="button" class="btn-close" (click)="closeStudentDetails()"></button>
+        <button type="button" class="btn-close" (click)="hideCreateForm()"></button>
       </div>
-      
-      <div class="modal-body">
-        <!-- Student Overview -->
-        <div class="student-overview mb-4">
-          <div class="row g-3">
-            <div class="col-md-8">
-              <div class="student-identity">
-                <div class="avatar-lg">
-                  <i class="fas fa-user"></i>
-                </div>
-                <div class="identity-details">
-                  <h4>{{ selectedStudent.student_firstname }} {{ selectedStudent.student_lastname }}</h4>
-                  <p class="text-muted mb-1" *ngIf="selectedStudent.student_mail">{{ selectedStudent.student_mail }}</p>
-                  <p class="text-muted mb-0">Inscrit le {{ formatDate(selectedStudent.start_date) }}</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="level-progress">
-                <div class="current-level">
-                  <span class="level-badge-lg">{{ selectedStudent.current_french_level.code }}</span>
-                  <small class="d-block text-center text-muted">Niveau actuel</small>
-                </div>
-                <div class="progress mt-2">
-                  <div 
-                    class="progress-bar" 
-                    [style.width.%]="selectedStudent.stats.progress_percentage"
-                    [style.background-color]="getProgressColor(selectedStudent.stats.progress_percentage)">
-                  </div>
-                </div>
-                <small class="text-center d-block">{{ selectedStudent.stats.progress_percentage }}% de progression</small>
-              </div>
+      <form [formGroup]="continuationForm" (ngSubmit)="onCreateContinuation()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="student_uuid" class="form-label">Étudiant <span class="text-danger">*</span></label>
+            <select formControlName="student_uuid" id="student_uuid" class="form-select" required>
+              <option value="">Sélectionner un étudiant</option>
+              <option *ngFor="let student of students" [value]="student.student_uuid">
+                {{ student.student_firstname }} {{ student.student_lastname }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="continuation_temporality" class="form-label">Temporalité</label>
+            <select 
+              id="continuation_temporality"
+              formControlName="continuation_temporality"
+              class="form-select">
+              <option value="">Sélectionner une temporalité</option>
+              <option value="3 mois">3 mois</option>
+              <option value="6 mois">6 mois</option>
+              <option value="1 an">1 an</option>
+              <option value="Indéterminée">Indéterminée</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="continuation_commentary" class="form-label">Commentaire</label>
+            <textarea 
+              id="continuation_commentary"
+              formControlName="continuation_commentary"
+              class="form-control"
+              rows="3"
+              maxlength="50"
+              placeholder="Commentaire optionnel (max 50 caractères)"></textarea>
+            <div class="form-text">
+              {{ continuationForm.get('continuation_commentary')?.value?.length || 0 }}/50 caractères
             </div>
           </div>
         </div>
-
-        <!-- Statistics -->
-        <div class="stats-section mb-4">
-          <h6>Statistiques</h6>
-          <div class="row g-3">
-            <div class="col-md-3">
-              <div class="stat-card-sm">
-                <div class="stat-icon-sm">
-                  <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="stat-details">
-                  <strong>{{ selectedStudent.stats.passed_exams }}/{{ selectedStudent.stats.total_exams }}</strong>
-                  <small>Examens réussis</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3" *ngIf="selectedStudent.stats.average_score">
-              <div class="stat-card-sm">
-                <div class="stat-icon-sm">
-                  <i class="fas fa-star"></i>
-                </div>
-                <div class="stat-details">
-                  <strong>{{ selectedStudent.stats.average_score }}/20</strong>
-                  <small>Note moyenne</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="stat-card-sm">
-                <div class="stat-icon-sm">
-                  <i class="fas fa-trophy"></i>
-                </div>
-                <div class="stat-details">
-                  <strong>{{ selectedStudent.milestones.length }}</strong>
-                  <small>Jalons atteints</small>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="stat-card-sm">
-                <div class="stat-icon-sm">
-                  <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="stat-details">
-                  <strong>{{ selectedStudent.stats.progress_percentage }}%</strong>
-                  <small>Progression</small>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="hideCreateForm()">Annuler</button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="continuationForm.invalid || isCreating">
+            <span *ngIf="isCreating" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isCreating ? 'Création...' : 'Créer' }}
+          </button>
         </div>
-
-        <!-- Exam History -->
-        <div class="exam-history-section mb-4" *ngIf="selectedStudent.exam_history.length > 0">
-          <h6>Historique des examens</h6>
-          <div class="exam-timeline">
-            <div 
-              class="exam-item" 
-              *ngFor="let exam of selectedStudent.exam_history"
-              [class.passed]="exam.is_passed"
-              [class.failed]="!exam.is_passed">
-              <div class="exam-marker">
-                <i [class]="exam.is_passed ? 'fas fa-check' : 'fas fa-times'"></i>
-              </div>
-              <div class="exam-details">
-                <strong>{{ exam.exam_label }}</strong>
-                <div class="exam-meta">
-                  <span class="exam-date">{{ formatDate(exam.exam_date) }}</span>
-                  <span class="exam-score" *ngIf="exam.exam_score">{{ exam.exam_score }}</span>
-                  <span class="exam-level" *ngIf="exam.level_achieved">Niveau {{ exam.level_achieved }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Next Steps -->
-        <div class="next-steps-section" *ngIf="selectedStudent.next_steps.length > 0">
-          <h6>Prochaines étapes recommandées</h6>
-          <div class="next-steps-list">
-            <div 
-              class="next-step-item" 
-              *ngFor="let step of selectedStudent.next_steps">
-              <div class="step-priority">
-                <i class="fas fa-circle" [style.color]="getPriorityColor(step.priority)"></i>
-              </div>
-              <div class="step-content">
-                <strong>{{ step.title }}</strong>
-                <p class="text-muted mb-0">{{ step.description }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
-</div> 
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" [class.show]="showEditForm" [style.display]="showEditForm ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-edit me-2"></i>
+          Modifier la continuation
+        </h5>
+        <button type="button" class="btn-close" (click)="hideEditForm()"></button>
+      </div>
+      <form [formGroup]="editForm" (ngSubmit)="onUpdateContinuation()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Étudiant</label>
+            <p class="mb-0 text-muted">
+              {{ selectedContinuation?.student?.student_firstname }} {{ selectedContinuation?.student?.student_lastname }}
+            </p>
+            <small class="text-muted">L'étudiant ne peut pas être modifié</small>
+          </div>
+          
+          <div class="mb-3">
+            <label for="edit_continuation_temporality" class="form-label">Temporalité</label>
+            <select 
+              id="edit_continuation_temporality"
+              formControlName="continuation_temporality"
+              class="form-select">
+              <option value="">Sélectionner une temporalité</option>
+              <option value="3 mois">3 mois</option>
+              <option value="6 mois">6 mois</option>
+              <option value="1 an">1 an</option>
+              <option value="Indéterminée">Indéterminée</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label for="edit_continuation_commentary" class="form-label">Commentaire</label>
+            <textarea 
+              id="edit_continuation_commentary"
+              formControlName="continuation_commentary"
+              class="form-control"
+              rows="3"
+              maxlength="50"></textarea>
+            <div class="form-text">
+              {{ editForm.get('continuation_commentary')?.value?.length || 0 }}/50 caractères
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="hideEditForm()">Annuler</button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="editForm.invalid || isEditing">
+            <span *ngIf="isEditing" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isEditing ? 'Modification...' : 'Modifier' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div *ngIf="showCreateForm || showEditForm" class="modal-backdrop fade show" (click)="hideCreateForm(); hideEditForm()"></div> 

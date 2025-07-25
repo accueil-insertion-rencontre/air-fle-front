@@ -1,16 +1,21 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, startWith } from 'rxjs/operators';
 
 import { 
-  StudentProgress, 
-  ProgressSummary, 
-  ProgressFilters, 
-  ProgressSortOptions 
-} from '../../../core/models/student-progress.model';
-import { ParcoursService } from '../../../core/services/parcours.service';
-import { AlertService } from '../../../core/services/alert.service';
+  Continuation, 
+  CreateContinuationDto,
+  UpdateContinuationDto,
+  ContinuationFilters,
+  ContinuationStats
+} from '@core/models';
+import { 
+  ContinuationService,
+  StudentService,
+  AlertService
+} from '@core/services';
 
 @Component({
   selector: 'app-parcours',
@@ -20,313 +25,324 @@ import { AlertService } from '../../../core/services/alert.service';
   styleUrls: ['./parcours.component.scss']
 })
 export class ParcoursComponent implements OnInit, OnDestroy {
-  // Data
-  studentProgressList: StudentProgress[] = [];
-  filteredProgressList: StudentProgress[] = [];
-  progressSummary: ProgressSummary | null = null;
-  selectedStudent: StudentProgress | null = null;
+  private destroy$ = new Subject<void>();
 
-  // UI State
+  // Data properties - TOUJOURS initialiser comme tableau
+  continuations: Continuation[] = [];
+  filteredContinuations: Continuation[] = [];
+  continuationStats: ContinuationStats | null = null;
+
+  // Reference data
+  students: any[] = [];
+
+  // UI state
+  viewMode: 'cards' | 'list' = 'cards';
   isLoading = false;
-  isLoadingSummary = false;
+  isLoadingStats = false;
+  isCreating = false;
+  isEditing = false;
   error: string | null = null;
-  showFilters = false;
-  showStudentDetail = false;
-  viewMode: 'list' | 'cards' | 'timeline' = 'cards';
+
+  // Form state
+  showCreateForm = false;
+  showEditForm = false;
+  selectedContinuation: Continuation | null = null;
 
   // Forms
-  filterForm: FormGroup;
-  
-  // Sorting and filtering
-  currentSort: ProgressSortOptions = {
-    field: 'progress',
-    direction: 'desc'
-  };
-  
-  // Subscriptions
-  private subscriptions: Subscription[] = [];
-
-  // Constants
-  readonly frenchLevels = [
-    { code: 'A1', label: 'A1 - Débutant' },
-    { code: 'A2', label: 'A2 - Élémentaire' },
-    { code: 'B1', label: 'B1 - Intermédiaire' },
-    { code: 'B2', label: 'B2 - Avancé' },
-    { code: 'C1', label: 'C1 - Autonome' },
-    { code: 'C2', label: 'C2 - Maîtrise' }
-  ];
+  filterForm!: FormGroup;
+  continuationForm!: FormGroup;
+  editForm!: FormGroup;
 
   constructor(
-    private parcoursService: ParcoursService,
-    private alertService: AlertService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private continuationService: ContinuationService,
+    private studentService: StudentService,
+    private alertService: AlertService
   ) {
-    this.filterForm = this.createFilterForm();
+    this.initializeForms();
   }
 
   ngOnInit(): void {
-    console.log('🚀 ParcoursComponent: Initialisation');
-    this.loadData();
+    this.loadStudents();
+    this.loadContinuations();
     this.setupFilterSubscription();
   }
 
   ngOnDestroy(): void {
-    console.log('🔚 ParcoursComponent: Nettoyage des subscriptions');
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  /**
-   * Charge toutes les données
-   */
-  loadData(): void {
-    this.loadProgressSummary();
-    this.loadStudentProgress();
-  }
-
-  /**
-   * Charge le résumé des parcours
-   */
-  loadProgressSummary(): void {
-    console.log('🔄 ParcoursComponent: Chargement du résumé...');
-    this.isLoadingSummary = true;
-
-    const summarySub = this.parcoursService.getProgressSummary().subscribe({
-      next: (summary) => {
-        console.log('✅ ParcoursComponent: Résumé chargé', summary);
-        this.progressSummary = summary;
-        this.isLoadingSummary = false;
-      },
-      error: (error) => {
-        console.error('❌ ParcoursComponent: Erreur lors du chargement du résumé:', error);
-        this.alertService.error('Erreur lors du chargement du résumé : ' + error.message);
-        this.isLoadingSummary = false;
-      }
+  private initializeForms(): void {
+    this.filterForm = this.fb.group({
+      student_name: [''],
+      date_from: [''],
+      date_to: ['']
     });
 
-    this.subscriptions.push(summarySub);
+    this.continuationForm = this.fb.group({
+      student_uuid: ['', Validators.required],
+      continuation_temporality: [''],
+      continuation_commentary: ['', Validators.maxLength(50)]
+    });
+
+    // 🔧 Formulaire d'édition séparé - SANS student_uuid (non modifiable)
+    this.editForm = this.fb.group({
+      continuation_temporality: [''],
+      continuation_commentary: ['', Validators.maxLength(50)]
+    });
   }
 
-  /**
-   * Charge la liste des parcours étudiants
-   */
-  loadStudentProgress(): void {
-    console.log('🔄 ParcoursComponent: Chargement des parcours...');
+  private setupFilterSubscription(): void {
+    this.filterForm.valueChanges
+      .pipe(
+        startWith(this.filterForm.value),
+        debounceTime(300),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.applyFilters();
+      });
+  }
+
+  private loadStudents(): void {
+    this.studentService.getStudents().subscribe({
+      next: (response: any) => {
+        // S'assurer que students est toujours un tableau
+        if (Array.isArray(response)) {
+          this.students = response;
+        } else if (response && Array.isArray(response.students)) {
+          this.students = response.students;
+        } else if (response && Array.isArray(response.data)) {
+          this.students = response.data;
+        } else {
+          this.students = [];
+          console.warn('Format de réponse inattendu pour les étudiants:', response);
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur lors du chargement des étudiants:', error);
+        this.students = []; // Toujours un tableau même en cas d'erreur
+      }
+    });
+  }
+
+  private loadContinuations(): void {
     this.isLoading = true;
     this.error = null;
-
-    const filters = this.buildFilters();
     
-    const progressSub = this.parcoursService.getAllStudentProgress(filters).subscribe({
-      next: (progressList) => {
-        console.log('✅ ParcoursComponent: Parcours chargés', progressList.length, 'étudiants');
-        this.studentProgressList = progressList;
-        this.applySort();
+    // Réinitialiser les tableaux
+    this.continuations = [];
+    this.filteredContinuations = [];
+
+    console.log('🔄 Début du chargement des continuations...');
+
+    this.continuationService.getAllContinuations().subscribe({
+      next: (response: any) => {
+        console.log('📥 Réponse API continuations complète:', response);
+        console.log('📥 Type de réponse:', typeof response);
+        console.log('📥 Est un tableau:', Array.isArray(response));
+        
+        // S'assurer que nous avons un tableau
+        let rawData = [];
+        if (Array.isArray(response)) {
+          rawData = response;
+        } else if (response && Array.isArray(response.data)) {
+          rawData = response.data;
+        } else if (response && Array.isArray(response.continuations)) {
+          rawData = response.continuations;
+        } else {
+          console.warn('⚠️ Format de réponse inattendu:', response);
+          console.warn('⚠️ Propriétés disponibles:', Object.keys(response || {}));
+          this.continuations = [];
+          this.applyFilters();
+          this.loadStats();
+          this.isLoading = false;
+          return;
+        }
+
+        // 🔧 FIX: Nettoyer le tableau mixte - éliminer les réponses d'API wrappées
+        this.continuations = rawData.filter((item: any) => {
+          // Garder seulement les objets qui ont directement un continuation_uuid
+          // Éliminer les réponses d'API wrappées qui ont data: {continuation...}
+          return item && item.continuation_uuid && !item.data;
+        });
+
+        console.log('✅ Continuations nettoyées:', this.continuations.length);
+        
+        this.applyFilters();
+        
+        this.loadStats();
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('❌ ParcoursComponent: Erreur lors du chargement des parcours:', error);
-        this.error = 'Erreur lors du chargement des parcours : ' + error.message;
+        console.error('❌ Erreur lors du chargement des continuations:', error);
+        console.error('❌ Status:', error.status);
+        console.error('❌ Message:', error.message);
+        console.error('❌ Response body:', error.error);
+        
+        this.error = 'Erreur lors du chargement des continuations';
+        this.continuations = []; // TOUJOURS un tableau en cas d'erreur
+        this.filteredContinuations = [];
         this.isLoading = false;
       }
     });
-
-    this.subscriptions.push(progressSub);
   }
 
-  /**
-   * Actualise les données
-   */
-  onRefresh(): void {
-    console.log('🔄 ParcoursComponent: Actualisation des données');
-    this.loadData();
+  private loadStats(): void {
+    this.isLoadingStats = true;
+    
+    this.continuationService.getContinuationStats().subscribe({
+      next: (stats) => {
+        this.continuationStats = stats;
+        this.isLoadingStats = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des statistiques:', error);
+        this.continuationStats = null;
+        this.isLoadingStats = false;
+      }
+    });
   }
 
-  /**
-   * Affiche les détails d'un étudiant
-   */
-  showStudentDetails(student: StudentProgress): void {
-    console.log('👁️ ParcoursComponent: Affichage des détails pour', student.student_firstname);
-    this.selectedStudent = student;
-    this.showStudentDetail = true;
+  private applyFilters(): void {
+    if (!Array.isArray(this.continuations)) {
+      console.warn('⚠️ this.continuations n\'est pas un tableau:', this.continuations);
+      this.continuations = [];
+      this.filteredContinuations = [];
+      return;
+    }
+
+    const filters = this.filterForm.value;
+    this.filteredContinuations = this.continuations.filter(continuation => {
+      let matches = true;
+
+      // Filtre par nom d'étudiant
+      if (filters.student_name) {
+        const fullName = `${continuation.student?.student_firstname || ''} ${continuation.student?.student_lastname || ''}`.toLowerCase();
+        matches = matches && fullName.includes(filters.student_name.toLowerCase());
+      }
+
+      // Pour les filtres de date, on ne peut plus les appliquer directement
+      // puisque continuation_temporality est maintenant un string comme "3 mois"
+      // On pourrait implémenter une logique différente si nécessaire
+
+      return matches;
+    });
   }
 
-  /**
-   * Ferme les détails d'un étudiant
-   */
-  closeStudentDetails(): void {
-    this.selectedStudent = null;
-    this.showStudentDetail = false;
-  }
-
-  /**
-   * Change le mode d'affichage
-   */
-  setViewMode(mode: 'list' | 'cards' | 'timeline'): void {
-    console.log('🎨 ParcoursComponent: Changement de vue vers', mode);
+  // View mode management
+  setViewMode(mode: 'cards' | 'list'): void {
     this.viewMode = mode;
   }
 
-  /**
-   * Active/désactive les filtres
-   */
-  toggleFilters(): void {
-    this.showFilters = !this.showFilters;
+  // Form management
+  showCreateContinuationForm(): void {
+    this.showCreateForm = true;
+    this.continuationForm.reset();
   }
 
-  /**
-   * Applique un tri
-   */
-  onSort(field: ProgressSortOptions['field']): void {
-    if (this.currentSort.field === field) {
-      // Inverser la direction si même champ
-      this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
-    } else {
-      // Nouveau champ, direction par défaut
-      this.currentSort = { field, direction: 'desc' };
-    }
-
-    console.log('🔄 ParcoursComponent: Tri appliqué', this.currentSort);
-    this.applySort();
+  hideCreateForm(): void {
+    this.showCreateForm = false;
+    this.continuationForm.reset();
   }
 
-  /**
-   * Applique le tri courant
-   */
-  private applySort(): void {
-    this.filteredProgressList = this.parcoursService.sortProgress(
-      this.studentProgressList, 
-      this.currentSort
-    );
-  }
-
-  /**
-   * Crée le formulaire de filtres
-   */
-  private createFilterForm(): FormGroup {
-    return this.fb.group({
-      searchTerm: [''],
-      level: [''],
-      progressMin: [0],
-      progressMax: [100],
-      status: ['']
+  showEditContinuationForm(continuation: Continuation): void {
+    this.selectedContinuation = continuation;
+    // 🔧 Utiliser editForm qui ne contient QUE les champs modifiables
+    this.editForm.patchValue({
+      continuation_temporality: continuation.continuation_temporality || '',
+      continuation_commentary: continuation.continuation_commentary || ''
     });
+    this.showEditForm = true;
   }
 
-  /**
-   * Met en place la souscription aux changements de filtres
-   */
-  private setupFilterSubscription(): void {
-    const filterSub = this.filterForm.valueChanges.subscribe(() => {
-      this.loadStudentProgress();
-    });
-
-    this.subscriptions.push(filterSub);
+  hideEditForm(): void {
+    this.showEditForm = false;
+    this.selectedContinuation = null;
+    this.editForm.reset();
   }
 
-  /**
-   * Construit les filtres à partir du formulaire
-   */
-  private buildFilters(): ProgressFilters {
-    const formValue = this.filterForm.value;
-    
-    const filters: ProgressFilters = {};
-
-    if (formValue.searchTerm) {
-      filters.search_term = formValue.searchTerm;
-    }
-
-    if (formValue.level) {
-      filters.level = formValue.level;
-    }
-
-    if (formValue.progressMin !== 0 || formValue.progressMax !== 100) {
-      filters.progress_range = {
-        min: formValue.progressMin,
-        max: formValue.progressMax
+  // CRUD operations
+  onCreateContinuation(): void {
+    if (this.continuationForm.valid) {
+      this.isCreating = true;
+      const formData: CreateContinuationDto = {
+        ...this.continuationForm.value,
+        continuation_temporality: this.continuationForm.value.continuation_temporality || null
       };
-    }
 
-    return filters;
-  }
-
-  /**
-   * Remet à zéro les filtres
-   */
-  resetFilters(): void {
-    console.log('🔄 ParcoursComponent: Remise à zéro des filtres');
-    this.filterForm.reset({
-      searchTerm: '',
-      level: '',
-      progressMin: 0,
-      progressMax: 100,
-      status: ''
-    });
-  }
-
-  /**
-   * Obtient la couleur selon le pourcentage de progression
-   */
-  getProgressColor(percentage: number): string {
-    if (percentage >= 80) return '#22c55e'; // Vert
-    if (percentage >= 60) return '#3b82f6'; // Bleu
-    if (percentage >= 40) return '#f59e0b'; // Orange
-    if (percentage >= 20) return '#ef4444'; // Rouge
-    return '#6b7280'; // Gris
-  }
-
-  /**
-   * Obtient l'icône selon le type de jalon
-   */
-  getMilestoneIcon(type: string): string {
-    switch (type) {
-      case 'exam': return 'fas fa-clipboard-check';
-      case 'level_change': return 'fas fa-arrow-up';
-      case 'course_completion': return 'fas fa-graduation-cap';
-      case 'goal_achieved': return 'fas fa-trophy';
-      default: return 'fas fa-circle';
+      this.continuationService.createContinuation(formData).subscribe({
+        next: (newContinuation) => {
+          // ✅ FIX: Recharger la liste complète au lieu de manipuler le tableau
+          this.loadContinuations();
+          this.hideCreateForm();
+          this.alertService.success('Continuation créée avec succès');
+          this.isCreating = false;
+        },
+        error: (error) => {
+          this.alertService.error('Erreur lors de la création de la continuation');
+          this.isCreating = false;
+          console.error('Erreur:', error);
+        }
+      });
     }
   }
 
-  /**
-   * Obtient la couleur selon la priorité
-   */
-  getPriorityColor(priority: string): string {
-    switch (priority) {
-      case 'high': return '#ef4444'; // Rouge
-      case 'medium': return '#f59e0b'; // Orange
-      case 'low': return '#22c55e'; // Vert
-      default: return '#6b7280'; // Gris
+  onUpdateContinuation(): void {
+    if (this.editForm.valid && this.selectedContinuation) {
+      this.isEditing = true;
+      const updateData: UpdateContinuationDto = {
+        continuation_temporality: this.editForm.value.continuation_temporality || null,
+        continuation_commentary: this.editForm.value.continuation_commentary || null
+      };
+
+      this.continuationService.updateContinuation(this.selectedContinuation.continuation_uuid, 
+updateData).subscribe({
+        next: (updatedContinuation) => {
+          // ✅ FIX: Recharger la liste complète au lieu de manipuler le tableau
+          this.loadContinuations();
+          this.hideEditForm();
+          this.alertService.success('Continuation mise à jour avec succès');
+          this.isEditing = false;
+        },
+        error: (error) => {
+          this.alertService.error('Erreur lors de la mise à jour');
+          this.isEditing = false;
+          console.error('Erreur:', error);
+        }
+      });
     }
   }
 
-  /**
-   * Formate une date
-   */
-  formatDate(date: Date | string): string {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  deleteContinuation(continuation: Continuation): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette continuation ?')) {
+      this.continuationService.deleteContinuation(continuation.continuation_uuid).subscribe({
+        next: () => {
+          // ✅ FIX: Recharger la liste complète au lieu de manipuler le tableau
+          this.loadContinuations();
+          this.alertService.success('Continuation supprimée');
+        },
+        error: (error) => {
+          this.alertService.error('Erreur lors de la suppression');
+          console.error('Erreur:', error);
+        }
+      });
+    }
   }
 
-  /**
-   * Formate une date avec l'heure
-   */
-  formatDateTime(date: Date | string): string {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Utility methods
+  onRefresh(): void {
+    this.loadContinuations();
   }
 
-  /**
-   * TrackBy function pour la performance
-   */
-  trackByStudentId(index: number, student: StudentProgress): string {
-    return student.student_uuid;
+  getStudentName(studentUuid: string): string {
+    const student = this.students.find(s => s.student_uuid === studentUuid);
+    return student ? `${student.student_firstname} ${student.student_lastname}` : 'Étudiant inconnu';
+  }
+
+  // TrackBy functions for performance
+  trackByContinuationId(index: number, continuation: Continuation): string {
+    return continuation.continuation_uuid;
   }
 } 
