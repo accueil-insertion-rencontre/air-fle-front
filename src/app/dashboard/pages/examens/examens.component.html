@@ -1,0 +1,457 @@
+<div class="examens-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-clipboard-list me-3"></i>
+        Gestion des Examens
+      </h1>
+      <p class="page-description">
+        Gérez les examens et évaluations de vos étudiants
+      </p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button"
+        class="btn btn-outline-secondary me-2"
+        (click)="onRefresh()"
+        [disabled]="isLoading"
+        title="Actualiser">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+      </button>
+      <button 
+        class="btn btn-primary"
+        (click)="showCreateExamForm()"
+        [disabled]="isLoading">
+        <i class="fas fa-plus me-2"></i>
+        Nouvel Examen
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close float-end" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-3">Chargement des examens...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="content-section">
+    
+    <!-- Stats Summary -->
+    <div class="stats-section mb-4">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ getTotalExams() }}</h4>
+              <p class="stat-label">Examens total</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ getExamsWithScores() }}</h4>
+              <p class="stat-label">Avec notes</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+              <h4 class="stat-number">{{ students.length }}</h4>
+              <p class="stat-label">Étudiants</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="filters-section mb-4">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              class="form-control search-input"
+              placeholder="Rechercher un examen, étudiant ou note..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="sort-controls">
+            <label class="form-label">Trier par :</label>
+            <div class="btn-group" role="group">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [class.active]="sortBy === 'date'"
+                (click)="onSortChange('date')">
+                Date
+                <i *ngIf="sortBy === 'date'" 
+                   class="fas ms-1"
+                   [class.fa-sort-up]="sortDirection === 'asc'"
+                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [class.active]="sortBy === 'student'"
+                (click)="onSortChange('student')">
+                Étudiant
+                <i *ngIf="sortBy === 'student'" 
+                   class="fas ms-1"
+                   [class.fa-sort-up]="sortDirection === 'asc'"
+                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [class.active]="sortBy === 'score'"
+                (click)="onSortChange('score')">
+                Note
+                <i *ngIf="sortBy === 'score'" 
+                   class="fas ms-1"
+                   [class.fa-sort-up]="sortDirection === 'asc'"
+                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Form -->
+    <div *ngIf="showCreateForm" class="form-section mb-4">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-plus me-2"></i>
+              Créer un Nouvel Examen
+            </h5>
+            <button type="button" class="btn-close" (click)="hideCreateForm()"></button>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <form [formGroup]="examForm" (ngSubmit)="onCreateExam()">
+            <div class="row g-3">
+              <!-- Libellé de l'examen -->
+              <div class="col-md-6">
+                <label for="exam_label" class="form-label">
+                  Libellé de l'examen <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [class.is-invalid]="hasFieldError('exam_label')"
+                  id="exam_label"
+                  formControlName="exam_label"
+                  placeholder="Ex: Examen final A1">
+                <div *ngIf="hasFieldError('exam_label')" class="invalid-feedback">
+                  {{ getFieldError('exam_label') }}
+                </div>
+              </div>
+
+              <!-- Date de l'examen -->
+              <div class="col-md-3">
+                <label for="exam_taked_at" class="form-label">
+                  Date de passation <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="date" 
+                  class="form-control"
+                  [class.is-invalid]="hasFieldError('exam_taked_at')"
+                  id="exam_taked_at"
+                  formControlName="exam_taked_at">
+                <div *ngIf="hasFieldError('exam_taked_at')" class="invalid-feedback">
+                  {{ getFieldError('exam_taked_at') }}
+                </div>
+              </div>
+
+              <!-- Note/Résultat -->
+              <div class="col-md-3">
+                <label for="exam_score" class="form-label">
+                  Note ou résultat <span class="text-muted">(optionnel)</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  id="exam_score"
+                  formControlName="exam_score"
+                  placeholder="Ex: B1 - 14/20">
+              </div>
+
+              <!-- Étudiant -->
+              <div class="col-12">
+                <label for="student_uuid" class="form-label">
+                  Étudiant <span class="text-danger">*</span>
+                </label>
+                <select 
+                  class="form-select"
+                  [class.is-invalid]="hasFieldError('student_uuid')"
+                  id="student_uuid"
+                  formControlName="student_uuid">
+                  <option value="">Sélectionner un étudiant</option>
+                  <option *ngFor="let student of students" [value]="student.student_uuid">
+                    {{ student.student_firstname }} {{ student.student_lastname }}
+                    <span *ngIf="student.student_mail"> - {{ student.student_mail }}</span>
+                  </option>
+                </select>
+                <div *ngIf="hasFieldError('student_uuid')" class="invalid-feedback">
+                  {{ getFieldError('student_uuid') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions mt-3">
+              <button type="button" class="btn btn-outline-secondary me-2" (click)="hideCreateForm()">
+                Annuler
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="examForm.invalid || isCreating">
+                <span *ngIf="isCreating" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isCreating" class="fas fa-save me-2"></i>
+                {{ isCreating ? 'Création...' : 'Créer l\'Examen' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div *ngIf="showEditForm" class="form-section mb-4">
+      <div class="card border-warning">
+        <div class="card-header bg-warning bg-opacity-10">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-edit me-2"></i>
+              Modifier l'Examen
+            </h5>
+            <button type="button" class="btn-close" (click)="hideEditForm()"></button>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <form [formGroup]="editForm" (ngSubmit)="onUpdateExam()">
+            <!-- Étudiant (lecture seule) -->
+            <div class="mb-3">
+              <label class="form-label">
+                <i class="fas fa-user me-2"></i>Étudiant
+              </label>
+              <div class="form-control bg-light" style="min-height: auto; cursor: not-allowed;">
+                <strong>{{ getStudentDisplayName() }}</strong>
+                <small class="text-muted ms-2">(non modifiable)</small>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <!-- Libellé de l'examen -->
+              <div class="col-md-8">
+                <label for="edit_exam_label" class="form-label">
+                  Libellé de l'examen <span class="text-danger">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [class.is-invalid]="hasFieldError('exam_label', editForm)"
+                  id="edit_exam_label"
+                  formControlName="exam_label"
+                  placeholder="Ex: Examen final A1">
+                <div *ngIf="hasFieldError('exam_label', editForm)" class="invalid-feedback">
+                  {{ getFieldError('exam_label', editForm) }}
+                </div>
+              </div>
+
+              <!-- Note/Résultat -->
+              <div class="col-md-4">
+                <label for="edit_exam_score" class="form-label">
+                  Note ou résultat <span class="text-muted">(optionnel)</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  id="edit_exam_score"
+                  formControlName="exam_score"
+                  placeholder="Ex: B1 - 14/20">
+              </div>
+            </div>
+
+            <div class="form-actions mt-3">
+              <button type="button" class="btn btn-outline-secondary me-2" (click)="hideEditForm()">
+                Annuler
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-warning"
+                [disabled]="editForm.invalid || isUpdating">
+                <span *ngIf="isUpdating" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isUpdating" class="fas fa-save me-2"></i>
+                {{ isUpdating ? 'Mise à jour...' : 'Mettre à Jour' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exams List -->
+    <div class="exams-section">
+      <!-- Empty State -->
+      <div *ngIf="filteredExams.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h3>{{ searchTerm ? 'Aucun examen trouvé' : 'Aucun examen enregistré' }}</h3>
+        <p>{{ searchTerm ? 'Essayez de modifier votre recherche' : 'Commencez par créer votre premier examen' }}</p>
+        <button *ngIf="!searchTerm" class="btn btn-primary" (click)="showCreateExamForm()">
+          <i class="fas fa-plus me-2"></i>
+          Créer le Premier Examen
+        </button>
+      </div>
+
+      <!-- Exams Table -->
+      <div *ngIf="filteredExams.length > 0" class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Libellé</th>
+                <th>Étudiant</th>
+                <th>Date</th>
+                <th>Note/Résultat</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let exam of filteredExams; trackBy: trackByExamId">
+                <td>
+                  <div class="exam-label">
+                    <i class="fas fa-clipboard-check me-2 text-primary"></i>
+                    <strong>{{ exam.label }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <div class="student-info">
+                    <strong>{{ exam.studentName }}</strong>
+                    <br>
+                    <small class="text-muted" *ngIf="exam.studentEmail">{{ exam.studentEmail }}</small>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark">{{ exam.date }}</span>
+                </td>
+                <td>
+                  <span *ngIf="exam.score" class="badge bg-success">{{ exam.score }}</span>
+                  <span *ngIf="!exam.score" class="text-muted">Non renseigné</span>
+                </td>
+                <td class="text-center">
+                  <div class="action-buttons">
+                    <button 
+                      class="btn btn-sm btn-outline-warning me-1"
+                      title="Modifier"
+                      (click)="showEditExamForm(exam)">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-danger"
+                      title="Supprimer"
+                      [disabled]="isDeleting"
+                      (click)="onDeleteExam(exam)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmation de Suppression -->
+  <div *ngIf="showDeleteConfirm" class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Confirmer la suppression
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cancelDelete()"></button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <div class="warning-icon">
+            <i class="fas fa-trash-alt"></i>
+          </div>
+        </div>
+        
+        <h6 class="text-center mb-3">Êtes-vous sûr de vouloir supprimer cet examen ?</h6>
+        
+        <div class="exam-details">
+          <div class="detail-item">
+            <strong>Libellé :</strong> {{ examToDelete?.label }}
+          </div>
+          <div class="detail-item">
+            <strong>Étudiant :</strong> {{ examToDelete?.studentName }}
+          </div>
+          <div class="detail-item">
+            <strong>Date :</strong> {{ examToDelete?.date }}
+          </div>
+          <div class="detail-item" *ngIf="examToDelete?.score">
+            <strong>Note :</strong> {{ examToDelete?.score }}
+          </div>
+        </div>
+        
+        <div class="alert alert-warning mt-3">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Attention :</strong> Cette action est irréversible. L'examen sera définitivement supprimé.
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelDelete()">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="confirmDelete()"
+          [disabled]="isDeleting">
+          <span *ngIf="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!isDeleting" class="fas fa-trash me-2"></i>
+          {{ isDeleting ? 'Suppression...' : 'Supprimer définitivement' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 
