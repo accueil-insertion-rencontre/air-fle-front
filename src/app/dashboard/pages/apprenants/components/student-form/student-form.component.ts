@@ -42,6 +42,9 @@ export class StudentFormComponent implements OnInit {
   isSubmitting = false;
   isLoading = true;
   error: string | null = null;
+  isEditMode = false;
+  studentId: string | null = null;
+  currentStudent: any = null;
 
   // Données de référence
   genders: Gender[] = [];
@@ -66,6 +69,10 @@ export class StudentFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Vérifier si on est en mode édition
+    this.studentId = this.route.snapshot.params['id'];
+    this.isEditMode = !!this.studentId;
+    
     this.loadReferenceData();
   }
 
@@ -147,6 +154,11 @@ export class StudentFormComponent implements OnInit {
         });
 
         this.isLoading = false;
+        
+        // Si on est en mode édition, charger les données de l'étudiant
+        if (this.isEditMode && this.studentId) {
+          this.loadStudentData();
+        }
       },
       error: err => {
         this.error = 'Erreur lors du chargement des données de référence';
@@ -164,6 +176,62 @@ export class StudentFormComponent implements OnInit {
 
         this.isLoading = false;
       },
+    });
+  }
+
+  private loadStudentData(): void {
+    if (!this.studentId) return;
+    
+    this.isLoading = true;
+    this.studentService.getStudentById(this.studentId).subscribe({
+      next: (student) => {
+        this.currentStudent = student;
+        this.populateForm(student);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement de l\'étudiant:', err);
+        this.error = 'Erreur lors du chargement des données de l\'étudiant';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private populateForm(student: any): void {
+    // Formater les dates pour les inputs de type date
+    const formatDate = (dateString: string | null) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
+
+    this.studentForm.patchValue({
+      // Informations personnelles
+      firstname: student.student_firstname || '',
+      lastname: student.student_lastname || '',
+      birthdate: formatDate(student.student_birthdate),
+      placeOfBirth: student.student_place_of_birth || '',
+      email: student.student_mail || '',
+      phone: student.student_phone?.toString() || '',
+      date_test_initial: formatDate(student.student_date_test_initial),
+      commentaire: student.student_commentary || '',
+      date_entree_france: formatDate(student.student_date_entry_france),
+      date_titre_sejour: formatDate(student.student_date_residence_permit),
+      date_cir: formatDate(student.student_date_cir),
+
+      // IDs
+      gender_id: student.gender_uuid || '',
+      initial_level_id: student.french_level_uuid || '',
+      nationality_id: student.nationality_uuid || '',
+      financing_id: student.financing_uuid || '',
+      status_id: student.status_uuid || '',
+      current_level_id: '', // À implémenter si nécessaire
+      orientation_id: student.orientation_uuid || '',
+      exit_reason_id: student.exit_reason_uuid || '',
+
+      // Handicaps
+      hasDisability: (student.disabilities && student.disabilities.length > 0) || false,
+      selectedDisabilities: student.disabilities ? student.disabilities.map((d: any) => d.disability_uuid) : [],
     });
   }
 
@@ -303,29 +371,35 @@ export class StudentFormComponent implements OnInit {
         willSend: !!(sanitizedFormData.email && sanitizedFormData.email.trim())
       });
 
-      // Créer l'étudiant puis associer les handicaps si nécessaire
-      this.studentService
-        .createStudent(studentData)
+      // Créer ou mettre à jour l'étudiant selon le mode
+      const operation$ = this.isEditMode && this.studentId
+        ? this.studentService.updateStudent(this.studentId, studentData)
+        : this.studentService.createStudent(studentData);
+
+      operation$
         .pipe(
-          switchMap((createdStudent: any) => {
+          switchMap((studentResult: any) => {
             // Si des handicaps sont sélectionnés, les associer à l'étudiant
             if (sanitizedFormData.hasDisability && sanitizedFormData.selectedDisabilities.length > 0) {
+              const studentUuid = studentResult.student_uuid || this.studentId;
               return this.studentService
-                .assignDisabilities(createdStudent.student_uuid, sanitizedFormData.selectedDisabilities)
-                .pipe(switchMap(() => of(createdStudent)));
+                .assignDisabilities(studentUuid, sanitizedFormData.selectedDisabilities)
+                .pipe(switchMap(() => of(studentResult)));
             }
-            return of(createdStudent);
+            return of(studentResult);
           }),
           finalize(() => (this.isSubmitting = false))
         )
         .subscribe({
           next: response => {
-            console.log('Apprenant créé avec succès:', response);
+            const action = this.isEditMode ? 'modifié' : 'créé';
+            console.log(`Apprenant ${action} avec succès:`, response);
             this.router.navigate(['/dashboard/apprenants']);
           },
           error: err => {
-            this.error = "Erreur lors de la création de l'apprenant";
-            console.error('Erreur lors de la création:', err);
+            const action = this.isEditMode ? 'la modification' : 'la création';
+            this.error = `Erreur lors de ${action} de l'apprenant`;
+            console.error(`Erreur lors de ${action}:`, err);
           },
         });
     } else {
