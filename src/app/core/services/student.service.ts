@@ -156,6 +156,13 @@ export class StudentService {
   }
 
   /**
+   * Met à jour un étudiant existant
+   */
+  updateStudent(id: string, studentData: any): Observable<Student> {
+    return this.http.put<Student>(`${this.apiUrl}/${id}`, studentData);
+  }
+
+  /**
    * Récupère les étudiants avec configuration (alias pour getAllStudents pour compatibilité)
    */
   getStudents(config?: StudentListConfig): Observable<StudentListResponse> {

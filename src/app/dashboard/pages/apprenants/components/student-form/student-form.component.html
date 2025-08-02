@@ -1,7 +1,7 @@
 <div class="form-container">
   <div class="form-header">
-    <h1>Ajouter un apprenant</h1>
-    <p>Créer un nouveau profil d'apprenant dans le système</p>
+    <h1>{{ isEditMode ? 'Modifier un apprenant' : 'Ajouter un apprenant' }}</h1>
+    <p>{{ isEditMode ? 'Modifier le profil d\'apprenant dans le système' : 'Créer un nouveau profil d\'apprenant dans le système' }}</p>
   </div>
 
   <div *ngIf="isLoading" class="loading-indicator">
@@ -335,7 +335,7 @@
       </button>
       <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="spinner-small"></span>
-        {{ isSubmitting ? 'Création...' : "Créer l'apprenant" }}
+        {{ isSubmitting ? (isEditMode ? 'Modification...' : 'Création...') : (isEditMode ? "Modifier l'apprenant" : "Créer l'apprenant") }}
       </button>
     </div>
   </form>
